@@ -1,0 +1,176 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// Prisma schema
+
+model Course {
+  id                 Int                 @id @default(autoincrement())
+  name               String              @db.VarChar(255)
+  description        String?             @db.VarChar(1024)
+  createdAt          DateTime            @default(now()) @db.Timestamp
+  updatedAt          DateTime            @default(now()) @updatedAt @db.Timestamp
+  groupSessions      GroupSession[]
+  individualSessions IndividualSession[]
+  userCourses        UserCourse[]
+}
+
+model GroupSession {
+  id          Int           @id @default(autoincrement())
+  courseId    Int
+  status      SessionStatus @default(UPCOMING)
+  title       String        @db.VarChar(255)
+  description String?       @db.VarChar(1024)
+
+  quizzesLink String? @db.VarChar(255)
+  bunnyLink   String? @db.VarChar(255)
+  zoomLink    String? @db.VarChar(255)
+
+  createdAt DateTime @default(now()) @db.Timestamp
+  updatedAt DateTime @default(now()) @updatedAt @db.Timestamp
+
+  course          Course        @relation(fields: [courseId], references: [id])
+  userSessions    UserSession[]
+  creditHistoryId Int           @unique
+  creditHistory   CreditHistory @relation(fields: [creditHistoryId], references: [id])
+  calendarDateId  Int           @unique
+  calendarDate    CalendarDate  @relation(fields: [calendarDateId], references: [id])
+}
+
+model IndividualSession {
+  id        Int                     @id @default(autoincrement())
+  courseId  Int
+  userId    Int
+  status    IndividualSessionStatus @default(WAITING)
+  userNotes String?                 @db.VarChar(1024)
+
+  quizzesLink String? @db.VarChar(255)
+  bunnyLink   String? @db.VarChar(255)
+  zoomLink    String? @db.VarChar(255)
+
+  createdAt DateTime @default(now()) @db.Timestamp
+  updatedAt DateTime @default(now()) @updatedAt @db.Timestamp
+
+  course Course @relation(fields: [courseId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+
+  creditHistoryId Int           @unique
+  creditHistory   CreditHistory @relation(fields: [creditHistoryId], references: [id])
+  calendarDateId  Int           @unique
+  calendarDate    CalendarDate  @relation(fields: [calendarDateId], references: [id])
+}
+
+model User {
+  id       Int     @id @default(autoincrement())
+  name     String  @db.VarChar(255)
+  email    String  @unique @db.VarChar(255)
+  password String?
+  token    String  @db.VarChar(255)
+
+  createdAt DateTime @default(now()) @db.Timestamp
+  updatedAt DateTime @default(now()) @updatedAt @db.Timestamp
+
+  userCourses            UserCourse[]
+  userSessions           UserSession[]
+  userIndividualSessions IndividualSession[]
+  purchaseHistory        PurchaseHistory[]
+  creditHistory          CreditHistory[]
+}
+
+model UserCourse {
+  id          Int @id @default(autoincrement())
+  userId      Int
+  courseId    Int
+  credentials Int
+
+  createdAt DateTime @default(now()) @db.Timestamp
+  updatedAt DateTime @default(now()) @updatedAt @db.Timestamp
+
+  user   User   @relation(fields: [userId], references: [id])
+  course Course @relation(fields: [courseId], references: [id])
+}
+
+model UserSession {
+  id        Int  @id @default(autoincrement())
+  userId    Int
+  sessionId Int
+  rate      Int?
+
+  createdAt DateTime @default(now()) @db.Timestamp
+  updatedAt DateTime @default(now()) @updatedAt @db.Timestamp
+
+  user    User         @relation(fields: [userId], references: [id])
+  session GroupSession @relation(fields: [sessionId], references: [id])
+}
+
+model PurchaseHistory {
+  id         Int   @id @default(autoincrement())
+  creds      Int   @default(1)
+  amountPaid Float
+
+  createdAt DateTime @default(now()) @db.Timestamp
+
+  userId          Int
+  user            User          @relation(fields: [userId], references: [id])
+  creditHistoryId Int           @unique
+  CreditHistory   CreditHistory @relation(fields: [creditHistoryId], references: [id])
+}
+
+model CreditHistory {
+  id                Int                @id @default(autoincrement())
+  userId            Int
+  amount            Int                @default(1)
+  purchaseHitory    PurchaseHistory?
+  type              CreditHistoryType
+  groupSession      GroupSession?
+  individualSession IndividualSession?
+  user              User               @relation(fields: [userId], references: [id])
+}
+
+model CalendarDate {
+  id                Int                @id @default(autoincrement())
+  time              DateTime
+  duration          Int                @default(60)
+  type              CalendarDateType
+  status            CalendarDateStatus @default(AVAILABLE)
+  groupSession      GroupSession?
+  individualSession IndividualSession?
+  createdAt         DateTime           @default(now()) @db.Timestamp
+  updatedAt         DateTime           @default(now()) @updatedAt @db.Timestamp
+}
+
+enum CalendarDateType {
+  GROUP_SESSION
+  INDIVIDUAL_SESSION
+}
+
+enum CalendarDateStatus {
+  AVAILABLE
+  PASSED
+  FULL
+}
+
+enum CreditHistoryType {
+  PURCHASE
+  GROUP_SESSION
+  INDIVIDUAL_SESSION
+}
+
+enum SessionStatus {
+  UPCOMING
+  RUNNING
+  ENDED
+}
+
+enum IndividualSessionStatus {
+  WAITING
+  PASSED
+  UPCOMING
+  RUNNING
+  ENDED
+}
