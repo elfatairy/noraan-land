@@ -1,0 +1,36 @@
+import express, { ErrorRequestHandler, NextFunction, Request, Response } from 'express';
+import bodyParser from 'body-parser';
+const app = express();
+const port = parseInt(process.env.PORT || "3000");
+import router from './routes/index.route';
+import { HTTPErrorLogger, HTTPLogger } from './utils/logging.util';
+import { rateLimiter } from './middlewares/ratelimiter';
+import cookieParser from 'cookie-parser';
+import { logRequest } from './middlewares/logging.middleware';
+import { swaggerDocs } from './utils/documentation.util';
+
+app.use(bodyParser.json());
+app.disable("x-powered-by");
+app.use(
+  bodyParser.urlencoded({
+    extended: true,
+  })
+);
+app.use(HTTPErrorLogger);
+app.use(HTTPLogger);
+app.use(cookieParser());
+app.use(rateLimiter);
+app.use("/api", logRequest, router);
+swaggerDocs(app, port);
+
+app.get('/', (req, res) => {
+  res.json({'message': 'ok'});
+})
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+});
+
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Example app listening at http://localhost:${port}`)
+});

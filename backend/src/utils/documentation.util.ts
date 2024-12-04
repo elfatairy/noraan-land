@@ -18,7 +18,7 @@ const options = {
         ],
         security: [{ Authorization: [] }],
     },
-    apis: ["./routes/*.ts"],
+    apis: ["./src/routes/**/*.ts"],
     customCss: `
         .swagger-ui .topbar-wrapper svg {
             display: none;
@@ -41,6 +41,6 @@ export const swaggerDocs = (app: Application, port: Number) => {
     app.use(
         "/docs",
         swaggerUi.serve,
-        swaggerUi.setup(swaggerSpec)
+        swaggerUi.setup(swaggerSpec, {explorer: true})
     );
 }

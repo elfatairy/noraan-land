@@ -1,6 +1,6 @@
 import express from 'express';
 const router = express.Router();
-import { router as studentRouter } from './student.route';
+import { router as userRouter } from './user.route';
 // import programmingLanguagesController from '../controllers/programmingLanguages.controller';
 
 // /* GET programming languages. */
@@ -15,5 +15,5 @@ import { router as studentRouter } from './student.route';
 // /* DELETE programming language */
 // router.delete('/:id', programmingLanguagesController.remove);
 
-router.use("/student", studentRouter);
+router.use("/users", userRouter);
 export default router;
