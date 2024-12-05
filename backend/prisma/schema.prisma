@@ -70,7 +70,7 @@ model User {
   name     String  @db.VarChar(255)
   email    String  @unique @db.VarChar(255)
   password String?
-  token    String  @db.VarChar(255)
+  token    String?  @db.VarChar(255)
 
   createdAt DateTime @default(now()) @db.Timestamp
   updatedAt DateTime @default(now()) @updatedAt @db.Timestamp
