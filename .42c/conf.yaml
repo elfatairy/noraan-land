@@ -1,0 +1,3 @@
+apis:
+  backend/docs.yml:
+    alias: noraan-api-documentation
