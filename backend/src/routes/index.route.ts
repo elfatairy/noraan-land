@@ -1,19 +1,15 @@
 import express from 'express';
 const router = express.Router();
 import { router as userRouter } from './user.route';
-// import programmingLanguagesController from '../controllers/programmingLanguages.controller';
-
-// /* GET programming languages. */
-// router.get('/', programmingLanguagesController.get);
-
-// /* POST programming language */
-// router.post('/', programmingLanguagesController.create);
-
-// /* PUT programming language */
-// router.put('/:id', programmingLanguagesController.update);
-
-// /* DELETE programming language */
-// router.delete('/:id', programmingLanguagesController.remove);
+import { router as adminRouter } from './admin.route';
+import { router as courseRouter } from './course.route'
+import { router as sessionRouter } from './session.route'
+import { router as calednarRouter } from './calendar.route'
 
 router.use("/users", userRouter);
+router.use("/admin", adminRouter);
+router.use("/courses", courseRouter);
+router.use("/sessions", sessionRouter);
+router.use("/calendar", calednarRouter);
+
 export default router;

@@ -1,10 +1,8 @@
 import * as jwt from 'jsonwebtoken';
 
-export const generateToken = (userId: number, email: string, expiresIn: string) => {
+export const generateToken = (data: Record<string, any>, expiresIn: string) => {
     return jwt.sign(
-        {
-            userId,
-            email        },
+        data,
         process.env.JWT_SECRET_KEY ?? "",
         { expiresIn }
     );

@@ -45,6 +45,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     })
 
   } catch (err: any) {
+    console.log("ERROR: ", err);
     res.status(500).json({
       name: "INTERNAL_SERVER_ERROR",
       message: "Internal Server Error"
@@ -96,6 +97,7 @@ export const googleLogin = async (req: Request, res: Response, next: NextFunctio
     }) 
 
   } catch (err: any) {
+    console.log("ERROR: ", err);
     res.status(500).json({
       name: "INTERNAL_SERVER_ERROR",
       message: "Internal Server Error"
@@ -146,6 +148,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
     })
 
   } catch (err: any) {
+    console.log("ERROR: ", err);
     res.status(500).json({
       name: "INTERNAL_SERVER_ERROR",
       message: "Internal Server Error"

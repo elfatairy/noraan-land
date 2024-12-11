@@ -3,6 +3,16 @@ import { prisma } from "../configs/db.config";
 import bcrypt from 'bcrypt';
 import { generateToken } from "../utils/token.util";
 import { OAuth2Client } from "google-auth-library";
+import { ROLES } from "../utils/constants.util";
+import { Prisma } from "@prisma/client";
+
+export const userExists = async (conditions: Prisma.UserWhereInput) => {
+    const user = await prisma.user.findFirst({
+        where: conditions
+    });
+
+    return user !== null;
+}
 
 export const emailExists = async (email: string) => {
     const user = await prisma.user.findFirst({
@@ -57,14 +67,11 @@ export const getUserByEmail = async (email: string) => await prisma.user.findFir
 });
 
 export const authenticateUser = async (id: number, email: string) => {
-    const token = generateToken(id, email, "7d");
+    const token = generateToken({id, email, role: ROLES.USER}, process.env.JWT_EXPIRY ?? '7d');
 
-    const user = await prisma.user.update({
+    const user = await prisma.user.findFirst({
         where: {
             id
-        },
-        data: {
-            token
         },
         select: {
             id: true,
