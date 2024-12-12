@@ -1,18 +1,5 @@
-import { NextFunction, Request, Response } from "express";
 import { prisma } from "../configs/db.config";
-import bcrypt from 'bcrypt';
-import { generateToken } from "../utils/token.util";
-import { OAuth2Client } from "google-auth-library";
-import { ROLES } from "../utils/constants.util";
-import { Prisma } from "@prisma/client";
-
-export const courseExists = async (conditions: Prisma.CourseWhereInput) => {
-    const course = await prisma.course.findFirst({
-        where: conditions
-    });
-
-    return course !== null;
-}
+import { Prisma, SessionType } from "@prisma/client";
 
 export const createCourse = async (name: string, groupPrice: number, individualPrice: number, description: string) => {
     const course = await prisma.course.create({
@@ -27,10 +14,43 @@ export const createCourse = async (name: string, groupPrice: number, individualP
     return course;
 }
 
-export const getCourse = async (id: number) => await prisma.course.findFirst({
-    where: {
-        id,
-    }
+export const getCourse = async (conditions: Prisma.CourseWhereInput) => await prisma.course.findFirst({
+    where: conditions
 })
 
 export const getAllCourses = async () => await prisma.course.findMany()
+
+export const getCourseUsers = async (courseId: number, conditions: Prisma.UserCourseWhereInput) => await prisma.course.findFirst({
+    where: {
+        id: courseId
+    }
+}).userCourses({
+    where: conditions
+})
+
+export const viewCourseUser = async (courseId: number, userId: number) => (await prisma.userCourse.updateMany({
+    where: {
+        userId,
+        courseId
+    },
+    data: {
+        viewedByAdmin: true
+    }
+})).count == 1
+
+export const getCourseUser = async (userId: number, courseId: number) => await prisma.userCourse.findFirst({
+    where: {
+        userId,
+        courseId
+    }
+})
+
+export const addCourseUser = async (userId: number, courseId: number, sessionType: SessionType, availableTime: string, userNotes?: string) => await prisma.userCourse.create({
+    data: {
+        userId,
+        courseId,
+        availableTime,
+        userNotes,
+        sessionType
+    },
+})

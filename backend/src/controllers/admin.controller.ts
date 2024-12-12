@@ -6,6 +6,7 @@ import axios from "axios";
 import { OAuth2Client } from "google-auth-library";
 import { generateToken } from "../utils/token.util";
 import { ROLES } from "../utils/constants.util";
+import { getCourse } from "../services/course.service";
 
 export const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -17,7 +18,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       });
       return;
     }
-    
+
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD!, salt);
 
@@ -30,7 +31,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       });
       return;
     }
-    const token = generateToken({username, role: ROLES.ADMIN}, process.env.JWT_EXPIRY ?? '7d');
+    const token = generateToken({ username, role: ROLES.ADMIN }, process.env.JWT_EXPIRY ?? '7d');
 
     res.json({
       message: "Admin Logged In Successfully",

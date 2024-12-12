@@ -66,6 +66,18 @@ export const getUserByEmail = async (email: string) => await prisma.user.findFir
     }
 });
 
+export const getUserById = async (id: number) => await prisma.user.findFirst({
+    where: {
+        id
+    },
+    select: {
+        id: true,
+        name: true,
+        email: true,
+        password: true
+    }
+});
+
 export const authenticateUser = async (id: number, email: string) => {
     const token = generateToken({id, email, role: ROLES.USER}, process.env.JWT_EXPIRY ?? '7d');
 

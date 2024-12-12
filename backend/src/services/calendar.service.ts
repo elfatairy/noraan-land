@@ -1,11 +1,5 @@
-import { NextFunction, Request, Response } from "express";
 import { prisma } from "../configs/db.config";
-import bcrypt from 'bcrypt';
-import { generateToken } from "../utils/token.util";
-import { OAuth2Client } from "google-auth-library";
-import { ROLES, SESSION_TYPE } from "../utils/constants.util";
 import { CalendarDateStatus, CalendarDateType, Prisma } from "@prisma/client";
-import { sessionTypeToCalendarType } from "../utils/helper.util";
 
 export const isDateAvailable = async (dateIso: string, duration: number) => {
     const newStartDate = new Date(dateIso);
@@ -35,18 +29,16 @@ export const isDateAvailable = async (dateIso: string, duration: number) => {
     return !busy;
 }
 
-export const createCalendarDate = async (dateIso: string, duration: number, type: SESSION_TYPE) => {
+export const createCalendarDate = async (dateIso: string, duration: number, type: CalendarDateType) => {
     const startDate = new Date(dateIso);
     const endDate = new Date(startDate.getTime() + duration * 60000);
-
-    const calendarType = sessionTypeToCalendarType(type);
 
     const { id: dateId } = await prisma.calendarDate.create({
         data: {
             startDate,
             endDate,
             duration,
-            type: calendarType
+            type
         },
         select: {
             id: true

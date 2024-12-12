@@ -28,6 +28,7 @@ model GroupSession {
   status      SessionStatus @default(UPCOMING)
   title       String        @db.VarChar(255)
   description String?       @db.VarChar(1024)
+  isFree      Boolean       @default(false)
 
   quizzesLink String? @db.VarChar(255)
   bunnyLink   String? @db.VarChar(255)
@@ -49,6 +50,7 @@ model IndividualSession {
   status      SessionStatus @default(UPCOMING)
   title       String        @db.VarChar(255)
   description String?       @db.VarChar(1024)
+  isFree      Boolean       @default(false)
 
   quizzesLink String? @db.VarChar(255)
   bunnyLink   String? @db.VarChar(255)
@@ -60,10 +62,8 @@ model IndividualSession {
   course Course @relation(fields: [courseId], references: [id])
   user   User   @relation(fields: [userId], references: [id])
 
-  creditHistoryId Int?           @unique
-  creditHistory   CreditHistory? @relation(fields: [creditHistoryId], references: [id])
-  calendarDateId  Int            @unique
-  calendarDate    CalendarDate   @relation(fields: [calendarDateId], references: [id])
+  calendarDateId Int          @unique
+  calendarDate   CalendarDate @relation(fields: [calendarDateId], references: [id])
 }
 
 model User {
@@ -79,14 +79,17 @@ model User {
   userSessions           UserSession[]
   userIndividualSessions IndividualSession[]
   purchaseHistory        PurchaseHistory[]
-  creditHistory          CreditHistory[]
 }
 
 model UserCourse {
-  id          Int @id @default(autoincrement())
-  userId      Int
-  courseId    Int
-  credentials Int
+  id            Int     @id @default(autoincrement())
+  userId        Int
+  courseId      Int
+  availableTime String  @db.VarChar(255)
+  userNotes     String? @db.VarChar(255)
+  viewedByAdmin Boolean @default(false)
+
+  sessionType SessionType
 
   createdAt DateTime @default(now()) @db.Timestamp
   updatedAt DateTime @default(now()) @updatedAt @db.Timestamp
@@ -104,22 +107,8 @@ model UserSession {
   createdAt DateTime @default(now()) @db.Timestamp
   updatedAt DateTime @default(now()) @updatedAt @db.Timestamp
 
-  creditHistoryId Int           @unique
-  creditHistory   CreditHistory @relation(fields: [creditHistoryId], references: [id])
-
   user    User         @relation(fields: [userId], references: [id])
   session GroupSession @relation(fields: [sessionId], references: [id])
-}
-
-model CreditHistory {
-  id                Int                @id @default(autoincrement())
-  userId            Int
-  amount            Int                @default(1)
-  purchaseHitory    PurchaseHistory?
-  type              CreditHistoryType
-  userGroupSession  UserSession?
-  individualSession IndividualSession?
-  user              User               @relation(fields: [userId], references: [id])
 }
 
 model PurchaseHistory {
@@ -129,10 +118,8 @@ model PurchaseHistory {
 
   createdAt DateTime @default(now()) @db.Timestamp
 
-  userId          Int
-  user            User          @relation(fields: [userId], references: [id])
-  creditHistoryId Int           @unique
-  CreditHistory   CreditHistory @relation(fields: [creditHistoryId], references: [id])
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
 }
 
 model CalendarDate {
@@ -159,14 +146,18 @@ enum CalendarDateStatus {
   FULL
 }
 
-enum CreditHistoryType {
-  PURCHASE
-  GROUP_SESSION
-  INDIVIDUAL_SESSION
-}
-
 enum SessionStatus {
   UPCOMING
   RUNNING
   ENDED
+}
+
+enum SessionType {
+  INDIVIDUAL
+  GROUP
+}
+
+enum SubscribtionStatus {
+  SUBSCRIBED
+  UNSUBSCRIBED
 }

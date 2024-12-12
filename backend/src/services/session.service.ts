@@ -1,29 +1,25 @@
-import { NextFunction, Request, Response } from "express";
 import { prisma } from "../configs/db.config";
-import bcrypt from 'bcrypt';
-import { generateToken } from "../utils/token.util";
-import { OAuth2Client } from "google-auth-library";
-import { ROLES, SESSION_TYPE } from "../utils/constants.util";
-import { Prisma } from "@prisma/client";
+import { CalendarDateStatus, CalendarDateType, Prisma } from "@prisma/client";
 import { createCalendarDate } from "./calendar.service";
 
-export const createGroupSessionService = async (courseId: number, title: string, date: string, duration: number, description?: string, quizzesLink?: string) => {
-    const calendarDateId = await createCalendarDate(date, duration, SESSION_TYPE.GROUP);
+export const createGroupSessionService = async (courseId: number, title: string, date: string, duration: number, isFree: boolean, description?: string, quizzesLink?: string) => {
+    const calendarDateId = await createCalendarDate(date, duration, CalendarDateType.GROUP_SESSION);
     const session = await prisma.groupSession.create({
         data: {
             title,
             description,
             quizzesLink,
             courseId,
-            calendarDateId
+            calendarDateId,
+            isFree
         }
     });
 
     return session;
 }
 
-export const createIndividualSessionService = async (courseId: number, userId: number, title: string, date: string, duration: number, description?: string, quizzesLink?: string) => {
-    const calendarDateId = await createCalendarDate(date, duration, SESSION_TYPE.INDIVIDUAL);
+export const createIndividualSessionService = async (courseId: number, userId: number, title: string, date: string, duration: number, isFree: boolean, description?: string, quizzesLink?: string) => {
+    const calendarDateId = await createCalendarDate(date, duration, CalendarDateType.INDIVIDUAL_SESSION);
     const session = await prisma.individualSession.create({
         data: {
             courseId, 
@@ -31,7 +27,8 @@ export const createIndividualSessionService = async (courseId: number, userId: n
             title, 
             calendarDateId, 
             description, 
-            quizzesLink
+            quizzesLink,
+            isFree
         }
     });
 

@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import * as jwt from 'jsonwebtoken';
 import { ROLES } from "../utils/constants.util";
+import { getUserByEmail, getUserById } from "../services/user.service";
 
 export const verifyToken = (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -23,7 +24,9 @@ export const verifyToken = (req: Request, res: Response, next: NextFunction) => 
             return;
         }
 
-        res.locals.role = decodedToken.role;
+        
+        const {iat, exp, ...tokenData} = decodedToken;
+        res.locals = {...res.locals, ...tokenData};
         next();
     } catch (err) {
         res.status(500).json({
@@ -44,6 +47,36 @@ export const checkAdmin = (req: Request, res: Response, next: NextFunction) => {
             });
             return;
         }
+        
+        next();
+    } catch (err) {
+        res.status(500).json({
+            name: "INTERNAL_SERVER_ERROR",
+            message: "Internal Server Error"
+        });
+        next(err);
+    }
+}
+
+export const checkUser = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const {id, role} = res.locals;
+        if (role == null || id == null || role != ROLES.USER) {
+            res.status(400).json({
+                name: "UNAUTHORIZED",
+                message: "This request needs permessions the user doesn't have"
+            });
+            return;
+        }
+        const user = await getUserById(res.locals.id);
+        if(!user) {
+            res.status(400).json({
+                name: "UNAUTHORIZED",
+                message: "This request needs permessions the user doesn't have"
+            });
+            return;
+        }
+        res.locals.user = user;
         
         next();
     } catch (err) {

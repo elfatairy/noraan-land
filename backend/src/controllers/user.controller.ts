@@ -1,9 +1,10 @@
 import { NextFunction, Request, Response } from "express";
-import { validateEmail, validateName, validatePassword } from "../utils/validation.util";
+import { validateEmail, validateName, validatePassword, validateSessionType, validateString } from "../utils/validation.util";
 import { authenticateUser, createUser, emailExists, getUserByEmail, nameExists, verifyGoogleToken } from "../services/user.service";
 import { compare } from "bcrypt";
 import axios from "axios";
 import { OAuth2Client } from "google-auth-library";
+import { addCourseUser, getCourse, getCourseUser } from "../services/course.service";
 
 export const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -94,7 +95,7 @@ export const googleLogin = async (req: Request, res: Response, next: NextFunctio
     res.json({
       message: "User Logged In Successfully",
       data
-    }) 
+    })
 
   } catch (err: any) {
     console.log("ERROR: ", err);
@@ -109,7 +110,7 @@ export const googleLogin = async (req: Request, res: Response, next: NextFunctio
 export const register = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { name, email, password } = req.body;
-    if (!name || !validateName(name) ||
+    if (!name || !validateString(name, 255, 4) ||
       !email || !validateEmail(email) ||
       !password || !validatePassword(password)) {
 
@@ -144,6 +145,63 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
       data: {
         token,
         user
+      }
+    })
+
+  } catch (err: any) {
+    console.log("ERROR: ", err);
+    res.status(500).json({
+      name: "INTERNAL_SERVER_ERROR",
+      message: "Internal Server Error"
+    });
+    next(err);
+  }
+}
+
+export const applyForCourse = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { courseId, availableTime, userNotes, sessionType } = req.body;
+    const { id: userId, user } = res.locals;
+
+    if (!courseId ||
+      !availableTime || !validateString(availableTime, 255, 1) ||
+      (userNotes && !validateString(userNotes, 255, 0)) ||
+      !sessionType || !validateSessionType(sessionType)
+    ) {
+
+      res.status(400).json({
+        name: "INVALID_PAYLOAD",
+        message: "Invalid payload data"
+      });
+      return;
+    }
+
+    const course = await getCourse({ id: courseId });
+    if (!course) {
+      res.status(409).json({
+        name: "COURSE_DOESNT_EXIST",
+        message: "No course with this id"
+      });
+      return;
+    }
+
+    if (await getCourseUser(userId, courseId)) {
+      res.status(409).json({
+        name: "USER_COURSE_ALERADY_EXIST",
+        message: "This user has already applied for this course"
+      });
+      return;
+    }
+
+    await addCourseUser(userId, courseId, sessionType, availableTime, userNotes);
+
+    res.json({
+      message: "User applied for course successfully",
+      data: {
+        user,
+        course,
+        availableTime,
+        userNotes
       }
     })
 

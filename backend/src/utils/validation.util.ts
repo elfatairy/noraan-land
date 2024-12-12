@@ -1,4 +1,6 @@
-import { SESSION_TYPE } from "./constants.util";
+import { SessionType } from "@prisma/client";
+
+export const validateString = (string: string, max: number, min: number) => string.length >= min && string.length <= max;
 
 export const validateEmail = (email: string) => email.match(/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/);
 
@@ -8,7 +10,7 @@ export const validateName = (password: string) => password.length >= 4;
 
 export const validateDate = (date: string) => date.match(/^(\d{4})-0?(\d+)-0?(\d+)[T ]0?(\d+):0?(\d+):0?(\d+)\.(\d+)Z$/);
 
-export const validateSessionType = (type: string) => Object.values(SESSION_TYPE).includes(type)
+export const validateSessionType = (type: any) => Object.values(SessionType).includes(type)
 
 // TODO IMPLEMENT QUIZES LINK VALIDATION
 export const validateQuizesLink = (link: string) => true

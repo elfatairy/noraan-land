@@ -162,6 +162,94 @@ paths:
                       email: email@gmail.com
                       name: name
 
+  /api/users/actions/applyForCourse:
+    post:
+      tags:
+        - User Actions
+      summary: Apply for a course
+      description: User apply for a course so the admin can view him and create trial session for him
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                courseId:
+                  type: number
+                availableTime:
+                  type: string
+                userNotes:
+                  type: string
+                sessionType:
+                  type: string
+                  enum:
+                    - GROUP
+                    - INDIVIDUAL
+              required:
+                - courseId
+                - availableTime
+                - sessionType
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                UNAUTHENTICATED:
+                  value:
+                    name: "UNAUTHENTICATED"
+                    message: "User is unauthenticated and this request requires authentication payload data"
+                TOKEN_EXPIRED:
+                  value:
+                    name: "TOKEN_EXPIRED"
+                    message: "The token you are using expird, please log in again to retrieve another token."
+                UNAUTHORIZED:
+                  value:
+                    name: "UNAUTHORIZED"
+                    message: "This request needs permessions the user doesn't have"
+                INVALID_PAYLOAD:
+                  value:
+                    name: "INVALID_PAYLOAD"
+                    message: "Invalid payload data"
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              examples:
+                COURSE_DOESNT_EXIST:
+                  value:
+                    name: "COURSE_DOESNT_EXIST"
+                    message: "No course with this id"
+                USER_DOESNT_EXIST:
+                  value:
+                    name: "USER_COURSE_ALERADY_EXIST"
+                    message: "This user has already applied for this course"
+        "200":
+          description: Success
+          content:
+            application/json:
+              example:
+                value:
+                  message: "User applied for course successfully"
+                  data:
+                    "user": {
+                        "id": 2,
+                        "name": "Omar Hassan2",
+                        "email": "omar2@gmail.com",
+                        "password": "$2b$10$sM.FH18xx4eJOTZ5FZydFOMh9qdqjnXaYLAd2m7VxiIUGBhV0n/aS"
+                    }
+                    "course": {
+                        "id": 1,
+                        "name": "Test Course",
+                        "groupPrice": 100,
+                        "individualPrice": 500,
+                        "description": null,
+                        "createdAt": "2024-12-12T16:31:46.000Z",
+                        "updatedAt": "2024-12-12T16:31:46.000Z"
+                    }
+                    "availableTime": "From sundays to thursdays 3pm-8pm"
+
   /api/admin/auth/login:
     post:
       tags:
@@ -524,6 +612,10 @@ paths:
                   value:
                     name: "DATE_NOT_AVAILABLE"
                     message: "This date is not available, please choose another date/duration"
+                NOT_INDIVIDUAL:
+                  value:
+                    name: "NOT_INDIVIDUAL"
+                    message: "Can't scedule individual session for user unless he applied as individual"
         "200":
           description: Success
           content:
@@ -547,6 +639,199 @@ paths:
                       creditHistoryId: null
                       calendarDateId: 1
 
+  /api/admin/actions/courseIndividualUsers/:courseId:
+    post:
+      tags:
+        - Admin Actions
+      summary: Get course individual users
+      description: Get users applied in this course in individual
+      parameters:
+        - name: courseId
+          in: query
+          description: the course id
+          required: true
+          schema:
+            type: string
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                UNAUTHENTICATED:
+                  value:
+                    name: "UNAUTHENTICATED"
+                    message: "User is unauthenticated and this request requires authentication payload data"
+                TOKEN_EXPIRED:
+                  value:
+                    name: "TOKEN_EXPIRED"
+                    message: "The token you are using expird, please log in again to retrieve another token."
+                UNAUTHORIZED:
+                  value:
+                    name: "UNAUTHORIZED"
+                    message: "This request needs permessions the user doesn't have"
+                INVALID_PAYLOAD:
+                  value:
+                    name: "INVALID_PAYLOAD"
+                    message: "Invalid payload data"
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              examples:
+                COURSE_DOESNT_EXIST:
+                  value:
+                    name: "COURSE_DOESNT_EXIST"
+                    message: "No course with this id"
+        "200":
+          description: Success
+          content:
+            application/json:
+              example:
+                value:
+                  message: "Course users retrieved successfully"
+                  data:
+                    courseUsers:
+                      - {
+                        "id": 1,
+                        "userId": 1,
+                        "courseId": 1,
+                        "availableTime": "From sundays to thursdays 3pm-8pm",
+                        "userNotes": null,
+                        "viewedByAdmin": true,
+                        "sessionType": "INDIVIDUAL",
+                        "createdAt": "2024-12-12T16:33:46.000Z",
+                        "updatedAt": "2024-12-12T17:24:47.000Z"
+                      }
+  /api/admin/actions/courseGroupUsers/:courseId:
+    post:
+      tags:
+        - Admin Actions
+      summary: Get course group users
+      description: Get users applied in this course in group
+      parameters:
+        - name: courseId
+          in: query
+          description: the course id
+          required: true
+          schema:
+            type: string
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                UNAUTHENTICATED:
+                  value:
+                    name: "UNAUTHENTICATED"
+                    message: "User is unauthenticated and this request requires authentication payload data"
+                TOKEN_EXPIRED:
+                  value:
+                    name: "TOKEN_EXPIRED"
+                    message: "The token you are using expird, please log in again to retrieve another token."
+                UNAUTHORIZED:
+                  value:
+                    name: "UNAUTHORIZED"
+                    message: "This request needs permessions the user doesn't have"
+                INVALID_PAYLOAD:
+                  value:
+                    name: "INVALID_PAYLOAD"
+                    message: "Invalid payload data"
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              examples:
+                COURSE_DOESNT_EXIST:
+                  value:
+                    name: "COURSE_DOESNT_EXIST"
+                    message: "No course with this id"
+        "200":
+          description: Success
+          content:
+            application/json:
+              example:
+                value:
+                  message: "Course users retrieved successfully"
+                  data:
+                    courseUsers:
+                      - {
+                        "id": 1,
+                        "userId": 1,
+                        "courseId": 1,
+                        "availableTime": "From sundays to thursdays 3pm-8pm",
+                        "userNotes": null,
+                        "viewedByAdmin": true,
+                        "sessionType": "GROUP",
+                        "createdAt": "2024-12-12T16:33:46.000Z",
+                        "updatedAt": "2024-12-12T17:24:47.000Z"
+                      }
+  /api/admin/actions/newCourseUsers/:courseId:
+    post:
+      tags:
+        - Admin Actions
+      summary: Get course new users
+      description: Get users that the admin didn't see before or who logged in after a week ago
+      parameters:
+        - name: courseId
+          in: query
+          description: the course id
+          required: true
+          schema:
+            type: string
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                UNAUTHENTICATED:
+                  value:
+                    name: "UNAUTHENTICATED"
+                    message: "User is unauthenticated and this request requires authentication payload data"
+                TOKEN_EXPIRED:
+                  value:
+                    name: "TOKEN_EXPIRED"
+                    message: "The token you are using expird, please log in again to retrieve another token."
+                UNAUTHORIZED:
+                  value:
+                    name: "UNAUTHORIZED"
+                    message: "This request needs permessions the user doesn't have"
+                INVALID_PAYLOAD:
+                  value:
+                    name: "INVALID_PAYLOAD"
+                    message: "Invalid payload data"
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              examples:
+                COURSE_DOESNT_EXIST:
+                  value:
+                    name: "COURSE_DOESNT_EXIST"
+                    message: "No course with this id"
+        "200":
+          description: Success
+          content:
+            application/json:
+              example:
+                value:
+                  message: "Course users retrieved successfully"
+                  data:
+                    unviewedUsers:
+                      - {
+                        "id": 1,
+                        "userId": 1,
+                        "courseId": 1,
+                        "availableTime": "From sundays to thursdays 3pm-8pm",
+                        "userNotes": null,
+                        "viewedByAdmin": true,
+                        "sessionType": "INDIVIDUAL",
+                        "createdAt": "2024-12-12T16:33:46.000Z",
+                        "updatedAt": "2024-12-12T17:24:47.000Z"
+                      }
+  
   /api/calendar/busyDates:
     get:
       tags:
