@@ -79,7 +79,7 @@ export const getUserById = async (id: number) => await prisma.user.findFirst({
 });
 
 export const authenticateUser = async (id: number, email: string) => {
-    const token = generateToken({id, email, role: ROLES.USER}, process.env.JWT_EXPIRY ?? '7d');
+    const token = generateToken({ id, email, role: ROLES.USER }, process.env.JWT_EXPIRY ?? '7d');
 
     const user = await prisma.user.findFirst({
         where: {
@@ -108,3 +108,17 @@ export const verifyGoogleToken = async (idToken: string) => {
         return { error: "Invalid user detected. Please try again" };
     }
 }
+
+export const createUserSession = async (userId: number, sessionId: number) => await prisma.userSession.create({
+    data: {
+        userId,
+        sessionId
+    }
+})
+
+export const getUserSession = async (userId: number, sessionId: number) => await prisma.userSession.findFirst({
+    where: {
+        userId,
+        sessionId
+    }
+})

@@ -469,8 +469,6 @@ paths:
               properties:
                 courseId:
                   type: integer
-                quizzesLink:
-                  type: string
                 date:
                   type: string
                 duration:
@@ -534,7 +532,6 @@ paths:
                       status: UPCOMING
                       title: string
                       description: description
-                      quizzesLink: "quizes.com"
                       bunnyLink: null
                       zoomLink: null
                       createdAt: 2024-12-11T13:46:10.000Z
@@ -557,8 +554,6 @@ paths:
                   type: integer
                 userId:
                   type: integer
-                quizzesLink:
-                  type: string
                 date:
                   type: string
                 duration:
@@ -631,7 +626,6 @@ paths:
                       status: UPCOMING
                       title: string
                       description: description
-                      quizzesLink: "quizes.com"
                       bunnyLink: null
                       zoomLink: null
                       createdAt: 2024-12-11T13:46:10.000Z
@@ -819,7 +813,7 @@ paths:
                 value:
                   message: "Course users retrieved successfully"
                   data:
-                    unviewedUsers:
+                    newUsers:
                       - {
                         "id": 1,
                         "userId": 1,
@@ -922,7 +916,6 @@ paths:
                           status": "UPCOMING"
                           title": "Session 1"
                           description: null
-                          quizzesLink: null
                           bunnyLink: null
                           zoomLink: null
                           createdAt": "2024-12-11T17:14:35.000Z"

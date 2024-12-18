@@ -1,15 +1,16 @@
 import { NextFunction, Request, Response } from "express";
 import { validateDate, validateEmail, validateName, validatePassword, validateQuizesLink, validateSessionType, validateString } from "../utils/validation.util";
-import { authenticateUser, createUser, emailExists, getUserByEmail, nameExists, userExists, verifyGoogleToken } from "../services/user.service";
+import { authenticateUser, createUser, emailExists, getUserByEmail, getUserSession, nameExists, userExists, verifyGoogleToken } from "../services/user.service";
 import { createCourse, getAllCourses, getCourse, getCourseUser } from "../services/course.service";
-import { createGroupSessionService, createIndividualSessionService } from "../services/session.service";
+import { createGroupSessionService, createIndividualSessionService, createRecording, endSessionService, getSession, saveGruopStudentNotes, saveIndividualStudentNotes, startSessionService, uploadRecording } from "../services/session.service";
 import { isDateAvailable } from "../services/calendar.service";
-import { SessionType } from "@prisma/client";
+import { SessionStatus, SessionType } from "@prisma/client";
+import { createMeeting, getAccessToken } from "../services/zoom.service";
 
 export const createGroupSession = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { courseId, title, description, quizzesLink, date, duration, isFree = false } = req.body;
-    if (!courseId || !title || !date || !validateDate(date) || !duration || (description && !validateString(description, 255, 0)) || (quizzesLink && (quizzesLink && !validateString(quizzesLink, 255, 0)))) {
+    const { courseId, title, description, date, duration, isFree = false } = req.body;
+    if (!courseId || !title || !date || !validateDate(date) || !duration || (description && !validateString(description, 255, 0))) {
       res.status(400).json({
         name: "INVALID_PAYLOAD",
         message: "Invalid payload data"
@@ -35,15 +36,15 @@ export const createGroupSession = async (req: Request, res: Response, next: Next
       return;
     }
 
-    if (quizzesLink && !validateQuizesLink(quizzesLink)) {
-      res.status(400).json({
-        name: "QUIZES_NOT_VALID",
-        message: "The quizes link isn't a valid link"
-      });
-      return;
-    }
+    // if (quizzesLink && !validateQuizesLink(quizzesLink)) {
+    //   res.status(400).json({
+    //     name: "QUIZES_NOT_VALID",
+    //     message: "The quizes link isn't a valid link"
+    //   });
+    //   return;
+    // }
 
-    const createdSession = await createGroupSessionService(courseId, title, date, duration, isFree, quizzesLink, description);
+    const createdSession = await createGroupSessionService(courseId, title, date, duration, isFree, description);
     res.json({
       message: "Session created successfully",
       data: {
@@ -65,8 +66,8 @@ export const createGroupSession = async (req: Request, res: Response, next: Next
 
 export const createIndividualSession = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { courseId, userId, title, description, quizzesLink, date, duration, isFree = false } = req.body;
-    if (!courseId || !userId || !title || !date || !validateDate(date) || !duration || (description && !validateString(description, 255, 0)) || (quizzesLink && !validateString(quizzesLink, 255, 0))) {
+    const { courseId, userId, title, description, date, duration, isFree = false } = req.body;
+    if (!courseId || !userId || !title || !date || !validateDate(date) || !duration || (description && !validateString(description, 255, 0))) {
       res.status(400).json({
         name: "INVALID_PAYLOAD",
         message: "Invalid payload data"
@@ -93,14 +94,14 @@ export const createIndividualSession = async (req: Request, res: Response, next:
     }
 
     const courseUser = await getCourseUser(userId, courseId);
-    if(courseUser == null) {
+    if (courseUser == null) {
       res.status(409).json({
         name: "USER_COURSE_DOESNT_EXIST",
         message: "This user hasn't applier for this course yet"
       });
       return;
     }
-    if(courseUser.sessionType != SessionType.INDIVIDUAL) {
+    if (courseUser.sessionType != SessionType.INDIVIDUAL) {
       res.status(409).json({
         name: "NOT_INDIVIDUAL",
         message: "Can't scedule individual session for user unless he applied as individual"
@@ -117,15 +118,15 @@ export const createIndividualSession = async (req: Request, res: Response, next:
       return;
     }
 
-    if (quizzesLink && !validateQuizesLink(quizzesLink)) {
-      res.status(400).json({
-        name: "QUIZES_NOT_VALID",
-        message: "The quizes link isn't a valid link"
-      });
-      return;
-    }
+    // if (quizzesLink && !validateQuizesLink(quizzesLink)) {
+    //   res.status(400).json({
+    //     name: "QUIZES_NOT_VALID",
+    //     message: "The quizes link isn't a valid link"
+    //   });
+    //   return;
+    // }
 
-    const createdSession = await createIndividualSessionService(courseId, userId, title, date, duration, isFree, quizzesLink, description);
+    const createdSession = await createIndividualSessionService(courseId, userId, title, date, duration, isFree, description);
     res.json({
       message: "Session created successfully",
       data: {
@@ -145,10 +146,12 @@ export const createIndividualSession = async (req: Request, res: Response, next:
   }
 }
 
-export const getWithId = async (req: Request, res: Response, next: NextFunction) => {
+export const startSession = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { id } = req.params;
-    if (!id) {
+    const { sessionType } = req.params;
+    const sessionId = Number(req.params.sessionId);
+
+    if (!sessionId || !validateSessionType(sessionType)) {
       res.status(400).json({
         name: "INVALID_PAYLOAD",
         message: "Invalid payload data"
@@ -156,21 +159,32 @@ export const getWithId = async (req: Request, res: Response, next: NextFunction)
       return;
     }
 
-    const courseExistsRes = await getCourse({ id: Number(id) });
-    if (!courseExistsRes) {
+    const session = await getSession(sessionId, SessionType[sessionType as keyof typeof SessionType]);
+    if (!session) {
       res.status(409).json({
-        name: "COURSE_DOESNT_EXIST",
-        message: "No course with this id"
+        name: "SESSION_DOESNT_EXIST",
+        message: "No sesesion with that id"
       });
       return;
     }
 
-    const course = (await getCourse({ id: Number(id) }))!;
+    if (session.status != SessionStatus.UPCOMING) {
+      res.status(409).json({
+        name: "MEETING_STARTED_ENDED",
+        message: "Can't start a meeting that had already started / ended"
+      });
+      return;
+    }
+
+    const accessToken = await getAccessToken();
+
+    const { id: meetingId, start_url } = await createMeeting(accessToken, session.title);
+    await startSessionService(meetingId, sessionId, SessionType[sessionType as keyof typeof SessionType]);
 
     res.json({
-      message: "Courses retrieved successfully",
+      message: "Meeting Started Successfully",
       data: {
-        course
+        startUrl: start_url
       }
     })
 
@@ -184,14 +198,122 @@ export const getWithId = async (req: Request, res: Response, next: NextFunction)
   }
 }
 
-export const getAll = async (req: Request, res: Response, next: NextFunction) => {
+export const endSession = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const courses = await getAllCourses();
+    const { sessionType } = req.params;
+    const sessionId = Number(req.params.sessionId);
+    const { sessionContent, notes } = req.body;
+
+    const validNotes =
+      !notes ||
+      (sessionType == SessionType.GROUP && Array.isArray(notes)) ||
+      (sessionType == SessionType.INDIVIDUAL && typeof notes == "string");
+
+    if (!sessionId || !validateSessionType(sessionType) ||
+      (sessionContent && !validateString(sessionContent, 255, 1)) ||
+      !validNotes) {
+
+      res.status(400).json({
+        name: "INVALID_PAYLOAD",
+        message: "Invalid payload data"
+      });
+      return;
+
+    }
+
+    const session = await getSession(sessionId, SessionType[sessionType as keyof typeof SessionType]);
+    if (!session) {
+      res.status(409).json({
+        name: "SESSION_DOESNT_EXIST",
+        message: "No sesesion with that id"
+      });
+      return;
+    }
+
+    if (session.status != SessionStatus.RUNNING) {
+      res.status(409).json({
+        name: "MEETING_HASNT_STARTED",
+        message: "You can't end the meeting before starting it"
+      });
+      return;
+    }
+
+    if (sessionType == SessionType.GROUP) {
+      notes.forEach(async (note: Record<string, string>) => {
+        if (note.userId) {
+          const userSession = await getUserSession(Number(note.userId), sessionId);
+          if (userSession) {
+            await saveGruopStudentNotes(userSession.id, note.notes);
+          }
+        }
+      });
+    } else if (sessionType == SessionType.INDIVIDUAL) {
+      await saveIndividualStudentNotes(session.id, notes);
+    }
+
+    await endSessionService(sessionId, SessionType[sessionType as keyof typeof SessionType], sessionContent);
 
     res.json({
-      message: "Courses retrieved successfully",
+      message: "Session Ended Successfully",
       data: {
-        courses
+      }
+    })
+
+  } catch (err: any) {
+    console.log("ERROR: ", err);
+    res.status(500).json({
+      name: "INTERNAL_SERVER_ERROR",
+      message: "Internal Server Error"
+    });
+    next(err);
+  }
+}
+
+export const uploadRecords = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const sessionType = SessionType[req.params.sessionType as keyof typeof SessionType];
+    const sessionId = Number(req.params.sessionId);
+    if (!req.files || Object.keys(req.files).length === 0 || !Array.isArray(req.files['files']) || req.files['files'].length === 0) {
+      res.status(400).json({
+        name: "NO_FILES",
+        message: "There is no recordings being uploaded"
+      });
+      return;
+    }
+
+    if (!sessionId || !validateSessionType(sessionType)) {
+      res.status(400).json({
+        name: "INVALID_PAYLOAD",
+        message: "Invalid payload data"
+      });
+      return;
+    }
+
+    const session = await getSession(sessionId, sessionType);
+    if (!session) {
+      res.status(409).json({
+        name: "SESSION_DOESNT_EXIST",
+        message: "No sesesion with that id"
+      });
+      return;
+    }
+
+    await Promise.all(req.files['files'].map(async file => {
+      const videoGuid = await uploadRecording(file, session.id, sessionType);
+      if(!videoGuid) {
+        res.status(500).json({
+          name: "ERROR_UPLOADING",
+          message: "There is an error happend while uploading the recordings"
+        });
+        return;        
+      }
+      await createRecording(session.id, sessionType, videoGuid);
+    }))
+
+
+    res.json({
+      message: "Recordings uploaded Successfully",
+      data: {
       }
     })
 

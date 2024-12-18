@@ -8,7 +8,7 @@ export const isDateAvailable = async (dateIso: string, duration: number) => {
     if (newStartDate < new Date()) {
         return false;
     }
-
+    
     const busy = await prisma.calendarDate.findFirst({
         where: {
             AND: [
@@ -25,7 +25,9 @@ export const isDateAvailable = async (dateIso: string, duration: number) => {
             ]
         }
     });
-
+    
+    console.log("busy");
+    console.log(busy);
     return !busy;
 }
 

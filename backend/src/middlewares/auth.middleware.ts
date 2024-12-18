@@ -29,6 +29,14 @@ export const verifyToken = (req: Request, res: Response, next: NextFunction) => 
         res.locals = {...res.locals, ...tokenData};
         next();
     } catch (err) {
+        if (err instanceof jwt.TokenExpiredError) {
+            res.status(400).json({
+                name: "TOKEN_EXPIRED",
+                message: "The token you are using expird, please log in again to retrieve another token."
+            });
+            return;
+        }
+
         res.status(500).json({
             name: "INTERNAL_SERVER_ERROR",
             message: "Internal Server Error"
@@ -68,14 +76,15 @@ export const checkUser = async (req: Request, res: Response, next: NextFunction)
             });
             return;
         }
-        const user = await getUserById(res.locals.id);
-        if(!user) {
+        const userExists = await getUserById(res.locals.id);
+        if(!userExists) {
             res.status(400).json({
                 name: "UNAUTHORIZED",
                 message: "This request needs permessions the user doesn't have"
             });
             return;
         }
+        const {password, ...user} = userExists;
         res.locals.user = user;
         
         next();

@@ -20,6 +20,8 @@ model Course {
   groupSessions      GroupSession[]
   individualSessions IndividualSession[]
   userCourses        UserCourse[]
+
+  subscribtionHistory subscribtionHistory[]
 }
 
 model GroupSession {
@@ -30,17 +32,17 @@ model GroupSession {
   description String?       @db.VarChar(1024)
   isFree      Boolean       @default(false)
 
-  quizzesLink String? @db.VarChar(255)
-  bunnyLink   String? @db.VarChar(255)
-  zoomLink    String? @db.VarChar(255)
+  meetingId BigInt?
 
-  createdAt DateTime @default(now()) @db.Timestamp
-  updatedAt DateTime @default(now()) @updatedAt @db.Timestamp
+  startedAt DateTime? @db.Timestamp
+  createdAt DateTime  @default(now()) @db.Timestamp
+  updatedAt DateTime  @default(now()) @updatedAt @db.Timestamp
 
   course         Course        @relation(fields: [courseId], references: [id])
   userSessions   UserSession[]
   calendarDateId Int           @unique
   calendarDate   CalendarDate  @relation(fields: [calendarDateId], references: [id])
+  Recording      Recording[]
 }
 
 model IndividualSession {
@@ -52,18 +54,34 @@ model IndividualSession {
   description String?       @db.VarChar(1024)
   isFree      Boolean       @default(false)
 
-  quizzesLink String? @db.VarChar(255)
-  bunnyLink   String? @db.VarChar(255)
-  zoomLink    String? @db.VarChar(255)
+  notes String? @db.VarChar(255)
 
-  createdAt DateTime @default(now()) @db.Timestamp
-  updatedAt DateTime @default(now()) @updatedAt @db.Timestamp
+  meetingId BigInt?
+
+  startedAt DateTime? @db.Timestamp
+  createdAt DateTime  @default(now()) @db.Timestamp
+  updatedAt DateTime  @default(now()) @updatedAt @db.Timestamp
 
   course Course @relation(fields: [courseId], references: [id])
   user   User   @relation(fields: [userId], references: [id])
 
   calendarDateId Int          @unique
   calendarDate   CalendarDate @relation(fields: [calendarDateId], references: [id])
+  Recordings     Recording[]
+}
+
+model Recording {
+  id          Int         @id @default(autoincrement())
+  sessionType SessionType
+  bunnyGuid   String
+
+  createdAt DateTime @default(now()) @db.Timestamp
+  updatedAt DateTime @default(now()) @updatedAt @db.Timestamp
+
+  IndividualSession   IndividualSession? @relation(fields: [IndividualSessionid], references: [id])
+  IndividualSessionid Int?
+  GroupSession        GroupSession?      @relation(fields: [groupSessionId], references: [id])
+  groupSessionId      Int?
 }
 
 model User {
@@ -78,7 +96,7 @@ model User {
   userCourses            UserCourse[]
   userSessions           UserSession[]
   userIndividualSessions IndividualSession[]
-  purchaseHistory        PurchaseHistory[]
+  subscribtionHistory    subscribtionHistory[]
 }
 
 model UserCourse {
@@ -89,7 +107,8 @@ model UserCourse {
   userNotes     String? @db.VarChar(255)
   viewedByAdmin Boolean @default(false)
 
-  sessionType SessionType
+  subscribtionStatus SubscribtionStatus @default(UNSUBSCRIBED)
+  sessionType        SessionType
 
   createdAt DateTime @default(now()) @db.Timestamp
   updatedAt DateTime @default(now()) @updatedAt @db.Timestamp
@@ -99,10 +118,10 @@ model UserCourse {
 }
 
 model UserSession {
-  id        Int  @id @default(autoincrement())
+  id        Int     @id @default(autoincrement())
   userId    Int
   sessionId Int
-  rate      Int?
+  notes     String? @db.VarChar(255)
 
   createdAt DateTime @default(now()) @db.Timestamp
   updatedAt DateTime @default(now()) @updatedAt @db.Timestamp
@@ -111,12 +130,15 @@ model UserSession {
   session GroupSession @relation(fields: [sessionId], references: [id])
 }
 
-model PurchaseHistory {
-  id         Int   @id @default(autoincrement())
-  creds      Int   @default(1)
+model subscribtionHistory {
+  id Int @id @default(autoincrement())
+
   amountPaid Float
 
   createdAt DateTime @default(now()) @db.Timestamp
+
+  courseId Int
+  course   Course @relation(fields: [courseId], references: [id])
 
   userId Int
   user   User @relation(fields: [userId], references: [id])
@@ -143,7 +165,6 @@ enum CalendarDateType {
 enum CalendarDateStatus {
   AVAILABLE
   PASSED
-  FULL
 }
 
 enum SessionStatus {

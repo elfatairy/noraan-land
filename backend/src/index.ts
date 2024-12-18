@@ -8,9 +8,11 @@ import { rateLimiter } from './middlewares/ratelimiter';
 import cookieParser from 'cookie-parser';
 import { logRequest } from './middlewares/logging.middleware';
 import { swaggerDocs } from './utils/documentation.util';
+import fileUpload from 'express-fileupload';
 
 app.use(bodyParser.json());
 app.disable("x-powered-by");
+app.use(fileUpload());
 app.use(
   bodyParser.urlencoded({
     extended: true,

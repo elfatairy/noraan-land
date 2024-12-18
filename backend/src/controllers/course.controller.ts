@@ -150,7 +150,7 @@ export const newUsers = async (req: Request, res: Response, next: NextFunction) 
     res.json({
       message: "New Course users retrieved successfully",
       data: {
-        unviewedUsers: courseUsers
+        newUsers: courseUsers
       }
     })
 

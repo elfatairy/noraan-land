@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { getAllCourses } from "../services/course.service";
 import { getDates, getDateSession } from "../services/calendar.service";
-import { CalendarDateType, Prisma, PrismaClient } from "@prisma/client";
+import { CalendarDateStatus, CalendarDateType, Prisma, PrismaClient } from "@prisma/client";
 import { prisma } from "../configs/db.config";
 import { getGroupSession } from "../services/session.service";
 
@@ -39,6 +39,7 @@ export const getNextWeekDates = async (req: Request, res: Response, next: NextFu
     const now = new Date();
     const nextWeekDate = new Date(now.getTime() + 604800000);
     const dates = await getDates({
+      status: CalendarDateStatus.AVAILABLE,
       endDate: {
         lt: nextWeekDate
       },
@@ -49,8 +50,8 @@ export const getNextWeekDates = async (req: Request, res: Response, next: NextFu
     const parsedDates: any[] = [];
 
     await Promise.all(dates.map(async date => {
-      const session = await getDateSession(date.id)
-      parsedDates.push({...date, session})
+      const session = JSON.parse(JSON.stringify(await getDateSession(date.id), (_, v) => typeof v === 'bigint' ? v.toString() : v)) 
+      parsedDates.push({ ...date, session })
     }))
 
     res.json({

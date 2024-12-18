@@ -4,3 +4,5 @@ import * as userController from "../../controllers/user.controller"
 export const router = express.Router();
 
 router.post('/applyForCourse', userController.applyForCourse)
+router.post('/joinSession/:courseId/:sessionId', userController.joinSession)
+// router.get('/nextWeekSessions', userController.applyForCourse)

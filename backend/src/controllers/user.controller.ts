@@ -1,10 +1,14 @@
 import { NextFunction, Request, Response } from "express";
 import { validateEmail, validateName, validatePassword, validateSessionType, validateString } from "../utils/validation.util";
-import { authenticateUser, createUser, emailExists, getUserByEmail, nameExists, verifyGoogleToken } from "../services/user.service";
+import { authenticateUser, createUser, createUserSession, emailExists, getUserByEmail, getUserSession, nameExists, verifyGoogleToken } from "../services/user.service";
 import { compare } from "bcrypt";
 import axios from "axios";
 import { OAuth2Client } from "google-auth-library";
 import { addCourseUser, getCourse, getCourseUser } from "../services/course.service";
+import { getRecordings, getSession, getSessions } from "../services/session.service";
+import { IndividualSession, SessionStatus, SessionType, SubscribtionStatus } from "@prisma/client";
+import { getDateSession } from "../services/calendar.service";
+import { getAccessToken, getMeeting } from "../services/zoom.service";
 
 export const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -202,6 +206,166 @@ export const applyForCourse = async (req: Request, res: Response, next: NextFunc
         course,
         availableTime,
         userNotes
+      }
+    })
+
+  } catch (err: any) {
+    console.log("ERROR: ", err);
+    res.status(500).json({
+      name: "INTERNAL_SERVER_ERROR",
+      message: "Internal Server Error"
+    });
+    next(err);
+  }
+}
+
+export const getCourseSessions = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const courseId = Number(req.params.courseId);
+    const { id: userId } = res.locals;
+
+    if (!courseId) {
+      res.status(400).json({
+        name: "INVALID_PAYLOAD",
+        message: "Invalid payload data"
+      });
+      return;
+    }
+
+    const course = await getCourse({ id: courseId });
+    if (!course) {
+      res.status(409).json({
+        name: "COURSE_DOESNT_EXIST",
+        message: "No course with this id"
+      });
+      return;
+    }
+
+    const userCourse = await getCourseUser(userId, courseId);
+    if (!userCourse) {
+      res.status(409).json({
+        name: "USER_COURSE_ALERADY_EXIST",
+        message: "This user has already applied for this course"
+      });
+      return;
+    }
+
+    console.log(userCourse)
+    const sessions = await Promise.all(
+      (await getSessions({
+        courseId
+      }, userCourse.sessionType)).map(async session => {
+        const { id, description, isFree, status, title, startedAt } = session;
+        let teacherNotes = "";
+        if (userCourse.sessionType == SessionType.INDIVIDUAL) {
+          teacherNotes = (<IndividualSession>session).notes ?? "";
+        } else if (userCourse.sessionType == SessionType.GROUP) {
+          const userSession = await getUserSession(userId, session.id);
+          if(userSession) {
+            teacherNotes = userSession.notes ?? "";
+          }
+        }
+
+        const recordings = await getRecordings(session.id, userCourse.sessionType) ?? [];
+        const recordingsGuids: string[] = [];
+        recordings.forEach(recording => {
+          recordingsGuids.push(userCourse.subscribtionStatus == SubscribtionStatus.SUBSCRIBED ? recording.bunnyGuid : "")
+        });
+        
+        return { id, description, isFree, status, title, teacherNotes, startedAt, recordings: recordingsGuids };
+      })
+    );
+
+    res.json({
+      message: "Coures Sessions returned Successfully",
+      data: {
+        subscribtionStatus: userCourse.subscribtionStatus,
+        sessions: JSON.parse(JSON.stringify(sessions, (_, v) => typeof v === 'bigint' ? v.toString() : v))
+      }
+    })
+
+  } catch (err: any) {
+    console.log("ERROR: ", err);
+    res.status(500).json({
+      name: "INTERNAL_SERVER_ERROR",
+      message: "Internal Server Error"
+    });
+    next(err);
+  }
+}
+
+export const joinSession = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const courseId = Number(req.params.courseId);
+    const sessionId = Number(req.params.sessionId);
+    const { id: userId } = res.locals.user;
+
+    if (!sessionId || !courseId) {
+      res.status(400).json({
+        name: "INVALID_PAYLOAD",
+        message: "Invalid payload data"
+      });
+      return;
+    }
+
+    const course = await getCourse({ id: courseId });
+    if (!course) {
+      res.status(409).json({
+        name: "COURSE_DOESNT_EXIST",
+        message: "No course with this id"
+      });
+      return;
+    }
+
+    console.log(userId);
+    const userCourse = await getCourseUser(userId, courseId);
+    if (!userCourse) {
+      res.status(409).json({
+        name: "USER_COURSE_ALERADY_EXIST",
+        message: "This user has already applied for this course"
+      });
+      return;
+    }
+
+    const session = await getSession(sessionId, userCourse.sessionType);
+    console.log(session);
+    if (!session) {
+      res.status(409).json({
+        name: "SESSION_DOESNT_EXIST",
+        message: "No session with this id"
+      });
+      return;
+    }
+
+    if (userCourse.subscribtionStatus != SubscribtionStatus.SUBSCRIBED && !session.isFree) {
+      res.status(409).json({
+        name: "CANT_JOIN",
+        message: "Renew the subscription to join this meeting"
+      });
+      return;
+    }
+
+    if (session.status != SessionStatus.RUNNING || !session.meetingId) {
+      res.status(409).json({
+        name: "MEETING_NOT_RUNNING",
+        message: "This meeting is not running now"
+      });
+      return;
+    }
+
+    const accessToken = await getAccessToken();
+    const { join_url } = await getMeeting(accessToken, session.meetingId);
+
+    if (userCourse.sessionType == SessionType.GROUP) {
+      const userSession = await getUserSession(userId, sessionId);
+      if(!userSession)
+        await createUserSession(userId, sessionId);
+    }
+
+    res.json({
+      message: "User joined session Successfully",
+      data: {
+        join_url
       }
     })
 
