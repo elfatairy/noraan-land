@@ -1,0 +1,50 @@
+import {
+   useState,
+   useCallback,
+} from 'react';
+
+import { useApiFetch } from '../utils/utils/hooks/useApi';
+
+/**
+ * mode: 'all' | 'pagination'
+ * pageSize: positive number
+ * page: positive number more than 1 (the page number)
+ */
+
+/**
+ * "Course Cannot be found", code: 315
+ * "Error fetching course Enrolled", code: 316
+ * "Error fetching Test Count", code: 317
+ * "Error fetching Files Count", code: 318
+ * "Error fetching total hourse", code: 319
+ */
+
+export const useGetCourse = () => {
+   const { isLoading, error, data, setError, _execute } = useApiFetch();
+
+   const execute = async (
+      courseId,
+      phoneNumber = null, 
+      options = {}
+   ) => {
+      try{
+         const formData = new FormData();
+         formData.append('phoneNumber', phoneNumber);
+         formData.append('courseId', courseId);
+         
+         const data = await _execute('guest/getCourse', 'POST', formData, options);
+         return data;
+      } catch (error) {
+         setError(error);
+         console.log(error);
+      }
+   };
+
+   
+   return {
+      isLoading,
+      error,
+      data,
+      execute: useCallback(execute, []),
+   };
+}

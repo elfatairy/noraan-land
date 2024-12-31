@@ -1,5 +1,6 @@
 import express, { ErrorRequestHandler, NextFunction, Request, Response } from 'express';
 import bodyParser from 'body-parser';
+import cors from 'cors';
 const app = express();
 const port = parseInt(process.env.PORT || "3000");
 import router from './routes/index.route';
@@ -9,6 +10,14 @@ import cookieParser from 'cookie-parser';
 import { logRequest } from './middlewares/logging.middleware';
 import { swaggerDocs } from './utils/documentation.util';
 import fileUpload from 'express-fileupload';
+
+// CORS configuration
+app.use(cors({
+  origin: 'http://localhost:3001', // Your frontend URL
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 
 app.use(bodyParser.json());
 app.disable("x-powered-by");
