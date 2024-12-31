@@ -89,7 +89,7 @@ export const getCourseSessions = async (req: Request, res: Response, next: NextF
     );
 
     res.json({
-      message: "Coures Sessions returned Successfully",
+      message: "Course Sessions returned Successfully",
       data: {
         sessions: JSON.parse(JSON.stringify(sessions, (_, v) => typeof v === 'bigint' ? v.toString() : v))
       }

@@ -36,14 +36,6 @@ export const createGroupSession = async (req: Request, res: Response, next: Next
       return;
     }
 
-    // if (quizzesLink && !validateQuizesLink(quizzesLink)) {
-    //   res.status(400).json({
-    //     name: "QUIZES_NOT_VALID",
-    //     message: "The quizes link isn't a valid link"
-    //   });
-    //   return;
-    // }
-
     const createdSession = await createGroupSessionService(courseId, title, date, duration, isFree, description);
     res.json({
       message: "Session created successfully",

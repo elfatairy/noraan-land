@@ -22,6 +22,8 @@ model Course {
   userCourses        UserCourse[]
 
   subscribtionHistory subscribtionHistory[]
+
+  Quizes Quiz[]
 }
 
 model GroupSession {
@@ -90,6 +92,10 @@ model User {
   email    String  @unique @db.VarChar(255)
   password String?
 
+  age      Int?
+  location String?
+  gender   Gender?
+
   createdAt DateTime @default(now()) @db.Timestamp
   updatedAt DateTime @default(now()) @updatedAt @db.Timestamp
 
@@ -157,6 +163,15 @@ model CalendarDate {
   updatedAt         DateTime           @default(now()) @updatedAt @db.Timestamp
 }
 
+model Quiz {
+  id Int @id @default(autoincrement())
+  courseId Int
+  link String @db.VarChar(255)
+  createdAt DateTime @default(now()) @db.Timestamp
+
+  course Course @relation(fields: [courseId], references: [id])
+}
+
 enum CalendarDateType {
   GROUP_SESSION
   INDIVIDUAL_SESSION
@@ -181,4 +196,9 @@ enum SessionType {
 enum SubscribtionStatus {
   SUBSCRIBED
   UNSUBSCRIBED
+}
+
+enum Gender {
+  MALE
+  FEMALE
 }

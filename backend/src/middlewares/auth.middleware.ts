@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import * as jwt from 'jsonwebtoken';
 import { ROLES } from "../utils/constants.util";
 import { getUserByEmail, getUserById } from "../services/user.service";
+import { getCourseUser } from "../services/course.service";
 
 export const verifyToken = (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -24,9 +25,9 @@ export const verifyToken = (req: Request, res: Response, next: NextFunction) => 
             return;
         }
 
-        
-        const {iat, exp, ...tokenData} = decodedToken;
-        res.locals = {...res.locals, ...tokenData};
+
+        const { iat, exp, ...tokenData } = decodedToken;
+        res.locals = { ...res.locals, ...tokenData };
         next();
     } catch (err) {
         if (err instanceof jwt.TokenExpiredError) {
@@ -55,7 +56,7 @@ export const checkAdmin = (req: Request, res: Response, next: NextFunction) => {
             });
             return;
         }
-        
+
         next();
     } catch (err) {
         res.status(500).json({
@@ -68,7 +69,7 @@ export const checkAdmin = (req: Request, res: Response, next: NextFunction) => {
 
 export const checkUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const {id, role} = res.locals;
+        const { id, role } = res.locals;
         if (role == null || id == null || role != ROLES.USER) {
             res.status(400).json({
                 name: "UNAUTHORIZED",
@@ -77,16 +78,73 @@ export const checkUser = async (req: Request, res: Response, next: NextFunction)
             return;
         }
         const userExists = await getUserById(res.locals.id);
-        if(!userExists) {
+        if (!userExists) {
             res.status(400).json({
                 name: "UNAUTHORIZED",
                 message: "This request needs permessions the user doesn't have"
             });
             return;
         }
-        const {password, ...user} = userExists;
+        const { password, ...user } = userExists;
         res.locals.user = user;
+
+        next();
+    } catch (err) {
+        res.status(500).json({
+            name: "INTERNAL_SERVER_ERROR",
+            message: "Internal Server Error"
+        });
+        next(err);
+    }
+}
+
+export const checkSubscribed = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { id, role } = res.locals;
+        const courseId = Number(req.params.courseId);
         
+        if (role == ROLES.ADMIN) {
+            next();
+            return;
+        }
+        
+        if (role == null || id == null) {
+            res.status(400).json({
+                name: "UNAUTHORIZED",
+                message: "This request needs permessions the user doesn't have"
+            });
+            return;
+        }
+
+        if (!courseId) {
+            res.status(400).json({
+                name: "INVALID_PAYLOAD",
+                message: "Invalid payload data"
+            });
+            return;
+        }
+
+        const userExists = await getUserById(id);
+        if (!userExists) {
+            res.status(400).json({
+                name: "UNAUTHORIZED",
+                message: "This request needs permessions the user doesn't have"
+            });
+            return;
+        }
+
+        const courseUser = await getCourseUser(id, courseId);
+        if(!courseUser || courseUser.subscribtionStatus == 'UNSUBSCRIBED') {
+            res.status(400).json({
+                name: "UNSUBSCRIBED",
+                message: "User is unsubscribed for this course and so can't view this"
+            });
+            return;
+        }
+        
+        const { password, ...user } = userExists;
+        res.locals.user = user;
+
         next();
     } catch (err) {
         res.status(500).json({

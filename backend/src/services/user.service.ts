@@ -4,7 +4,7 @@ import bcrypt from 'bcrypt';
 import { generateToken } from "../utils/token.util";
 import { OAuth2Client } from "google-auth-library";
 import { ROLES } from "../utils/constants.util";
-import { Prisma } from "@prisma/client";
+import { Gender, Prisma } from "@prisma/client";
 
 export const userExists = async (conditions: Prisma.UserWhereInput) => {
     const user = await prisma.user.findFirst({
@@ -34,7 +34,7 @@ export const nameExists = async (name: string) => {
     return user !== null;
 }
 
-export const createUser = async (name: string, email: string, password?: string) => {
+export const createUser = async (name: string, email: string, options?: Record<string, string>, password?: string) => {
     const salt = await bcrypt.genSalt();
     const hashedPassword = password ? await bcrypt.hash(password, salt) : null;
 
@@ -42,12 +42,35 @@ export const createUser = async (name: string, email: string, password?: string)
         data: {
             name,
             email,
+            ...options,
             password: hashedPassword
         },
         select: {
             id: true,
             name: true,
-            email: true
+            email: true,
+            age: true,
+            location: true,
+            gender: true,
+        }
+    });
+
+    return user;
+}
+
+export const updateUser = async (userId: number, data: Record<string, string>) => {
+    const user = await prisma.user.update({
+        where: {
+            id: userId
+        },
+        data: data,
+        select: {
+            id: true,
+            name: true,
+            email: true,
+            age: true,
+            location: true,
+            gender: true,
         }
     });
 
@@ -62,7 +85,10 @@ export const getUserByEmail = async (email: string) => await prisma.user.findFir
         id: true,
         name: true,
         email: true,
-        password: true
+        password: true,
+        age: true,
+        location: true,
+        gender: true,
     }
 });
 
@@ -74,7 +100,10 @@ export const getUserById = async (id: number) => await prisma.user.findFirst({
         id: true,
         name: true,
         email: true,
-        password: true
+        password: true,
+        age: true,
+        location: true,
+        gender: true,
     }
 });
 
@@ -88,7 +117,10 @@ export const authenticateUser = async (id: number, email: string) => {
         select: {
             id: true,
             name: true,
-            email: true
+            email: true,
+            age: true,
+            location: true,
+            gender: true,
         }
     });
 
