@@ -50,14 +50,13 @@ paths:
           content:
             application/json:
               example:
-                value:
-                  message: "User Logged In Successfully"
-                  data:
-                    token: "JWT_TOKEN"
-                    user:
-                      id: 1
-                      email: email@gmail.com
-                      name: name
+                message: "User Logged In Successfully"
+                data:
+                  token: "JWT_TOKEN"
+                  user:
+                    id: 1
+                    email: email@gmail.com
+                    name: name
   /api/users/auth/google-login:
     post:
       tags:
@@ -97,14 +96,16 @@ paths:
           content:
             application/json:
               example:
-                value:
-                  message: "User Logged In Successfully"
-                  data:
-                    token: "JWT_TOKEN"
-                    user:
-                      id: 1
-                      email: email@gmail.com
-                      name: name
+                message: "User Logged In Successfully"
+                data:
+                  token: "JWT_TOKEN"
+                  user:
+                    id: 1
+                    email: email@gmail.com
+                    name: name
+                    age: 23,
+                    location: "cairo"
+                    gender: "MALE"
   /api/users/auth/register:
     post:
       tags:
@@ -153,14 +154,87 @@ paths:
           content:
             application/json:
               example:
-                value:
-                  message: "User Registered Successfully"
-                  data:
-                    token: "JWT_TOKEN"
-                    user:
-                      id: 1
-                      email: email@gmail.com
-                      name: name
+                message: "User Registered Successfully"
+                data:
+                  token: "JWT_TOKEN"
+                  user:
+                    id: 1
+                    email: email@gmail.com
+                    name: name
+                    age: 23,
+                    location: "cairo"
+                    gender: "MALE"
+  /api/users/auth/update-profile:
+    patch:
+      tags:
+        - Authentication
+      summary: Update Profile
+      description: Update user's profile information
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                age:
+                  type: number
+                location:
+                  type: string
+                gender:
+                  type: string
+                  enum:
+                    - MALE
+                    - FEMALE
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                UNAUTHENTICATED:
+                  value:
+                    name: "UNAUTHENTICATED"
+                    message: "User is unauthenticated and this request requires authentication payload data"
+                TOKEN_EXPIRED:
+                  value:
+                    name: "TOKEN_EXPIRED"
+                    message: "The token you are using expird, please log in again to retrieve another token."
+                UNAUTHORIZED:
+                  value:
+                    name: "UNAUTHORIZED"
+                    message: "This request needs permessions the user doesn't have"
+                INVALID_PAYLOAD:
+                  value:
+                    name: "INVALID_PAYLOAD"
+                    message: "Invalid payload data"
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              examples:
+                COURSE_DOESNT_EXIST:
+                  value:
+                    name: "NAME_ALREADY_EXISTS"
+                    message: "Name already exists"
+        "200":
+          description: Success
+          content:
+            application/json:
+              example:
+                message: "Profile Updated Successfully"
+                data:
+                  "user":
+                    {
+                      "id": 2,
+                      "name": "Omar Hassan2",
+                      "email": "omar2@gmail.com",
+                      "age": 20,
+                      "location": "cairo helmyat",
+                      "gender": "MALE",
+                    }
 
   /api/users/actions/applyForCourse:
     post:
@@ -221,7 +295,7 @@ paths:
                   value:
                     name: "COURSE_DOESNT_EXIST"
                     message: "No course with this id"
-                USER_DOESNT_EXIST:
+                USER_COURSE_ALERADY_EXIST:
                   value:
                     name: "USER_COURSE_ALERADY_EXIST"
                     message: "This user has already applied for this course"
@@ -230,32 +304,111 @@ paths:
           content:
             application/json:
               example:
-                value:
-                  message: "User applied for course successfully"
-                  data:
-                    "user": {
-                        "id": 2,
-                        "name": "Omar Hassan2",
-                        "email": "omar2@gmail.com",
-                        "password": "$2b$10$sM.FH18xx4eJOTZ5FZydFOMh9qdqjnXaYLAd2m7VxiIUGBhV0n/aS"
+                message: "User applied for course successfully"
+                data:
+                  "user":
+                    {
+                      "id": 2,
+                      "name": "Omar Hassan2",
+                      "email": "omar2@gmail.com",
+                      "age": 20,
+                      "location": "cairo helmyat",
+                      "gender": "MALE",
                     }
-                    "course": {
-                        "id": 1,
-                        "name": "Test Course",
-                        "groupPrice": 100,
-                        "individualPrice": 500,
-                        "description": null,
-                        "createdAt": "2024-12-12T16:31:46.000Z",
-                        "updatedAt": "2024-12-12T16:31:46.000Z"
+                  "course":
+                    {
+                      "id": 1,
+                      "name": "Test Course",
+                      "groupPrice": 100,
+                      "individualPrice": 500,
+                      "description": null,
+                      "createdAt": "2024-12-12T16:31:46.000Z",
+                      "updatedAt": "2024-12-12T16:31:46.000Z",
                     }
-                    "availableTime": "From sundays to thursdays 3pm-8pm"
+                  "availableTime": "From sundays to thursdays 3pm-8pm"
+                  "userNotes": "Some notes"
+
+  /api/users/actions/joinSession/:courseId/:sessionId:
+    post:
+      tags:
+        - User Actions
+      summary: Join a Session
+      description: User joins a session (zoom meeting)
+      parameters:
+        - name: courseId
+          in: path
+          description: the course id
+          required: true
+          schema:
+            type: string
+        - name: sessionId
+          in: path
+          description: the session id
+          required: true
+          schema:
+            type: string
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                UNAUTHENTICATED:
+                  value:
+                    name: "UNAUTHENTICATED"
+                    message: "User is unauthenticated and this request requires authentication payload data"
+                TOKEN_EXPIRED:
+                  value:
+                    name: "TOKEN_EXPIRED"
+                    message: "The token you are using expird, please log in again to retrieve another token."
+                UNAUTHORIZED:
+                  value:
+                    name: "UNAUTHORIZED"
+                    message: "This request needs permessions the user doesn't have"
+                INVALID_PAYLOAD:
+                  value:
+                    name: "INVALID_PAYLOAD"
+                    message: "Invalid payload data"
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              examples:
+                COURSE_DOESNT_EXIST:
+                  value:
+                    name: "COURSE_DOESNT_EXIST"
+                    message: "No course with this id"
+                SESSION_DOESNT_EXIST:
+                  value:
+                    name: "SESSION_DOESNT_EXIST"
+                    message: "No session with this id"
+                CANT_JOIN:
+                  value:
+                    name: "CANT_JOIN"
+                    message: "Renew the subscription to join this meeting"
+                MEETING_NOT_RUNNING:
+                  value:
+                    name: "MEETING_NOT_RUNNING"
+                    message: "This meeting is not running now"
+                USER_COURSE_DOESNT_EXIST:
+                  value:
+                    name: "USER_COURSE_DOESNT_EXIST"
+                    message: "This user has not applied for this course"
+        "200":
+          description: Success
+          content:
+            application/json:
+              example:
+                message: "User joined session Successfully"
+                data:
+                  join_url: "Zoom Url"
 
   /api/admin/auth/login:
     post:
       tags:
         - Admin
       summary: Login Admin
-      description: Login a user with email and password
+      description: Login a user with username and password
       requestBody:
         required: true
         content:
@@ -263,12 +416,12 @@ paths:
             schema:
               type: object
               properties:
-                email:
+                username:
                   type: string
                 password:
                   type: string
               required:
-                - email
+                - username
                 - password
       responses:
         "400":
@@ -285,23 +438,18 @@ paths:
           content:
             application/json:
               examples:
-                EMAIL_PASSWORD_INCORRECT:
+                USERNAME_PASSWORD_INCORRECT:
                   value:
-                    name: "EMAIL_PASSWORD_INCORRECT"
-                    message: "Either the email or password is incorrect"
+                    name: "USERNAME_PASSWORD_INCORRECT"
+                    message: "Either the username or password is incorrect"
         "200":
           description: Success
           content:
             application/json:
               example:
-                value:
-                  message: "User Logged In Successfully"
-                  data:
-                    token: "JWT_TOKEN"
-                    user:
-                      id: 1
-                      email: email@gmail.com
-                      name: name
+                message: "Admin Logged In Successfully"
+                data:
+                  token: "JWT_TOKEN"
 
   /api/course/:id:
     get:
@@ -311,7 +459,7 @@ paths:
       description: Get course by its id
       parameters:
         - name: id
-          in: query
+          in: path
           description: the course id
           required: true
           schema:
@@ -340,15 +488,83 @@ paths:
             application/json:
               example:
                 value:
-                  message: "Courses retrieved successfully"
+                  message: "Course retrieved successfully"
                   data:
                     course:
                       id: 1
                       name: name
                       description: description
+                      individualPrice: 500
+                      groupPrice: 200
                       createdAt: 2024-12-11T13:46:10.000Z
                       updatedAt: 2024-12-11T13:46:10.000Z
-  /api/course/:
+    patch:
+      tags:
+        - Course
+      summary: Update a course
+      description: Update course details
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                groupPrice:
+                  type: string
+                individualPrice:
+                  type: string
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                UNAUTHENTICATED:
+                  value:
+                    name: "UNAUTHENTICATED"
+                    message: "User is unauthenticated and this request requires authentication payload data"
+                TOKEN_EXPIRED:
+                  value:
+                    name: "TOKEN_EXPIRED"
+                    message: "The token you are using expird, please log in again to retrieve another token."
+                UNAUTHORIZED:
+                  value:
+                    name: "UNAUTHORIZED"
+                    message: "This request needs permessions the user doesn't have"
+                INVALID_PAYLOAD:
+                  value:
+                    name: "INVALID_PAYLOAD"
+                    message: "Invalid payload data"
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              examples:
+                COURSE_DOESNT_EXIST:
+                  value:
+                    name: "COURSE_DOESNT_EXIST"
+                    message: "No course with this id"
+        "200":
+          description: Success
+          content:
+            application/json:
+              example:
+                message: "Coursee updated successfully"
+                data:
+                  course:
+                    id: 1
+                    name: name
+                    groupPrice: 100
+                    individualPrice: 500
+                    description: description2
+                    createdAt: 2024-12-11T13:46:10.000Z
+                    updatedAt: 2024-12-11T13:46:10.000Z
+  /api/course:
     post:
       tags:
         - Course
@@ -393,34 +609,78 @@ paths:
                   value:
                     name: "INVALID_PAYLOAD"
                     message: "Invalid payload data"
+                REQUIRED_PRICE:
+                  value:
+                    name: "REQUIRED_PRICE"
+                    message: "At least one of group price / individual price should have a value"
         "409":
           description: Conflict
           content:
             application/json:
               examples:
-                COURSE_DOESNT_EXIST:
+                COURSE_ALREADY_EXISTS:
                   value:
-                    name: "COURSE_DOESNT_EXIST"
-                    message: "No course with this id"
+                    name: "COURSE_ALREADY_EXISTS"
+                    message: "This course name is already used, use a different one"
+        "200":
+          description: Success
+          content:
+            application/json:
+              example:
+                message: "Course created successfully"
+                data:
+                  course:
+                    id: 1
+                    name: name
+                    groupPrice: 100
+                    individualPrice: 500
+                    description: description2
+                    createdAt: 2024-12-11T13:46:10.000Z
+                    updatedAt: 2024-12-11T13:46:10.000Z
+    get:
+      tags:
+        - Course
+      summary: Get all courses
+      description: Get all courses
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                INVALID_PAYLOAD:
+                  value:
+                    name: "INVALID_PAYLOAD"
+                    message: "Invalid payload data"
         "200":
           description: Success
           content:
             application/json:
               example:
                 value:
-                  message: "Course created successfully"
+                  message: "Courses retrieved successfully"
                   data:
-                    course:
-                      id: 1
-                      name: name
-                      description: description
-                      createdAt: 2024-12-11T13:46:10.000Z
-                      updatedAt: 2024-12-11T13:46:10.000Z
+                    courses:
+                      - id: 1
+                        name: name
+                        description: description
+                        individualPrice: 500
+                        groupPrice: 200
+                        createdAt: 2024-12-11T13:46:10.000Z
+                        updatedAt: 2024-12-11T13:46:10.000Z
+  /api/:courseId/courseSessions:
     get:
       tags:
         - Course
-      summary: Get all courses
-      description: Get all courses
+      summary: Get course sessions
+      description: Get course sessions by its id
+      parameters:
+        - name: courseId
+          in: path
+          description: the course id
+          required: true
+          schema:
+            type: string
       responses:
         "400":
           description: Bad Request
@@ -439,20 +699,37 @@ paths:
                   value:
                     name: "INVALID_PAYLOAD"
                     message: "Invalid payload data"
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              examples:
+                COURSE_DOESNT_EXIST:
+                  value:
+                    name: "COURSE_DOESNT_EXIST"
+                    message: "User is unauthenticated and this request requires authentication payload data"
+                USER_COURSE_DOESNT_EXIST:
+                  value:
+                    name: "USER_COURSE_DOESNT_EXIST"
+                    message: "This user has not applied for this course"
         "200":
           description: Success
           content:
             application/json:
               example:
-                value:
-                  message: "Courses retrieved successfully"
-                  data:
-                    courses:
-                      - id: 1
-                        name: name
-                        description: description
-                        createdAt: 2024-12-11T13:46:10.000Z
-                        updatedAt: 2024-12-11T13:46:10.000Z
+                message: "Course Sessions returned Successfully"
+                data:
+                  subscribtionStatus: SUBSCRIBED
+                  sessions:
+                    - {
+                        "id": 3,
+                        "description": "Testing the content thing",
+                        "isFree": false,
+                        "status": "ENDED",
+                        "title": "Session notes test",
+                        "startedAt": "2024-12-18T15:37:51.000Z",
+                        "recordings": [],
+                      }
 
   /api/session/group:
     post:
@@ -501,10 +778,6 @@ paths:
                   value:
                     name: "INVALID_PAYLOAD"
                     message: "Invalid payload data"
-                QUIZES_NOT_VALID:
-                  value:
-                    name: "QUIZES_NOT_VALID"
-                    message: "The quizes link isn't a valid link"
         "409":
           description: Conflict
           content:
@@ -527,16 +800,19 @@ paths:
                   message: "Session created successfully"
                   data:
                     session:
-                      id: 1
-                      courseId: 1
-                      status: UPCOMING
-                      title: string
-                      description: description
-                      bunnyLink: null
-                      zoomLink: null
-                      createdAt: 2024-12-11T13:46:10.000Z
-                      updatedAt: 2024-12-11T13:46:10.000Z
-                      calendarDateId: 1
+                      {
+                        "id": 6,
+                        "courseId": 2,
+                        "status": "UPCOMING",
+                        "title": "Session notes test",
+                        "description": null,
+                        "isFree": false,
+                        "meetingId": null,
+                        "startedAt": null,
+                        "createdAt": "2024-12-31T15:42:33.000Z",
+                        "updatedAt": "2024-12-31T15:42:33.000Z",
+                        "calendarDateId": 10,
+                      }
   /api/session/individual:
     post:
       tags:
@@ -632,6 +908,476 @@ paths:
                       updatedAt: 2024-12-11T13:46:10.000Z
                       creditHistoryId: null
                       calendarDateId: 1
+  /api/course/:courseId/quiz:
+    post:
+      tags:
+        - Quiz
+      summary: Add quiz
+      description: Admin add new quiz
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                link:
+                  type: string
+              required:
+                - link
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                UNAUTHENTICATED:
+                  value:
+                    name: "UNAUTHENTICATED"
+                    message: "User is unauthenticated and this request requires authentication payload data"
+                TOKEN_EXPIRED:
+                  value:
+                    name: "TOKEN_EXPIRED"
+                    message: "The token you are using expird, please log in again to retrieve another token."
+                UNAUTHORIZED:
+                  value:
+                    name: "UNAUTHORIZED"
+                    message: "This request needs permessions the user doesn't have"
+                INVALID_PAYLOAD:
+                  value:
+                    name: "INVALID_PAYLOAD"
+                    message: "Invalid payload data"
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              examples:
+                COURSE_DOESNT_EXIST:
+                  value:
+                    name: "COURSE_DOESNT_EXIST"
+                    message: "No course with this id"
+                QUIZ_ALREADY_EXISTS:
+                  value:
+                    name: "QUIZ_ALREADY_EXISTS"
+                    message: "This quiz is already used for this course"
+        "200":
+          description: Success
+          content:
+            application/json:
+              example:
+                message: "Quiz created successfully"
+                data: null
+    get:
+      tags:
+        - Quiz
+      summary: Get quizes
+      description: Get course qeuizes
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                UNAUTHENTICATED:
+                  value:
+                    name: "UNAUTHENTICATED"
+                    message: "User is unauthenticated and this request requires authentication payload data"
+                TOKEN_EXPIRED:
+                  value:
+                    name: "TOKEN_EXPIRED"
+                    message: "The token you are using expird, please log in again to retrieve another token."
+                UNAUTHORIZED:
+                  value:
+                    name: "UNAUTHORIZED"
+                    message: "This request needs permessions the user doesn't have"
+                UNSUBSCRIBED:
+                  value:
+                    name: "UNSUBSCRIBED"
+                    message: "User is unsubscribed for this course and so can't view this"
+                INVALID_PAYLOAD:
+                  value:
+                    name: "INVALID_PAYLOAD"
+                    message: "Invalid payload data"
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              examples:
+                COURSE_DOESNT_EXIST:
+                  value:
+                    name: "COURSE_DOESNT_EXIST"
+                    message: "No course with this id"
+        "200":
+          description: Success
+          content:
+            application/json:
+              example:
+                message: "Quizes retrieved successfully"
+                data:
+                  quizes:
+                    - {
+                        "id": 2,
+                        "courseId": 1,
+                        "link": "https://quizizz.com/admin/quiz/6708f1f3662a13e19cbddcf5/concepts-in-whole-numbers",
+                        "createdAt": "2024-12-31T16:20:49.000Z",
+                      }
+  /api/course/:courseId/quiz/:quizId:
+    delete:
+      tags:
+        - Quiz
+      summary: Delete quiz
+      description: Admin delete a quiz
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                UNAUTHENTICATED:
+                  value:
+                    name: "UNAUTHENTICATED"
+                    message: "User is unauthenticated and this request requires authentication payload data"
+                TOKEN_EXPIRED:
+                  value:
+                    name: "TOKEN_EXPIRED"
+                    message: "The token you are using expird, please log in again to retrieve another token."
+                UNAUTHORIZED:
+                  value:
+                    name: "UNAUTHORIZED"
+                    message: "This request needs permessions the user doesn't have"
+                INVALID_PAYLOAD:
+                  value:
+                    name: "INVALID_PAYLOAD"
+                    message: "Invalid payload data"
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              examples:
+                COURSE_DOESNT_EXIST:
+                  value:
+                    name: "COURSE_DOESNT_EXIST"
+                    message: "No course with this id"
+                QUIZ_DOESNT_EXIST:
+                  value:
+                    name: "QUIZ_DOESNT_EXIST"
+                    message: "No quiz with this id"
+        "200":
+          description: Success
+          content:
+            application/json:
+              example:
+                message: "Quiz deleted successfully"
+                data:
+                  quiz:
+                    {
+                      "id": 2,
+                      "courseId": 1,
+                      "link": "https://quizizz.com/admin/quiz/6708f1f3662a13e19cbddcf5/concepts-in-whole-numbers",
+                      "createdAt": "2024-12-31T16:20:49.000Z",
+                    }
+
+  /api/course/materials/folder/:courseId/*:
+    get:
+      tags:
+        - Materials
+      summary: Open Folder
+      description: Get the content of a folder by its path
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                UNAUTHENTICATED:
+                  value:
+                    name: "UNAUTHENTICATED"
+                    message: "User is unauthenticated and this request requires authentication payload data"
+                TOKEN_EXPIRED:
+                  value:
+                    name: "TOKEN_EXPIRED"
+                    message: "The token you are using expird, please log in again to retrieve another token."
+                UNAUTHORIZED:
+                  value:
+                    name: "UNAUTHORIZED"
+                    message: "This request needs permessions the user doesn't have"
+                UNSUBSCRIBED:
+                  value:
+                    name: "UNSUBSCRIBED"
+                    message: "User is unsubscribed for this course and so can't view this"
+                INVALID_PAYLOAD:
+                  value:
+                    name: "INVALID_PAYLOAD"
+                    message: "Invalid payload data"
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              examples:
+                COURSE_DOESNT_EXIST:
+                  value:
+                    name: "COURSE_DOESNT_EXIST"
+                    message: "No course with this id"
+        "200":
+          description: Success
+          content:
+            application/json:
+              example:
+                message: "Folder content returned successfully"
+                data:
+                  content:
+                    - "Laravel(3).png"
+                    - "session 2"
+    post:
+      tags:
+        - Materials
+      summary: Add Folder
+      description: Create a folder in a path
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                UNAUTHENTICATED:
+                  value:
+                    name: "UNAUTHENTICATED"
+                    message: "User is unauthenticated and this request requires authentication payload data"
+                TOKEN_EXPIRED:
+                  value:
+                    name: "TOKEN_EXPIRED"
+                    message: "The token you are using expird, please log in again to retrieve another token."
+                UNAUTHORIZED:
+                  value:
+                    name: "UNAUTHORIZED"
+                    message: "This request needs permessions the user doesn't have"
+                INVALID_PAYLOAD:
+                  value:
+                    name: "INVALID_PAYLOAD"
+                    message: "Invalid payload data"
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              examples:
+                FOLDER_ALREADY_EXIST:
+                  value:
+                    name: "FOLDER_ALREADY_EXIST"
+                    message: "This folder already exists"
+                COURSE_DOESNT_EXIST:
+                  value:
+                    name: "COURSE_DOESNT_EXIST"
+                    message: "No course with this id"
+        "200":
+          description: Success
+          content:
+            application/json:
+              example:
+                message: "Folder created successfully"
+                data: null
+  /api/course/materials/file/:courseId/*:
+    get:
+      tags:
+        - Materials
+      summary: Open File
+      description: Download a file by its path
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                UNAUTHENTICATED:
+                  value:
+                    name: "UNAUTHENTICATED"
+                    message: "User is unauthenticated and this request requires authentication payload data"
+                TOKEN_EXPIRED:
+                  value:
+                    name: "TOKEN_EXPIRED"
+                    message: "The token you are using expird, please log in again to retrieve another token."
+                UNAUTHORIZED:
+                  value:
+                    name: "UNAUTHORIZED"
+                    message: "This request needs permessions the user doesn't have"
+                UNSUBSCRIBED:
+                  value:
+                    name: "UNSUBSCRIBED"
+                    message: "User is unsubscribed for this course and so can't view this"
+                INVALID_PAYLOAD:
+                  value:
+                    name: "INVALID_PAYLOAD"
+                    message: "Invalid payload data"
+                NOT_FILE:
+                  value:
+                    name: "NOT_FILE"
+                    message: "This is not a file"
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              examples:
+                COURSE_DOESNT_EXIST:
+                  value:
+                    name: "COURSE_DOESNT_EXIST"
+                    message: "No course with this id"
+        "200":
+          description: Success
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+                example: FILE
+    post:
+      tags:
+        - Materials
+      summary: Upload a file
+      description: Upload a file in a folder
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                UNAUTHENTICATED:
+                  value:
+                    name: "UNAUTHENTICATED"
+                    message: "User is unauthenticated and this request requires authentication payload data"
+                TOKEN_EXPIRED:
+                  value:
+                    name: "TOKEN_EXPIRED"
+                    message: "The token you are using expird, please log in again to retrieve another token."
+                UNAUTHORIZED:
+                  value:
+                    name: "UNAUTHORIZED"
+                    message: "This request needs permessions the user doesn't have"
+                INVALID_PAYLOAD:
+                  value:
+                    name: "INVALID_PAYLOAD"
+                    message: "Invalid payload data"
+                NOT_FILE:
+                  value:
+                    name: "NOT_FILE"
+                    message: "This is not a file"
+                MAX_SIZE_EXCEEDED:
+                  value:
+                    name: "MAX_SIZE_EXCEEDED"
+                    message: "This file is bigger than the max file size"
+                FILE_TYPE_INVALID:
+                  value:
+                    name: "FILE_TYPE_INVALID"
+                    message: "This file type is not valid"
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              examples:
+                COURSE_DOESNT_EXIST:
+                  value:
+                    name: "COURSE_DOESNT_EXIST"
+                    message: "No course with this id"
+        "200":
+          description: Success
+          content:
+            application/json:
+              example:
+                message: "File uploaded successfully"
+                data: null
+  /api/course/materials/:courseId/*:
+    patch:
+      tags:
+        - Materials
+      summary: Rename
+      description: Rename a file or a folder
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                UNAUTHENTICATED:
+                  value:
+                    name: "UNAUTHENTICATED"
+                    message: "User is unauthenticated and this request requires authentication payload data"
+                TOKEN_EXPIRED:
+                  value:
+                    name: "TOKEN_EXPIRED"
+                    message: "The token you are using expird, please log in again to retrieve another token."
+                UNAUTHORIZED:
+                  value:
+                    name: "UNAUTHORIZED"
+                    message: "This request needs permessions the user doesn't have"
+                INVALID_PAYLOAD:
+                  value:
+                    name: "INVALID_PAYLOAD"
+                    message: "Invalid payload data"
+                NOT_FILE:
+                  value:
+                    name: "NOT_FILE"
+                    message: "This is not a file"
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              examples:
+                COURSE_DOESNT_EXIST:
+                  value:
+                    name: "COURSE_DOESNT_EXIST"
+                    message: "No course with this id"
+        "200":
+          description: Success
+          content:
+            application/json:
+              example:
+                message: "File/Folder renamed successfully"
+                data: null
+    delete:
+      tags:
+        - Materials
+      summary: Delete
+      description: Delete a file or a folder
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                UNAUTHENTICATED:
+                  value:
+                    name: "UNAUTHENTICATED"
+                    message: "User is unauthenticated and this request requires authentication payload data"
+                TOKEN_EXPIRED:
+                  value:
+                    name: "TOKEN_EXPIRED"
+                    message: "The token you are using expird, please log in again to retrieve another token."
+                UNAUTHORIZED:
+                  value:
+                    name: "UNAUTHORIZED"
+                    message: "This request needs permessions the user doesn't have"
+                INVALID_PAYLOAD:
+                  value:
+                    name: "INVALID_PAYLOAD"
+                    message: "Invalid payload data"
+                NOT_FILE:
+                  value:
+                    name: "NOT_FILE"
+                    message: "This is not a file"
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              examples:
+                COURSE_DOESNT_EXIST:
+                  value:
+                    name: "COURSE_DOESNT_EXIST"
+                    message: "No course with this id"
+        "200":
+          description: Success
+          content:
+            application/json:
+              example:
+                message: "File/Folder deleted successfully"
+                data: null
 
   /api/admin/actions/courseIndividualUsers/:courseId:
     post:
@@ -641,7 +1387,7 @@ paths:
       description: Get users applied in this course in individual
       parameters:
         - name: courseId
-          in: query
+          in: path
           description: the course id
           required: true
           schema:
@@ -687,16 +1433,17 @@ paths:
                   data:
                     courseUsers:
                       - {
-                        "id": 1,
-                        "userId": 1,
-                        "courseId": 1,
-                        "availableTime": "From sundays to thursdays 3pm-8pm",
-                        "userNotes": null,
-                        "viewedByAdmin": true,
-                        "sessionType": "INDIVIDUAL",
-                        "createdAt": "2024-12-12T16:33:46.000Z",
-                        "updatedAt": "2024-12-12T17:24:47.000Z"
-                      }
+                          "id": 1,
+                          "userId": 1,
+                          "courseId": 1,
+                          "availableTime": "From sundays to thursdays 3pm-8pm",
+                          "userNotes": null,
+                          "viewedByAdmin": true,
+                          "subscribtionStatus": "SUBSCRIBED",
+                          "sessionType": "INDIVIDUAL",
+                          "createdAt": "2024-12-12T16:33:46.000Z",
+                          "updatedAt": "2024-12-12T17:24:47.000Z",
+                        }
   /api/admin/actions/courseGroupUsers/:courseId:
     post:
       tags:
@@ -705,7 +1452,7 @@ paths:
       description: Get users applied in this course in group
       parameters:
         - name: courseId
-          in: query
+          in: path
           description: the course id
           required: true
           schema:
@@ -751,16 +1498,17 @@ paths:
                   data:
                     courseUsers:
                       - {
-                        "id": 1,
-                        "userId": 1,
-                        "courseId": 1,
-                        "availableTime": "From sundays to thursdays 3pm-8pm",
-                        "userNotes": null,
-                        "viewedByAdmin": true,
-                        "sessionType": "GROUP",
-                        "createdAt": "2024-12-12T16:33:46.000Z",
-                        "updatedAt": "2024-12-12T17:24:47.000Z"
-                      }
+                          "id": 1,
+                          "userId": 1,
+                          "courseId": 1,
+                          "availableTime": "From sundays to thursdays 3pm-8pm",
+                          "userNotes": null,
+                          "viewedByAdmin": true,
+                          "subscribtionStatus": "SUBSCRIBED",
+                          "sessionType": "GROUP",
+                          "createdAt": "2024-12-12T16:33:46.000Z",
+                          "updatedAt": "2024-12-12T17:24:47.000Z",
+                        }
   /api/admin/actions/newCourseUsers/:courseId:
     post:
       tags:
@@ -769,7 +1517,7 @@ paths:
       description: Get users that the admin didn't see before or who logged in after a week ago
       parameters:
         - name: courseId
-          in: query
+          in: path
           description: the course id
           required: true
           schema:
@@ -810,22 +1558,232 @@ paths:
           content:
             application/json:
               example:
-                value:
-                  message: "Course users retrieved successfully"
-                  data:
-                    newUsers:
-                      - {
-                        "id": 1,
+                message: "New Course users retrieved successfully"
+                data:
+                  newUsers:
+                    - {
+                        "id": 3,
                         "userId": 1,
-                        "courseId": 1,
+                        "courseId": 2,
                         "availableTime": "From sundays to thursdays 3pm-8pm",
                         "userNotes": null,
-                        "viewedByAdmin": true,
-                        "sessionType": "INDIVIDUAL",
-                        "createdAt": "2024-12-12T16:33:46.000Z",
-                        "updatedAt": "2024-12-12T17:24:47.000Z"
+                        "viewedByAdmin": false,
+                        "subscribtionStatus": "SUBSCRIBED",
+                        "sessionType": "GROUP",
+                        "createdAt": "2024-12-18T15:31:15.000Z",
+                        "updatedAt": "2024-12-18T15:31:15.000Z",
                       }
-  
+  /api/admin/actions/startMeeting/:sessionType/:sessionId:
+    post:
+      tags:
+        - Admin Actions
+      summary: Start Meeting
+      description: Admin starts a meeting
+      parameters:
+        - name: sessionId
+          in: path
+          description: the session id
+          required: true
+          schema:
+            type: string
+        - name: sessionType
+          in: path
+          description: the session type
+          required: true
+          schema:
+            type: string
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                UNAUTHENTICATED:
+                  value:
+                    name: "UNAUTHENTICATED"
+                    message: "User is unauthenticated and this request requires authentication payload data"
+                TOKEN_EXPIRED:
+                  value:
+                    name: "TOKEN_EXPIRED"
+                    message: "The token you are using expird, please log in again to retrieve another token."
+                UNAUTHORIZED:
+                  value:
+                    name: "UNAUTHORIZED"
+                    message: "This request needs permessions the user doesn't have"
+                INVALID_PAYLOAD:
+                  value:
+                    name: "INVALID_PAYLOAD"
+                    message: "Invalid payload data"
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              examples:
+                SESSION_DOESNT_EXIST:
+                  value:
+                    name: "SESSION_DOESNT_EXIST"
+                    message: "No sesesion with that id"
+                MEETING_STARTED_ENDED:
+                  value:
+                    name: "MEETING_STARTED_ENDED"
+                    message: "Can't start a meeting that had already started / endedCan't start a meeting that had already started / ended"
+        "200":
+          description: Success
+          content:
+            application/json:
+              example:
+                message: "Meeting Started Successfully"
+                data:
+                  startUrl: "zoom start url"
+  /api/admin/actions/endSession/:sessionType/:sessionId:
+    post:
+      tags:
+        - Admin Actions
+      summary: End Session
+      description: Admin ends a session
+      parameters:
+        - name: sessionId
+          in: path
+          description: the session id
+          required: true
+          schema:
+            type: string
+        - name: sessionType
+          in: path
+          description: the session type
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sessionContent:
+                  type: string
+                notes:
+                  type: string
+              required:
+                - notes
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                UNAUTHENTICATED:
+                  value:
+                    name: "UNAUTHENTICATED"
+                    message: "User is unauthenticated and this request requires authentication payload data"
+                TOKEN_EXPIRED:
+                  value:
+                    name: "TOKEN_EXPIRED"
+                    message: "The token you are using expird, please log in again to retrieve another token."
+                UNAUTHORIZED:
+                  value:
+                    name: "UNAUTHORIZED"
+                    message: "This request needs permessions the user doesn't have"
+                INVALID_PAYLOAD:
+                  value:
+                    name: "INVALID_PAYLOAD"
+                    message: "Invalid payload data"
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              examples:
+                SESSION_DOESNT_EXIST:
+                  value:
+                    name: "SESSION_DOESNT_EXIST"
+                    message: "No sesesion with that id"
+                MEETING_HASNT_STARTED:
+                  value:
+                    name: "MEETING_HASNT_STARTED"
+                    message: "You can't end the meeting before starting it"
+        "200":
+          description: Success
+          content:
+            application/json:
+              example:
+                message: "Session Ended Successfully"
+                data:
+  /api/admin/actions/uploadRecords/:sessionType/:sessionId:
+    post:
+      tags:
+        - Admin Actions
+      summary: Upload session records
+      description: Admin uploads session records
+      parameters:
+        - name: sessionId
+          in: path
+          description: the session id
+          required: true
+          schema:
+            type: string
+        - name: sessionType
+          in: path
+          description: the session type
+          required: true
+          schema:
+            type: string
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                UNAUTHENTICATED:
+                  value:
+                    name: "UNAUTHENTICATED"
+                    message: "User is unauthenticated and this request requires authentication payload data"
+                TOKEN_EXPIRED:
+                  value:
+                    name: "TOKEN_EXPIRED"
+                    message: "The token you are using expird, please log in again to retrieve another token."
+                UNAUTHORIZED:
+                  value:
+                    name: "UNAUTHORIZED"
+                    message: "This request needs permessions the user doesn't have"
+                INVALID_PAYLOAD:
+                  value:
+                    name: "INVALID_PAYLOAD"
+                    message: "Invalid payload data"
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              examples:
+                NO_FILES:
+                  value:
+                    name: "NO_FILES"
+                    message: "There is no recordings being uploaded"
+                SESSION_DOESNT_EXIST:
+                  value:
+                    name: "SESSION_DOESNT_EXIST"
+                    message: "No sesesion with that id"
+                MEETING_HASNT_STARTED:
+                  value:
+                    name: "MEETING_HASNT_STARTED"
+                    message: "You can't end the meeting before starting it"
+        "500":
+          description: Internal Server Error
+          content:
+            application/json:
+              examples:
+                ERROR_UPLOADING:
+                  value:
+                    name: "ERROR_UPLOADING"
+                    message: "There is an error happend while uploading the recordings"
+        "200":
+          description: Success
+          content:
+            application/json:
+              example:
+                message: "Session Ended Successfully"
+                data:
+
   /api/calendar/busyDates:
     get:
       tags:

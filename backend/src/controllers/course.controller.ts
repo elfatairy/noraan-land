@@ -5,7 +5,7 @@ import bcrypt, { compare } from "bcrypt";
 import axios from "axios";
 import { OAuth2Client } from "google-auth-library";
 import { generateToken } from "../utils/token.util";
-import { getCourse, createCourse, getAllCourses, getCourseUsers, viewCourseUser } from "../services/course.service";
+import { getCourse, createCourse, getAllCourses, getCourseUsers, viewCourseUser, updateCourse } from "../services/course.service";
 import { SessionType } from "@prisma/client";
 
 export const create = async (req: Request, res: Response, next: NextFunction) => {
@@ -39,9 +39,65 @@ export const create = async (req: Request, res: Response, next: NextFunction) =>
     const createdCourse = await createCourse(name, groupPrice, individualPrice, description);
 
     res.json({
-      message: "Courese created successfully",
+      message: "Coursee created successfully",
       data: {
         course: createdCourse
+      }
+    })
+
+  } catch (err: any) {
+    console.log("ERROR: ", err);
+    res.status(500).json({
+      name: "INTERNAL_SERVER_ERROR",
+      message: "Internal Server Error"
+    });
+    next(err);
+  }
+}
+
+export const update = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { name, description, individualPrice, groupPrice } = req.body;
+    const courseId = Number(req.params.id);
+
+    if (!courseId ||
+      (!name && (description && !validateString(description, 255, 0)) && !individualPrice && !groupPrice)) {
+      res.status(400).json({
+        name: "INVALID_PAYLOAD",
+        message: "Invalid payload data"
+      });
+      return;
+    }
+
+    const courseExistsRes = await getCourse({ id: courseId });
+    if (!courseExistsRes) {
+      res.status(409).json({
+        name: "COURSE_DOESNT_EXIST",
+        message: "No course with this id"
+      });
+      return;
+    }
+
+    const options: any = {};
+
+    if(name)
+      options.name = name;
+    
+    if(description)
+      options.description = description;
+    
+    if(individualPrice)
+      options.individualPrice = individualPrice;
+    
+    if(groupPrice)
+      options.groupPrice = groupPrice;
+
+    const updatedCourse = await updateCourse(courseId, options);
+
+    res.json({
+      message: "Coursee updated successfully",
+      data: {
+        course: updatedCourse
       }
     })
 
@@ -102,6 +158,27 @@ export const getAll = async (req: Request, res: Response, next: NextFunction) =>
       message: "Courses retrieved successfully",
       data: {
         courses
+      }
+    })
+
+  } catch (err: any) {
+    console.log("ERROR: ", err);
+    res.status(500).json({
+      name: "INTERNAL_SERVER_ERROR",
+      message: "Internal Server Error"
+    });
+    next(err);
+  }
+}
+export const get = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const courseId = Number(req.params.courseId)
+    const course = await getCourse({ id: courseId });
+
+    res.json({
+      message: "Course retrieved successfully",
+      data: {
+        course
       }
     })
 

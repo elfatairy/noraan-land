@@ -14,6 +14,17 @@ export const createCourse = async (name: string, groupPrice: number, individualP
     return course;
 }
 
+export const updateCourse = async (courseId: number, options: any) => {
+    const course = await prisma.course.update({
+        where: {
+            id: courseId
+        },
+        data: options
+    })
+
+    return course;
+}
+
 export const getCourse = async (conditions: Prisma.CourseWhereInput) => await prisma.course.findFirst({
     where: conditions
 })

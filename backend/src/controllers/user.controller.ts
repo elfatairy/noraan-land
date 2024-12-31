@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
-import { validateEmail, validateName, validatePassword, validateSessionType, validateString } from "../utils/validation.util";
-import { authenticateUser, createUser, createUserSession, emailExists, getUserByEmail, getUserSession, nameExists, verifyGoogleToken } from "../services/user.service";
+import { validateAge, validateEmail, validateGender, validateName, validatePassword, validateSessionType, validateString } from "../utils/validation.util";
+import { authenticateUser, createUser, createUserSession, emailExists, getUserByEmail, getUserSession, nameExists, updateUser, verifyGoogleToken } from "../services/user.service";
 import { compare } from "bcrypt";
 import axios from "axios";
 import { OAuth2Client } from "google-auth-library";
@@ -113,10 +113,13 @@ export const googleLogin = async (req: Request, res: Response, next: NextFunctio
 
 export const register = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, age, gender, location, password } = req.body;
     if (!name || !validateString(name, 255, 4) ||
       !email || !validateEmail(email) ||
-      !password || !validatePassword(password)) {
+      !password || !validatePassword(password) ||
+      (gender && !validateGender(gender)) ||
+      (age && !validateAge(age)) ||
+      (location && !validateString(location, 255, 1))) {
 
       res.status(400).json({
         name: "INVALID_PAYLOAD",
@@ -141,13 +144,77 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
       return;
     }
 
-    const { id: userId } = await createUser(name, email, password);
+    const options: any = {};
+    if(age) 
+      options.age = age;
+    if(location) 
+      options.location = location;
+    if(gender) 
+      options.gender = gender;
+
+    const { id: userId } = await createUser(name, email, options, password);
     const { user, token } = await authenticateUser(userId, email);
 
     res.json({
       message: "User Registered Successfully",
       data: {
         token,
+        user
+      }
+    })
+
+  } catch (err: any) {
+    console.log("ERROR: ", err);
+    res.status(500).json({
+      name: "INTERNAL_SERVER_ERROR",
+      message: "Internal Server Error"
+    });
+    next(err);
+  }
+}
+
+export const updateProfile = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { name, age, gender, location } = req.body;
+    const { id: userId } = res.locals.user;
+
+    console.log("id");
+    console.log(userId);
+    if ((name && !validateString(name, 255, 4)) ||
+      (gender && !validateGender(gender)) ||
+      (age && !validateAge(age)) ||
+      (location && !validateString(location, 255, 1))) {
+
+      res.status(400).json({
+        name: "INVALID_PAYLOAD",
+        message: "Invalid payload data"
+      });
+      return;
+    }
+
+    if (name && await nameExists(name)) {
+      res.status(409).json({
+        name: "NAME_ALREADY_EXISTS",
+        message: "Name already exists"
+      });
+      return;
+    }
+
+    const data: any = {};
+    if(name) 
+      data.name = name;
+    if(age) 
+      data.age = age;
+    if(location) 
+      data.location = location;
+    if(gender) 
+      data.gender = gender;
+
+    const user = await updateUser(userId, data);
+
+    res.json({
+      message: "Profile Updated Successfully",
+      data: {
         user
       }
     })
@@ -244,8 +311,8 @@ export const getCourseSessions = async (req: Request, res: Response, next: NextF
     const userCourse = await getCourseUser(userId, courseId);
     if (!userCourse) {
       res.status(409).json({
-        name: "USER_COURSE_ALERADY_EXIST",
-        message: "This user has already applied for this course"
+        name: "USER_COURSE_DOESNT_EXIST",
+        message: "This user has not applied for this course"
       });
       return;
     }
@@ -277,7 +344,7 @@ export const getCourseSessions = async (req: Request, res: Response, next: NextF
     );
 
     res.json({
-      message: "Coures Sessions returned Successfully",
+      message: "Course Sessions returned Successfully",
       data: {
         subscribtionStatus: userCourse.subscribtionStatus,
         sessions: JSON.parse(JSON.stringify(sessions, (_, v) => typeof v === 'bigint' ? v.toString() : v))
@@ -321,8 +388,8 @@ export const joinSession = async (req: Request, res: Response, next: NextFunctio
     const userCourse = await getCourseUser(userId, courseId);
     if (!userCourse) {
       res.status(409).json({
-        name: "USER_COURSE_ALERADY_EXIST",
-        message: "This user has already applied for this course"
+        name: "USER_COURSE_DOESNT_EXIST",
+        message: "This user has not applied for this course"
       });
       return;
     }
