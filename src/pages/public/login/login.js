@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../contexts/auth';
+import { useGoogleLogin } from '@react-oauth/google';
+import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Loading from '../../../components/loading/loading';
+import { FcGoogle } from 'react-icons/fc';
 import './login.css';
 
 const Login = () => {
@@ -10,6 +14,20 @@ const Login = () => {
   const [errors, setErrors] = useState({});
   const { login, isLoading } = useAuth();
   const navigate = useNavigate();
+
+  const googleLogin = useGoogleLogin({
+    onSuccess: async (codeResponse) => {
+      try {
+        const result = await login('google', codeResponse.access_token);
+        if (result?.success) {
+          navigate('/');
+        }
+      } catch (error) {
+        toast.error('Google login failed');
+      }
+    },
+    onError: () => toast.error('Google login failed')
+  });
 
   const validateEmail = (email) => {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -26,12 +44,14 @@ const Login = () => {
     if (!email) {
       newErrors.email = 'Email is required';
     } else if (!validateEmail(email)) {
+      console.log(email);
       newErrors.email = 'Please enter a valid email';
     }
 
     if (!password) {
       newErrors.password = 'Password is required';
     } else if (!validatePassword(password)) {
+      console.log(password);
       newErrors.password = 'Password must be at least 8 characters';
     }
 
@@ -43,16 +63,14 @@ const Login = () => {
     e.preventDefault();
     
     if (validateForm()) {
-      const result = await login(email, password);
+      const result = await login('credentials', email, password);
       if (result?.success) {
         navigate('/');
       }
     }
   };
-
-  // if (isLoading) {
-  //   return <LoadingScreen />; // Your loading component
-  // }
+  
+  if(isLoading) return <Loading isVisible={isLoading} />;
 
   return (
     <div className="auth-container">
@@ -95,6 +113,19 @@ const Login = () => {
             {isLoading ? 'Logging in...' : 'Login'}
           </button>
         </form>
+
+        <div className="auth-divider">
+          <span>OR</span>
+        </div>
+
+        <button 
+          type="button" 
+          onClick={() => googleLogin()}
+          className="google-auth-btn"
+        >
+          <FcGoogle size={20} />
+          Continue with Google
+        </button>
       </div>
     </div>
   );

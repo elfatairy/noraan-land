@@ -1,7 +1,9 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState } from 'react';
 import { toast } from 'react-toastify';
-import useLogin from './loginhook';
-import { setStorageData } from "../utils/data";
+import useLogin from '../hooks/loginhook';
+import useRegister from '../hooks/registerhook';
+import { setStorageData , getStorageData } from "../utils/data";
+import useAdminLogin from '../hooks/adminloginhook';
 
 const AuthContext = createContext(null);
 
@@ -10,9 +12,17 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const {
     isLoading,
-    error: responseErrorLogin,
+    // error: responseErrorLogin,
     execute: executeLogin
   } = useLogin();
+  const {
+    isLoading: isLoadingRegister,
+    execute: executeRegister
+  } = useRegister();
+  const {
+    isLoading: isLoadingAdminLogin,
+    execute: executeAdminLogin
+  } = useAdminLogin();
 
   const login = async (email, password) => {
     // Validate email
@@ -33,6 +43,9 @@ export const AuthProvider = ({ children }) => {
       
       if (response?.data?.user) {
         setStorageData('token', response.data.token);
+        setStorageData('id', response.data.user.id);
+        setStorageData('name', response.data.user.name);
+        setStorageData('email', response.data.user.email);
         setUser(response.data.user);
         setIsLoggedIn(true);
         toast.success(response.message, { autoClose: 3000 });
@@ -48,6 +61,73 @@ export const AuthProvider = ({ children }) => {
       };
     }
   };
+
+  const register = async (name, email, password) => {
+    // Validate email and password (reuse existing validation)
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast.error("Please enter a valid email address", { autoClose: 3000 });
+      return { success: false };
+    }
+
+    if (!password || password.length < 8) {
+      toast.error("Password must be at least 8 characters long", { autoClose: 3000 });
+      return { success: false };
+    }
+
+    try {
+      const response = await executeRegister(name, email, password);
+      
+      if (response?.data?.user) {
+        setStorageData('token', response.data.token);
+        setStorageData('id', response.data.user.id);
+        setStorageData('name', response.data.user.name);
+        setStorageData('email', response.data.user.email);
+        setUser(response.data.user);
+        setIsLoggedIn(true);
+        toast.success(response.message || 'Registration successful!', { autoClose: 3000 });
+        return { success: true };
+      }
+      
+      return { success: false };
+    } catch (error) {
+      handleRegisterError(error);
+      return { 
+        success: false, 
+        error: error?.response?.data?.message || 'Registration failed' 
+      };
+    }
+  };
+
+  const adminLogin = async (username, password) => {
+    if (!username || username.length < 3) {
+      toast.error("Username must be at least 3 characters", { autoClose: 3000 });
+      return { success: false };
+    }
+
+    if (!password || password.length < 8) {
+      toast.error("Password must be at least 8 characters", { autoClose: 3000 });
+      return { success: false };
+    }
+
+    try {
+      const response = await executeAdminLogin(username, password);
+      
+      if (response?.data?.token) {
+        setStorageData('token', response.data.token);
+        setUser({name : "Admin", isAdmin: true });
+        console.log(user);
+        console.log(getStorageData('token'))
+        setIsLoggedIn(true);
+        return { success: true };
+      }
+      return { success: false };
+    } catch (error) {
+      handleLoginError(error);
+      return { success: false, error: error?.response?.data?.message || 'Admin login failed' };
+    }
+  };
+  
 
   const handleLoginError = (error) => {
     const errorMessage = error?.response?.data?.message;
@@ -65,6 +145,11 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const handleRegisterError = (error) => {
+    const errorMessage = error?.response?.data?.message;
+    toast.error(errorMessage || "An error occurred during registration", { autoClose: 3000 });
+  };
+
   const logout = () => {
     setIsLoggedIn(false);
     setUser(null);
@@ -75,8 +160,12 @@ export const AuthProvider = ({ children }) => {
     isLoggedIn,
     user,
     isLoading,
+    isLoadingRegister,
     login,
-    logout
+    register,
+    logout,
+    adminLogin,
+    isLoadingAdminLogin
   };
 
   return (

@@ -2,7 +2,7 @@ import express, { ErrorRequestHandler, NextFunction, Request, Response } from 'e
 import bodyParser from 'body-parser';
 import cors from 'cors';
 const app = express();
-const port = parseInt(process.env.PORT || "3000");
+const port = parseInt(process.env.PORT || '3001')
 import router from './routes/index.route';
 import { HTTPErrorLogger, HTTPLogger } from './utils/logging.util';
 import { rateLimiter } from './middlewares/ratelimiter';
@@ -13,9 +13,9 @@ import fileUpload from 'express-fileupload';
 
 // CORS configuration
 app.use(cors({
-  origin: 'http://localhost:3001', // Your frontend URL
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  origin: '*', 
+  credentials: false,
+  methods: ['GET', 'POST','PATCH', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 

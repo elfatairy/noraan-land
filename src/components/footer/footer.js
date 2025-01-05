@@ -11,14 +11,19 @@ const Footer = () => {
           </div>
 
           <nav className="navf-links">
-            <a>Home</a>
-            <a>About</a>
-            <a>Courses</a>
-            <a>Pricing</a>
+            <a href="/home">Home</a>
+            <a href="/about">About</a>
+            <a href="/courses">Courses</a>
+            <a href="/pricing">Pricing</a>
           </nav>
 
           <div className="social-icons">
-            <a aria-label="Instagram">
+            <a
+              href="https://instagram.com/yourprofile"
+              target="_blank"
+              rel="noopener noreferrer" 
+              aria-label="Instagram"
+            >
               <svg
                 width="24"
                 height="24"
@@ -34,7 +39,12 @@ const Footer = () => {
                 <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
               </svg>
             </a>
-            <a aria-label="Facebook">
+            <a
+              href="https://facebook.com/yourprofile"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Facebook"
+            >
               <svg
                 width="24"
                 height="24"
@@ -48,7 +58,13 @@ const Footer = () => {
                 <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
               </svg>
             </a>
-            <a aria-label="Twitter">
+            <a
+              href="https://twitter.com/yourprofile"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Twitter"
+            >
+              {" "}
               <svg
                 width="24"
                 height="24"

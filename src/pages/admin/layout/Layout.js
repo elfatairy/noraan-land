@@ -11,6 +11,7 @@ const AdminLayout = () => {
     <div className="admin-layout">
       <Navbar className="navbar" />
       <div className="content-wrapper">
+        {location.pathname !== "/admin/login" &&(
         <aside className="sidebar">
           <ul>
             <li className={location.pathname === "/admin/upcoming-sessions" ? "active" : ""}>
@@ -25,14 +26,15 @@ const AdminLayout = () => {
                 <span>Calendar</span>
               </Link>
             </li>
-            <li className={location.pathname === "/admin/courses-management" ? "active" : ""}>
-              <Link to="/admin/courses-management">
+            <li className={location.pathname === "/admin/courses" ? "active" : ""}>
+              <Link to="/admin/courses">
                 <i className="fas fa-graduation-cap"></i>
                 <span>Courses</span>
               </Link>
             </li>
           </ul>
         </aside>
+        )}
         <main className="main-content">
           <Outlet />
         </main>

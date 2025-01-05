@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { toast } from 'react-toastify';
+import { Link, useNavigate } from 'react-router-dom';
 import 'react-toastify/dist/ReactToastify.css';
 import './register.css';
+import { useAuth } from '../../../contexts/auth';
+import Loading from '../../../components/loading/loading';
 
 const Register = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
+
+  const { register, isLoadingRegister } = useAuth();
+  const navigate = useNavigate();
 
   const validateUsername = (username) => {
     const regex = /^[a-zA-Z0-9]{4,}$/;
@@ -49,23 +53,18 @@ const Register = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (validateForm()) {
-      toast.success('Registration in progress...', {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-      });
-    } else {
-      toast.error('Please check your inputs', {
-        position: "top-right",
-        autoClose: 3000,
-        hideProgressBar: false,
-      });
+      const result = await register(username, email, password);
+      if (result?.success) {
+        navigate('/');
+      }
     }
   };
+
+  if(isLoadingRegister) return <Loading isVisible={isLoadingRegister} />;
 
   return (
     <div className="auth-container">
@@ -114,8 +113,8 @@ const Register = () => {
           <div className="auth-redirect">
             Already have an account? <Link to="/login">Log in</Link>
           </div>
-          <button type="submit" className="auth-submit-btn">
-            Register
+          <button type="submit" className="auth-submit-btn" disabled={isLoadingRegister}>
+            {isLoadingRegister ? 'Registering...' : 'Register'}
           </button>
         </form>
       </div>
