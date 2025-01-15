@@ -1,5 +1,5 @@
 import { prisma } from "../configs/db.config";
-import { Prisma, SessionType } from "@prisma/client";
+import { Prisma, SessionType, SubscriptionMethod, SubscriptionStatus } from "@prisma/client";
 
 export const createCourse = async (name: string, groupPrice: number, individualPrice: number, description: string) => {
     const course = await prisma.course.create({
@@ -13,6 +13,24 @@ export const createCourse = async (name: string, groupPrice: number, individualP
 
     return course;
 }
+
+export const createCoursePaymentDetails = async (courseId: number, paypalGroupPlanId: string, paypalIndividualPlanId: string) => {
+    const paymentDetails = await prisma.paymentDetails.create({
+        data: {
+            courseId,
+            paypalGroupPlanId,
+            paypalIndividualPlanId
+        }
+    });
+
+    return paymentDetails;
+}
+
+export const getPaymentDetails = async (courseId: number) => await prisma.paymentDetails.findFirstOrThrow({
+    where: {
+        courseId
+    }
+})
 
 export const updateCourse = async (courseId: number, options: any) => {
     const course = await prisma.course.update({
@@ -31,15 +49,22 @@ export const getCourse = async (conditions: Prisma.CourseWhereInput) => await pr
 
 export const getAllCourses = async () => await prisma.course.findMany()
 
-export const getCourseUsers = async (courseId: number, conditions: Prisma.UserCourseWhereInput) => await prisma.course.findFirst({
+export const getUserCourses = async (courseId: number, conditions: Prisma.UserCourseWhereInput) => await prisma.course.findFirst({
     where: {
         id: courseId
     }
 }).userCourses({
-    where: conditions
+    where: conditions,
+    include: {
+        user: {
+            select: {
+                name: true
+            }
+        }
+    }
 })
 
-export const viewCourseUser = async (courseId: number, userId: number) => (await prisma.userCourse.updateMany({
+export const viewUserCourse = async (courseId: number, userId: number) => (await prisma.userCourse.updateMany({
     where: {
         userId,
         courseId
@@ -49,14 +74,14 @@ export const viewCourseUser = async (courseId: number, userId: number) => (await
     }
 })).count == 1
 
-export const getCourseUser = async (userId: number, courseId: number) => await prisma.userCourse.findFirst({
+export const getUserCourse = async (userId: number, courseId: number) => await prisma.userCourse.findFirst({
     where: {
         userId,
         courseId
     }
 })
 
-export const addCourseUser = async (userId: number, courseId: number, sessionType: SessionType, availableTime: string, userNotes?: string) => await prisma.userCourse.create({
+export const addUserCourse = async (userId: number, courseId: number, sessionType: SessionType, availableTime: string, userNotes?: string) => await prisma.userCourse.create({
     data: {
         userId,
         courseId,
@@ -64,4 +89,25 @@ export const addCourseUser = async (userId: number, courseId: number, sessionTyp
         userNotes,
         sessionType
     },
+})
+
+export const addUserCourseSubscriptionStatus = async (userCourseId: number) => await prisma.userCourseSubscription.create({
+    data: {
+        userCourseId
+    }
+})
+
+export const getUserSubscriptionDetails = async (conditions: Prisma.UserCourseSubscriptionWhereInput) => await prisma.userCourseSubscription.findFirst({
+    where: conditions
+})
+
+export const approvePaypalSubscription = async (userCourseId: number, paypalSubscriptionId: string) => await prisma.userCourseSubscription.update({
+    where: {
+        userCourseId
+    },
+    data: {
+        subscriptionStatus: SubscriptionStatus.SUBSCRIBED,
+        subscriptionMethod: SubscriptionMethod.PAYPAL,
+        paypalSubscriptionId
+    }
 })

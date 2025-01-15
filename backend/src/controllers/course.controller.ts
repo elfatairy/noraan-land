@@ -5,8 +5,10 @@ import bcrypt, { compare } from "bcrypt";
 import axios from "axios";
 import { OAuth2Client } from "google-auth-library";
 import { generateToken } from "../utils/token.util";
-import { getCourse, createCourse, getAllCourses, getCourseUsers, viewCourseUser, updateCourse } from "../services/course.service";
+import { getCourse, createCourse, getAllCourses, getUserCourses, viewUserCourse, updateCourse, createCoursePaymentDetails, getPaymentDetails } from "../services/course.service";
 import { SessionType } from "@prisma/client";
+import { getZoomAccessToken } from "../services/zoom.service";
+import { createPaypalPlan, createPaypalProduct, getPaypalAccessToken } from "../services/paypal.service";
 
 export const create = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -37,6 +39,17 @@ export const create = async (req: Request, res: Response, next: NextFunction) =>
     }
 
     const createdCourse = await createCourse(name, groupPrice, individualPrice, description);
+    const accessToken = await getPaypalAccessToken();
+    if(!accessToken) throw Error("Error getting access token");
+
+    const paypalProductId = await createPaypalProduct(name, description, accessToken);
+    if(!paypalProductId) throw Error("Error creating paypal product");
+    
+    const paypalGroupPlanId = await createPaypalPlan(name, paypalProductId, accessToken, groupPrice, SessionType.GROUP);
+    const paypalIndividualPlanId = await createPaypalPlan(name, paypalProductId, accessToken, individualPrice, SessionType.INDIVIDUAL);
+    if(!paypalGroupPlanId || !paypalIndividualPlanId) throw Error("Error creating paypal plans");
+
+    await createCoursePaymentDetails(createdCourse.id, paypalGroupPlanId, paypalIndividualPlanId);
 
     res.json({
       message: "Coursee created successfully",
@@ -44,7 +57,6 @@ export const create = async (req: Request, res: Response, next: NextFunction) =>
         course: createdCourse
       }
     })
-
   } catch (err: any) {
     console.log("ERROR: ", err);
     res.status(500).json({
@@ -111,45 +123,6 @@ export const update = async (req: Request, res: Response, next: NextFunction) =>
   }
 }
 
-export const getWithId = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { id } = req.params;
-    if (!id) {
-      res.status(400).json({
-        name: "INVALID_PAYLOAD",
-        message: "Invalid payload data"
-      });
-      return;
-    }
-
-    const courseExistsRes = await getCourse({ id: Number(id) });
-    if (!courseExistsRes) {
-      res.status(409).json({
-        name: "COURSE_DOESNT_EXIST",
-        message: "No course with this id"
-      });
-      return;
-    }
-
-    const course = (await getCourse({ id: Number(id) }))!;
-
-    res.json({
-      message: "Courses retrieved successfully",
-      data: {
-        course
-      }
-    })
-
-  } catch (err: any) {
-    console.log("ERROR: ", err);
-    res.status(500).json({
-      name: "INTERNAL_SERVER_ERROR",
-      message: "Internal Server Error"
-    });
-    next(err);
-  }
-}
-
 export const getAll = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const courses = await getAllCourses();
@@ -172,13 +145,30 @@ export const getAll = async (req: Request, res: Response, next: NextFunction) =>
 }
 export const get = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const courseId = Number(req.params.courseId)
-    const course = await getCourse({ id: courseId });
+    const courseId = Number(req.params.id);
+    if (!courseId) {
+      res.status(400).json({
+        name: "INVALID_PAYLOAD",
+        message: "Invalid payload data"
+      });
+      return;
+    }
 
+    const course = await getCourse({ id: courseId });
+    if (!course) {
+      res.status(409).json({
+        name: "COURSE_DOESNT_EXIST",
+        message: "No course with this id"
+      });
+      return;
+    }
+
+    const paymentDetails = await getPaymentDetails(courseId);
     res.json({
       message: "Course retrieved successfully",
       data: {
-        course
+        course,
+        paymentDetails
       }
     })
 
@@ -213,21 +203,21 @@ export const newUsers = async (req: Request, res: Response, next: NextFunction) 
     }
 
     const lastWeekDate = new Date(new Date().getTime() - 604800000);
-    const courseUsers = await getCourseUsers(courseId, {
+    const newUsers = await getUserCourses(courseId, {
       OR: [
         { viewedByAdmin: false },
         { createdAt: { gt: lastWeekDate } }
       ]
     }) ?? [];
 
-    await Promise.all(courseUsers?.map(async courseUser => {
-      await viewCourseUser(courseId, courseUser.userId);
+    await Promise.all(newUsers?.map(async newUser => {
+      await viewUserCourse(courseId, newUser.userId);
     }))
 
     res.json({
       message: "New Course users retrieved successfully",
       data: {
-        newUsers: courseUsers
+        newUsers
       }
     })
 
@@ -261,14 +251,14 @@ export const groupUsers = async (req: Request, res: Response, next: NextFunction
       return;
     }
 
-    const courseUsers = await getCourseUsers(courseId, {
+    const userCourses = await getUserCourses(courseId, {
       sessionType: SessionType.GROUP
     }) ?? [];
 
     res.json({
       message: "Course users retrieved successfully",
       data: {
-        courseUsers
+        userCourses
       }
     })
 
@@ -303,14 +293,14 @@ export const individualUsers = async (req: Request, res: Response, next: NextFun
       return;
     }
 
-    const courseUsers = await getCourseUsers(courseId, {
+    const userCourses = await getUserCourses(courseId, {
       sessionType: SessionType.INDIVIDUAL
     }) ?? [];
 
     res.json({
       message: "Course users retrieved successfully",
       data: {
-        courseUsers
+        userCourses
       }
     })
 

@@ -1,7 +1,7 @@
 import axios from "axios"
 import { btoa } from "buffer"
 
-export const getAccessToken = async () => {
+export const getZoomAccessToken = async () => {
     const accessToken = await axios.post(`https://zoom.us/oauth/token?grant_type=account_credentials&account_id=${process.env.ZOOM_ACCOUNT_ID}`, {}, {
         headers: {
             Authorization: `Basic ${btoa(`${process.env.ZOOM_CLIENT_ID}:${process.env.ZOOM_CLIENT_SECRET}`)}`

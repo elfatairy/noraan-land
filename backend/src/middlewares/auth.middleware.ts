@@ -1,8 +1,8 @@
 import { NextFunction, Request, Response } from "express";
 import * as jwt from 'jsonwebtoken';
 import { ROLES } from "../utils/constants.util";
-import { getUserByEmail, getUserById } from "../services/user.service";
-import { getCourseUser } from "../services/course.service";
+import { getUserByEmail, getUserById, getUserCourseSubscriptionStatus } from "../services/user.service";
+import { getUserCourse } from "../services/course.service";
 
 export const verifyToken = (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -133,8 +133,8 @@ export const checkSubscribed = async (req: Request, res: Response, next: NextFun
             return;
         }
 
-        const courseUser = await getCourseUser(id, courseId);
-        if(!courseUser || courseUser.subscribtionStatus == 'UNSUBSCRIBED') {
+        const userCourse = await getUserCourse(id, courseId);
+        if(!userCourse || await getUserCourseSubscriptionStatus(userCourse.id) == 'UNSUBSCRIBED') {
             res.status(400).json({
                 name: "UNSUBSCRIBED",
                 message: "User is unsubscribed for this course and so can't view this"
