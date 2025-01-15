@@ -27,9 +27,10 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     const correctPass = await compare(password, hashedPassword);
     const correctUserName = username == process.env.ADMIN_USERNAME;
     if (!correctPass || !correctUserName) {
+      console.log("ERROR: ", correctPass, correctUserName);
       res.status(404).json({
         name: "USERNAME_PASSWORD_INCORRECT",
-        message: "Either the username or password is incorrect"
+        message: `either the username or password is incorrect ${correctPass}, ${correctUserName}`
       });
       return;
     }
