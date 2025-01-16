@@ -2,8 +2,9 @@ import express, { ErrorRequestHandler, NextFunction, Request, Response } from 'e
 import bodyParser from 'body-parser';
 import cors from 'cors';
 const app = express();
-const port = parseInt(process.env.PORT || '3001')
-import router from './routes/index.route';
+const port = parseInt(process.env.PORT || '3000')
+import apiRouter from './routes/index.route';
+import router from './routes/nonApi.route';
 import { HTTPErrorLogger, HTTPLogger } from './utils/logging.util';
 import { rateLimiter } from './middlewares/ratelimiter';
 import cookieParser from 'cookie-parser';
@@ -31,7 +32,8 @@ app.use(HTTPErrorLogger);
 app.use(HTTPLogger);
 app.use(cookieParser());
 app.use(rateLimiter);
-app.use("/api", logRequest, router);
+app.use("/api", logRequest, apiRouter);
+app.use("/", logRequest, router);
 swaggerDocs(app, port);
 
 app.get('/', (req, res) => {

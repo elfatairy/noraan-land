@@ -4,13 +4,14 @@ import { authenticateUser, createUser, createUserSession, emailExists, getUserBy
 import { compare } from "bcrypt";
 import axios from "axios";
 import { OAuth2Client } from "google-auth-library";
-import { addUserCourse, addUserCourseSubscriptionStatus, approvePaypalSubscription, getCourse, getUserCourse, getUserSubscriptionDetails } from "../services/course.service";
+import { addUserCourse, addUserCourseSubscriptionStatus, approvePaypalSubscription, getCourse, getPaymentDetails, getUserCourse, getUserSubscriptionDetails, savePaymobSubscription } from "../services/course.service";
 import { getRecordings, getSession, getSessions } from "../services/session.service";
 import { IndividualSession, SessionStatus, SessionType, SubscriptionStatus } from "@prisma/client";
 import { getDateSession } from "../services/calendar.service";
 import { getZoomAccessToken, getMeeting } from "../services/zoom.service";
 import { getPaypalAccessToken, getPaypalSubscription } from "../services/paypal.service";
 import { prisma } from "../configs/db.config";
+import { createPaymobSubscription } from "../services/paymob.service";
 
 export const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -522,6 +523,93 @@ export const approvePaypal = async (req: Request, res: Response, next: NextFunct
       }
     })
 
+  } catch (err: any) {
+    console.log("ERROR: ", err);
+    res.status(500).json({
+      name: "INTERNAL_SERVER_ERROR",
+      message: "Internal Server Error"
+    });
+    next(err);
+  }
+}
+
+export const paymobIntention = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const courseId = Number(req.params.courseId);
+    const { id: userId, ...user } = res.locals.user;
+  
+    if (!courseId) {
+      res.status(400).json({
+        name: "INVALID_PAYLOAD",
+        message: "Invalid payload data"
+      });
+      return;
+    }
+
+    const course = await getCourse({ id: courseId });
+    if (!course) {
+      res.status(409).json({
+        name: "COURSE_DOESNT_EXIST",
+        message: "No course with this id"
+      });
+      return;
+    }
+
+    const userCourse = await getUserCourse(userId, courseId);
+    if (!userCourse) {
+      res.status(409).json({
+        name: "USER_COURSE_DOESNT_EXIST",
+        message: "This user has not applied for this course"
+      });
+      return;
+    }
+
+    const subscriptionStatus = await getUserCourseSubscriptionStatus(userCourse.id);
+
+    if (subscriptionStatus == SubscriptionStatus.SUBSCRIBED) {
+      res.status(409).json({
+        name: "ALREADY_SUBSCRIBED",
+        message: "User already subscribed to this course"
+      });
+      return;
+    }
+
+    const paymentDetails = await getPaymentDetails(course.id);
+    const planId = userCourse.sessionType == SessionType.GROUP ? paymentDetails.paymobGroupPlanId : paymentDetails.paymobIndividualPlanId;
+    if(!planId) throw Error("Plan id not found");
+
+    const subscription = await createPaymobSubscription(user.name, 
+      user.email, 
+      userCourse.sessionType == SessionType.GROUP ? course.groupPrice! : course.individualPrice!, 
+      planId);
+    if(!subscription) throw Error("Error while creating subscription intent");
+
+    await savePaymobSubscription(userCourse.id, subscription.id);
+
+    res.json({
+      message: "Subscription Intention Completed Successfully",
+      data: {
+        clientSecret: subscription.client_secret
+      }
+    })
+
+  } catch (err: any) {
+    console.log("ERROR: ", err);
+    console.log(err.response.data);
+    res.status(500).json({
+      name: "INTERNAL_SERVER_ERROR",
+      message: "Internal Server Error"
+    });
+    next(err);
+  }
+}
+
+export const paymobResponse = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    console.log("PAYMOB Response params:");
+    console.log(req.query);
+
+    res.status(200).end();
   } catch (err: any) {
     console.log("ERROR: ", err);
     res.status(500).json({

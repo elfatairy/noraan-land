@@ -31,8 +31,11 @@ model PaymentDetails {
   course   Course? @relation(fields: [courseId], references: [id])
   courseId Int?    @unique
 
-  paypalGroupPlanId      String
-  paypalIndividualPlanId String
+  paypalGroupPlanId      String?
+  paypalIndividualPlanId String?
+  
+  paymobGroupPlanId      Int?
+  paymobIndividualPlanId Int?
 }
 
 model GroupSession {
@@ -141,6 +144,7 @@ model UserCourseSubscription {
   subscriptionMethod   SubscriptionMethod?
 
   paypalSubscriptionId String?
+  paymobSubscriptionId String?
 }
 
 model UserSession {

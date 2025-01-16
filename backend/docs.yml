@@ -402,6 +402,67 @@ paths:
               example:
                 message: "Subscription Completed Successfully"
                 data: {}
+  /api/users/actions/intentPaymob/:courseId:
+    post:
+      tags:
+        - Subscription
+      summary: Make Paymob Intention
+      description: Make intention for paymob payment and returen the clients secret to be used in the payment
+      parameters:
+        - name: courseId
+          in: path
+          description: the course id
+          required: true
+          schema:
+            type: string
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                UNAUTHENTICATED:
+                  value:
+                    name: "UNAUTHENTICATED"
+                    message: "User is unauthenticated and this request requires authentication payload data"
+                TOKEN_EXPIRED:
+                  value:
+                    name: "TOKEN_EXPIRED"
+                    message: "The token you are using expird, please log in again to retrieve another token."
+                UNAUTHORIZED:
+                  value:
+                    name: "UNAUTHORIZED"
+                    message: "This request needs permessions the user doesn't have"
+                INVALID_PAYLOAD:
+                  value:
+                    name: "INVALID_PAYLOAD"
+                    message: "Invalid payload data"
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              examples:
+                COURSE_DOESNT_EXIST:
+                  value:
+                    name: "COURSE_DOESNT_EXIST"
+                    message: "No course with this id"
+                USER_COURSE_DOESNT_EXIST:
+                  value:
+                    name: "USER_COURSE_DOESNT_EXIST"
+                    message: "This user has not applied for this course"
+                ALREADY_SUBSCRIBED:
+                  value:
+                    name: "ALREADY_SUBSCRIBED"
+                    message: "User already subscribed to this course"
+        "200":
+          description: Success
+          content:
+            application/json:
+              example:
+                message: "Subscription Intention Completed Successfully"
+                data: {
+                  "clientSecret": "egy_csk_test_af72417dbc5dd1f7593274966f9ea89e"
+                }
   /api/users/actions/enrolledCourses:
     get:
       tags:

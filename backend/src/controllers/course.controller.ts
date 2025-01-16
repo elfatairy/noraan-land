@@ -9,6 +9,7 @@ import { getCourse, createCourse, getAllCourses, getUserCourses, viewUserCourse,
 import { SessionType } from "@prisma/client";
 import { getZoomAccessToken } from "../services/zoom.service";
 import { createPaypalPlan, createPaypalProduct, getPaypalAccessToken } from "../services/paypal.service";
+import { createPaymobPlan, getPaymobAcceessToken } from "../services/paymob.service";
 
 export const create = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -39,17 +40,28 @@ export const create = async (req: Request, res: Response, next: NextFunction) =>
     }
 
     const createdCourse = await createCourse(name, groupPrice, individualPrice, description);
-    const accessToken = await getPaypalAccessToken();
-    if(!accessToken) throw Error("Error getting access token");
+    
+    // PAYPAL
+    const paypalAccessToken = await getPaypalAccessToken();
+    if(!paypalAccessToken) throw Error("Error getting access token");
 
-    const paypalProductId = await createPaypalProduct(name, description, accessToken);
+    const paypalProductId = await createPaypalProduct(name, description, paypalAccessToken);
     if(!paypalProductId) throw Error("Error creating paypal product");
     
-    const paypalGroupPlanId = await createPaypalPlan(name, paypalProductId, accessToken, groupPrice, SessionType.GROUP);
-    const paypalIndividualPlanId = await createPaypalPlan(name, paypalProductId, accessToken, individualPrice, SessionType.INDIVIDUAL);
+    const paypalGroupPlanId = await createPaypalPlan(name, paypalProductId, paypalAccessToken, groupPrice, SessionType.GROUP);
+    const paypalIndividualPlanId = await createPaypalPlan(name, paypalProductId, paypalAccessToken, individualPrice, SessionType.INDIVIDUAL);
     if(!paypalGroupPlanId || !paypalIndividualPlanId) throw Error("Error creating paypal plans");
 
-    await createCoursePaymentDetails(createdCourse.id, paypalGroupPlanId, paypalIndividualPlanId);
+    // PAYMOB
+    const paymobAccessToken = await getPaymobAcceessToken();
+    if(!paymobAccessToken) throw Error("Error getting access token");
+
+    const paymobGroupPlanId = await createPaymobPlan(name, paymobAccessToken, groupPrice, SessionType.GROUP);
+    const paymobIndividualPlanId = await createPaymobPlan(name, paymobAccessToken, individualPrice, SessionType.INDIVIDUAL);
+    if(!paymobGroupPlanId || !paymobIndividualPlanId) throw Error("Error creating paymob plans");
+    console.log(paymobGroupPlanId, paymobIndividualPlanId);
+
+    await createCoursePaymentDetails(createdCourse.id, paypalGroupPlanId, paypalIndividualPlanId, paymobGroupPlanId, paymobIndividualPlanId);
 
     res.json({
       message: "Coursee created successfully",

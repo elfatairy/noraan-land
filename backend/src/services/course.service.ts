@@ -14,12 +14,14 @@ export const createCourse = async (name: string, groupPrice: number, individualP
     return course;
 }
 
-export const createCoursePaymentDetails = async (courseId: number, paypalGroupPlanId: string, paypalIndividualPlanId: string) => {
+export const createCoursePaymentDetails = async (courseId: number, paypalGroupPlanId: string, paypalIndividualPlanId: string, paymobGroupPlanId: number, paymobIndividualPlanId: number) => {
     const paymentDetails = await prisma.paymentDetails.create({
         data: {
             courseId,
             paypalGroupPlanId,
-            paypalIndividualPlanId
+            paypalIndividualPlanId,
+            paymobGroupPlanId, 
+            paymobIndividualPlanId
         }
     });
 
@@ -109,5 +111,14 @@ export const approvePaypalSubscription = async (userCourseId: number, paypalSubs
         subscriptionStatus: SubscriptionStatus.SUBSCRIBED,
         subscriptionMethod: SubscriptionMethod.PAYPAL,
         paypalSubscriptionId
+    }
+})
+
+export const savePaymobSubscription = async (userCourseId: number, paymobSubscriptionId: string) => await prisma.userCourseSubscription.update({
+    where: {
+        userCourseId
+    },
+    data: {
+        paymobSubscriptionId
     }
 })
