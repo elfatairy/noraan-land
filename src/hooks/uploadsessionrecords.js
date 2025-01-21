@@ -13,8 +13,8 @@ export const useUploadRecords = () => {
                 formData,
                 {
                     headers: {
-                        // Remove Content-Type header to let the browser set it with the boundary
-                        // 'Content-Type': 'multipart/form-data'
+                        // Let browser set correct multipart boundary
+                        'Content-Type': 'multipart/form-data'
                     }
                 }
             );

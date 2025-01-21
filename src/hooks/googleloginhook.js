@@ -7,8 +7,7 @@ export const useGoogleLogin = () => {
 
   const execute = useCallback(async (accessToken) => {
     try {
-      // Get Google user profile
-      const profileResponse = await axios.get(
+      const googleUserInfo = await axios.get(
         'https://www.googleapis.com/oauth2/v3/userinfo',
         {
           headers: { 
@@ -19,12 +18,11 @@ export const useGoogleLogin = () => {
       );
 
       const requestData = {
-        email: profileResponse.data.email,
-        password: profileResponse.data.sub, // Using Google's unique ID as password
-        name: profileResponse.data.name
+        email: googleUserInfo.data.email,
+        password: googleUserInfo.data.sub, // Using Google's unique ID as password
       };
 
-      return await _execute('users/auth/google-login', 'POST', requestData);
+      return await _execute('users/auth/login', 'POST', requestData);
     } catch (error) {
       setError(error);
       throw error;

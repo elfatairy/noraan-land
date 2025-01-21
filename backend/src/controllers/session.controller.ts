@@ -265,18 +265,24 @@ export const uploadRecords = async (req: Request, res: Response, next: NextFunct
   try {
     const sessionType = SessionType[req.params.sessionType as keyof typeof SessionType];
     const sessionId = Number(req.params.sessionId);
-    if (!req.files || Object.keys(req.files).length === 0 || !Array.isArray(req.files['files']) || req.files['files'].length === 0) {
+
+    // Updated validation to handle both array and single file
+    const files = req.files?.['files'];
+    if (!files || (Array.isArray(files) && files.length === 0) || (!Array.isArray(files) && !files)) {
       res.status(400).json({
         name: "NO_FILES",
-        message: "There is no recordings being uploaded"
+        message: "There is no recordings being uploaded",
       });
       return;
     }
 
+    // Convert single file to array if needed
+    const fileArray = Array.isArray(files) ? files : [files];
+
     if (!sessionId || !validateSessionType(sessionType)) {
       res.status(400).json({
         name: "INVALID_PAYLOAD",
-        message: "Invalid payload data"
+        message: "Invalid payload data",
       });
       return;
     }
@@ -285,36 +291,36 @@ export const uploadRecords = async (req: Request, res: Response, next: NextFunct
     if (!session) {
       res.status(409).json({
         name: "SESSION_DOESNT_EXIST",
-        message: "No sesesion with that id"
+        message: "No session with that id",
       });
       return;
     }
 
-    await Promise.all(req.files['files'].map(async file => {
-      const videoGuid = await uploadRecording(file, session.id, sessionType);
-      if(!videoGuid) {
-        res.status(500).json({
-          name: "ERROR_UPLOADING",
-          message: "There is an error happend while uploading the recordings"
-        });
-        return;        
-      }
-      await createRecording(session.id, sessionType, videoGuid);
-    }))
-
+    // Process file uploads
+    await Promise.all(
+      fileArray.map(async (file) => {
+        const videoGuid = await uploadRecording(file, session.id, sessionType);
+        if (!videoGuid) {
+          res.status(500).json({
+            name: "ERROR_UPLOADING",
+            message: "There was an error while uploading the recordings",
+          });
+          return;
+        }
+        await createRecording(session.id, sessionType, videoGuid);
+      })
+    );
 
     res.json({
-      message: "Recordings uploaded Successfully",
-      data: {
-      }
-    })
-
+      message: "Recordings uploaded successfully",
+      data: {},
+    });
   } catch (err: any) {
     console.log("ERROR: ", err);
     res.status(500).json({
       name: "INTERNAL_SERVER_ERROR",
-      message: "Internal Server Error"
+      message: "Internal Server Error",
     });
     next(err);
   }
-}
+};

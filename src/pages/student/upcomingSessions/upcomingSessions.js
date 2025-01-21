@@ -9,6 +9,7 @@ import './upcomingSessions.css';
 
 const UpcomingSessions = () => {
   const [sessions, setSessions] = useState([]);
+  const [subscriptionStatus, setSubscriptionStatus] = useState('');
   const { execute: getNextWeekDates, isLoading } = useGetNextWeekDates();
   const [isEndModalOpen, setIsEndModalOpen] = useState(false);
   const [selectedSession, setSelectedSession] = useState(null);
@@ -24,17 +25,16 @@ const UpcomingSessions = () => {
   const fetchSessions = async () => {
     try {
       const response = await getNextWeekDates();
-      // Sort by start date
-      const sortedDates = response.data.dates.sort((a, b) => 
-        new Date(a.startDate) - new Date(b.startDate)
-      );
-      setSessions(sortedDates);
+      setSubscriptionStatus(response.data.subscribtionStatus);
+      setSessions(response.data.sessions);
     } catch (error) {
       toast.error('Failed to fetch upcoming sessions');
     }
   };
 
   const formatDate = (dateString) => {
+    console.log(dateString);
+    if (!dateString) return 'Not started';
     return new Date(dateString).toLocaleString('en-US', {
       weekday: 'long',
       year: 'numeric',
@@ -87,34 +87,29 @@ const UpcomingSessions = () => {
     <div className="upcoming-sessions-container">
       <h2>Upcoming Sessions</h2>
       <div className="sessions-list">
-        {sessions.map((date) => (
-          <div key={date.id} className="session-card">
+        {sessions.map((session) => (
+          <div key={session.id} className="session-card">
             <div className="card-header">
               <div className="title-section">
-                <h3>{date.session.title}</h3>
-                {date.session.isFree && <span className="free-badge">FREE</span>}
+                <h3>{session.title}</h3>
+                {session.isFree && <span className="free-badge">FREE</span>}
               </div>
               <div className="badges">
-                <span className={`type-badge ${date.type}`}>
-                  {getSessionTypeDisplay(date.type)}
-                </span>
-                <span className={`status-badge ${date.session.status}`}>
-                  {date.session.status}
+                <span className={`status-badge ${session.status}`}>
+                  {session.status}
                 </span>
               </div>
             </div>
             <div className="session-details">
-              <p><strong>Start:</strong> {formatDate(date.startDate)}</p>
-              <p><strong>End:</strong> {formatDate(date.endDate)}</p>
-              <p><strong>Duration:</strong> {date.duration} minutes</p>
-              {date.session.description && (
-                <p><strong>Description:</strong> {date.session.description}</p>
+              <p><strong>Start:</strong> { formatDate(session.startedAt) }</p>
+              {session.description && (
+                <p><strong>Description:</strong> {session.description}</p>
               )}
             </div>
             <div className="session-actions">
-              {date.session.meetingId && (
+              {session.status === 'RUNNING' && session.meetingId && (
                 <a 
-                  href={`https://zoom.us/j/${date.session.meetingId}`}
+                  href={`https://zoom.us/j/${session.meetingId}`}
                   target="_blank" 
                   rel="noopener noreferrer"
                   className="action-button zoom"
@@ -122,22 +117,22 @@ const UpcomingSessions = () => {
                   <FaVideo /> Join Meeting
                 </a>
               )}
-              {date.session.status === 'UPCOMING' && (
+              {session.status === 'UPCOMING' && (
                 <button 
                   className="action-button start"
                   onClick={() => {
-                    setSelectedSession(date);
+                    setSelectedSession(session);
                     setIsStartModalOpen(true);
                   }}
                 >
                   Start Meeting
                 </button>
               )}
-              {date.session.status === 'RUNNING' && (
+              {session.status === 'RUNNING' && (
                 <button 
                   className="action-button end"
                   onClick={() => {
-                    setSelectedSession(date);
+                    setSelectedSession(session);
                     setIsEndModalOpen(true);
                   }}
                 >
@@ -149,47 +144,7 @@ const UpcomingSessions = () => {
         ))}
       </div>
 
-      {isEndModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <h2>End Session</h2>
-            <form onSubmit={handleEndSession}>
-              <textarea
-                placeholder="Session Content"
-                value={endSessionData.sessionContent}
-                onChange={(e) => setEndSessionData({...endSessionData, sessionContent: e.target.value})}
-                maxLength="255"
-                required
-              />
-              <textarea
-                placeholder={selectedSession?.session.userId ? 
-                  "Individual Session Notes" : 
-                  "Group Session Notes"}
-                value={endSessionData.notes}
-                onChange={(e) => setEndSessionData({...endSessionData, notes: e.target.value})}
-                required
-              />
-              <div className="modal-buttons">
-                <button type="submit">End Session</button>
-                <button type="button" onClick={() => setIsEndModalOpen(false)}>Cancel</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {isStartModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal confirmation">
-            <h2>Start Meeting</h2>
-            <p>Are you sure you want to start this meeting?</p>
-            <div className="modal-buttons">
-              <button onClick={() => handleStartMeeting(selectedSession.session)}>Start</button>
-              <button onClick={() => setIsStartModalOpen(false)}>Cancel</button>
-            </div>
-          </div>
-        </div>
-      )}
+   
     </div>
   );
 };

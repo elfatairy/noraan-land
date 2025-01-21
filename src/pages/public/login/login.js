@@ -26,8 +26,24 @@ const Login = () => {
         toast.error('Google login failed');
       }
     },
-    onError: () => toast.error('Google login failed')
+    onError: () => toast.error('Google login failed'),
+    flow: 'implicit',
+    popup: true,
+    cookiePolicy: 'single_host_origin',
+    popupType: 'window',  // Explicitly specify popup type
+    ux_mode: 'popup',     // Ensure popup mode is used
+    state_cookie_domain: window.location.hostname, // Set cookie domain
   });
+  
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (validateForm()) {
+      const result = await login('credentials', email, password);
+      if (result?.success) {
+        navigate('/');
+      }
+    }
+  };
 
   const validateEmail = (email) => {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -59,16 +75,6 @@ const Login = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (validateForm()) {
-      const result = await login('credentials', email, password);
-      if (result?.success) {
-        navigate('/');
-      }
-    }
-  };
   
   if(isLoading) return <Loading isVisible={isLoading} />;
 

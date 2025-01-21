@@ -39,6 +39,11 @@ const Sessions = () => {
     }
   };
 
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Not started';
+    return new Date(dateString).toLocaleString();
+  };
+
   const filteredSessions = sessions.filter(session => 
     session.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -69,10 +74,10 @@ const Sessions = () => {
             </div>
             <p>{session.description}</p>
             <div className="session-info">
-              <span>Started: {new Date(session.startedAt).toLocaleString()}</span>
+              <span>Started: {formatDate(session.startedAt)}</span>
             </div>
             <div className="session-actions">
-              {session.status === 'UPCOMING' && (
+              {session.status === 'RUNNING' && (
                 <button 
                   className="action-button join"
                   onClick={() => handleJoinSession(session.id)}
