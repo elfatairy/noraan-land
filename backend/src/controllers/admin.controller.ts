@@ -6,7 +6,7 @@ import axios from "axios";
 import { OAuth2Client } from "google-auth-library";
 import { generateToken } from "../utils/token.util";
 import { ROLES } from "../utils/constants.util";
-import { getCourse, getCourseUser } from "../services/course.service";
+import { getCourse, getUserCourse } from "../services/course.service";
 import { getRecordings, getSessions } from "../services/session.service";
 import { IndividualSession, SessionType } from "@prisma/client";
 

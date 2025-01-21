@@ -5,7 +5,7 @@ import bcrypt, { compare } from "bcrypt";
 import axios from "axios";
 import { OAuth2Client } from "google-auth-library";
 import { generateToken } from "../utils/token.util";
-import { getCourse, createCourse, getAllCourses, getCourseUsers, viewCourseUser, updateCourse } from "../services/course.service";
+import { getCourse, createCourse, getAllCourses, getUserCourses, viewUserCourse, updateCourse } from "../services/course.service";
 import { SessionType } from "@prisma/client";
 import { createFolder, deleteItem, getContent, renameItem, uploadFile } from "../services/material.service";
 import { existsSync } from "fs";

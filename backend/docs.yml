@@ -328,6 +328,238 @@ paths:
                   "availableTime": "From sundays to thursdays 3pm-8pm"
                   "userNotes": "Some notes"
 
+  /api/users/actions/approvePaypal/:courseId:
+    post:
+      tags:
+        - Subscription
+      summary: Approve Paypal Subscription
+      description: Approve the user had completed the paypal subscription successfully
+      parameters:
+        - name: courseId
+          in: path
+          description: the course id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                subscriptionId:
+                  type: number
+              required:
+                - subscriptionId
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                UNAUTHENTICATED:
+                  value:
+                    name: "UNAUTHENTICATED"
+                    message: "User is unauthenticated and this request requires authentication payload data"
+                TOKEN_EXPIRED:
+                  value:
+                    name: "TOKEN_EXPIRED"
+                    message: "The token you are using expird, please log in again to retrieve another token."
+                UNAUTHORIZED:
+                  value:
+                    name: "UNAUTHORIZED"
+                    message: "This request needs permessions the user doesn't have"
+                INVALID_PAYLOAD:
+                  value:
+                    name: "INVALID_PAYLOAD"
+                    message: "Invalid payload data"
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              examples:
+                COURSE_DOESNT_EXIST:
+                  value:
+                    name: "COURSE_DOESNT_EXIST"
+                    message: "No course with this id"
+                USER_COURSE_DOESNT_EXIST:
+                  value:
+                    name: "USER_COURSE_DOESNT_EXIST"
+                    message: "This user has not applied for this course"
+                ALREADY_SUBSCRIBED:
+                  value:
+                    name: "ALREADY_SUBSCRIBED"
+                    message: "User already subscribed to this course"
+                SUBSCRIBTION_NOT_VALID:
+                  value:
+                    name: "SUBSCRIBTION_NOT_VALID"
+                    message: "This subscription is not valid"
+        "200":
+          description: Success
+          content:
+            application/json:
+              example:
+                message: "Subscription Completed Successfully"
+                data: {}
+  /api/users/actions/intentPaymob/:courseId:
+    post:
+      tags:
+        - Subscription
+      summary: Make Paymob Intention
+      description: Make intention for paymob payment and returen the clients secret to be used in the payment
+      parameters:
+        - name: courseId
+          in: path
+          description: the course id
+          required: true
+          schema:
+            type: string
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                UNAUTHENTICATED:
+                  value:
+                    name: "UNAUTHENTICATED"
+                    message: "User is unauthenticated and this request requires authentication payload data"
+                TOKEN_EXPIRED:
+                  value:
+                    name: "TOKEN_EXPIRED"
+                    message: "The token you are using expird, please log in again to retrieve another token."
+                UNAUTHORIZED:
+                  value:
+                    name: "UNAUTHORIZED"
+                    message: "This request needs permessions the user doesn't have"
+                INVALID_PAYLOAD:
+                  value:
+                    name: "INVALID_PAYLOAD"
+                    message: "Invalid payload data"
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              examples:
+                COURSE_DOESNT_EXIST:
+                  value:
+                    name: "COURSE_DOESNT_EXIST"
+                    message: "No course with this id"
+                USER_COURSE_DOESNT_EXIST:
+                  value:
+                    name: "USER_COURSE_DOESNT_EXIST"
+                    message: "This user has not applied for this course"
+                ALREADY_SUBSCRIBED:
+                  value:
+                    name: "ALREADY_SUBSCRIBED"
+                    message: "User already subscribed to this course"
+        "200":
+          description: Success
+          content:
+            application/json:
+              example:
+                message: "Subscription Intention Completed Successfully"
+                data: {
+                  "clientSecret": "egy_csk_test_af72417dbc5dd1f7593274966f9ea89e"
+                }
+  /api/users/actions/enrolledCourses:
+    get:
+      tags:
+        - User Actions
+      summary: User Enrolled Courses
+      description: Get the courses the user had applied to whether subscribed to or not
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                UNAUTHENTICATED:
+                  value:
+                    name: "UNAUTHENTICATED"
+                    message: "User is unauthenticated and this request requires authentication payload data"
+                TOKEN_EXPIRED:
+                  value:
+                    name: "TOKEN_EXPIRED"
+                    message: "The token you are using expird, please log in again to retrieve another token."
+                UNAUTHORIZED:
+                  value:
+                    name: "UNAUTHORIZED"
+                    message: "This request needs permessions the user doesn't have"
+                INVALID_PAYLOAD:
+                  value:
+                    name: "INVALID_PAYLOAD"
+                    message: "Invalid payload data"
+        "200":
+          description: Success
+          content:
+            application/json:
+              example:
+                message: "Enrolled Courses Retreived Successfully"
+                data: 
+                  courses: 
+                    - {
+                      "id": 1,
+                      "name": "testing updateing",
+                      "groupPrice": 100,
+                      "individualPrice": 200,
+                      "description": "test updating decription",
+                      "createdAt": "2024-12-12T16:31:46.000Z",
+                      "updatedAt": "2024-12-23T17:16:02.000Z"
+                    }
+  /api/users/actions/nextWeekSessions:
+    get:
+      tags:
+        - User Actions
+      summary: User Next Week Sessions
+      description: Get the next week sessions for the user
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                UNAUTHENTICATED:
+                  value:
+                    name: "UNAUTHENTICATED"
+                    message: "User is unauthenticated and this request requires authentication payload data"
+                TOKEN_EXPIRED:
+                  value:
+                    name: "TOKEN_EXPIRED"
+                    message: "The token you are using expird, please log in again to retrieve another token."
+                UNAUTHORIZED:
+                  value:
+                    name: "UNAUTHORIZED"
+                    message: "This request needs permessions the user doesn't have"
+                INVALID_PAYLOAD:
+                  value:
+                    name: "INVALID_PAYLOAD"
+                    message: "Invalid payload data"
+        "200":
+          description: Success
+          content:
+            application/json:
+              example:
+                message: "Enrolled Courses Retreived Successfully"
+                data: 
+                  sessions:
+                    - {
+                        "id": 6,
+                        "courseId": 2,
+                        "status": "UPCOMING",
+                        "title": "Session notes test",
+                        "description": null,
+                        "isFree": false,
+                        "meetingId": null,
+                        "startedAt": null,
+                        "createdAt": "2024-12-31T15:42:33.000Z",
+                        "updatedAt": "2024-12-31T15:42:33.000Z",
+                        "calendarDateId": 10,
+                        "courseName": "Test notes Course"
+                      }
+
+
   /api/users/actions/joinSession/:courseId/:sessionId:
     post:
       tags:
@@ -719,7 +951,7 @@ paths:
               example:
                 message: "Course Sessions returned Successfully"
                 data:
-                  subscribtionStatus: SUBSCRIBED
+                  subscriptionStatus: SUBSCRIBED
                   sessions:
                     - {
                         "id": 3,
@@ -1431,15 +1663,16 @@ paths:
                 value:
                   message: "Course users retrieved successfully"
                   data:
-                    courseUsers:
+                    userCourses:
                       - {
                           "id": 1,
                           "userId": 1,
+                          "user": { "name": "omar" },
                           "courseId": 1,
                           "availableTime": "From sundays to thursdays 3pm-8pm",
                           "userNotes": null,
                           "viewedByAdmin": true,
-                          "subscribtionStatus": "SUBSCRIBED",
+                          "subscriptionStatus": "SUBSCRIBED",
                           "sessionType": "INDIVIDUAL",
                           "createdAt": "2024-12-12T16:33:46.000Z",
                           "updatedAt": "2024-12-12T17:24:47.000Z",
@@ -1496,15 +1729,16 @@ paths:
                 value:
                   message: "Course users retrieved successfully"
                   data:
-                    courseUsers:
+                    userCourses:
                       - {
                           "id": 1,
                           "userId": 1,
+                          "user": { "name": "omar" },
                           "courseId": 1,
                           "availableTime": "From sundays to thursdays 3pm-8pm",
                           "userNotes": null,
                           "viewedByAdmin": true,
-                          "subscribtionStatus": "SUBSCRIBED",
+                          "subscriptionStatus": "SUBSCRIBED",
                           "sessionType": "GROUP",
                           "createdAt": "2024-12-12T16:33:46.000Z",
                           "updatedAt": "2024-12-12T17:24:47.000Z",
@@ -1564,11 +1798,12 @@ paths:
                     - {
                         "id": 3,
                         "userId": 1,
+                        "user": { "name": "omar" },
                         "courseId": 2,
                         "availableTime": "From sundays to thursdays 3pm-8pm",
                         "userNotes": null,
                         "viewedByAdmin": false,
-                        "subscribtionStatus": "SUBSCRIBED",
+                        "subscriptionStatus": "SUBSCRIBED",
                         "sessionType": "GROUP",
                         "createdAt": "2024-12-18T15:31:15.000Z",
                         "updatedAt": "2024-12-18T15:31:15.000Z",

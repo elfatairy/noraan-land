@@ -154,3 +154,64 @@ export const getUserSession = async (userId: number, sessionId: number) => await
         sessionId
     }
 })
+
+export const getUserCourseSubscriptionStatus = async (userCourseId: number) => (await prisma.userCourseSubscription.findFirstOrThrow({
+    where: {
+        userCourseId
+    }
+}))?.subscriptionStatus
+
+export const getUserEnrolledCourses = async (userId: number) => (await prisma.userCourse.findMany({
+    where: { userId },
+    include: {
+        course: {}
+    }
+})).map(item => item.course);
+
+export const getUserNextWeekSessions = async (userId: number) => {
+    const now = new Date();
+    const nextWeekDate = new Date(now.getTime() + 604800000);
+
+    return (await prisma.userCourse.findMany({
+        where: {
+            userId
+        },
+        include: {
+            course: {
+                include: {
+                    groupSessions: {
+                        where: {
+                            calendarDate: {
+                                endDate: {
+                                    lt: nextWeekDate
+                                },
+                                startDate: {
+                                    gt: now
+                                }
+                            }
+                        }
+                    },
+                    individualSessions: {
+                        where: {
+                            calendarDate: {
+                                endDate: {
+                                    lt: nextWeekDate
+                                },
+                                startDate: {
+                                    gt: now
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    })).map(item => [
+        ...item.course.groupSessions,
+        ...item.course.individualSessions
+    ].map(session => ({
+        ...session,
+        courseId: item.course.id,
+        courseName: item.course.name,
+    }))).reduce((acc, cur) => [...acc, ...cur], []);
+}

@@ -21,9 +21,21 @@ model Course {
   individualSessions IndividualSession[]
   userCourses        UserCourse[]
 
-  subscribtionHistory subscribtionHistory[]
+  quizes Quiz[]
 
-  Quizes Quiz[]
+  paymentDetails PaymentDetails?
+}
+
+model PaymentDetails {
+  id       Int     @id @default(autoincrement())
+  course   Course? @relation(fields: [courseId], references: [id])
+  courseId Int?    @unique
+
+  paypalGroupPlanId      String?
+  paypalIndividualPlanId String?
+  
+  paymobGroupPlanId      Int?
+  paymobIndividualPlanId Int?
 }
 
 model GroupSession {
@@ -102,7 +114,6 @@ model User {
   userCourses            UserCourse[]
   userSessions           UserSession[]
   userIndividualSessions IndividualSession[]
-  subscribtionHistory    subscribtionHistory[]
 }
 
 model UserCourse {
@@ -113,14 +124,27 @@ model UserCourse {
   userNotes     String? @db.VarChar(255)
   viewedByAdmin Boolean @default(false)
 
-  subscribtionStatus SubscribtionStatus @default(UNSUBSCRIBED)
-  sessionType        SessionType
+  sessionType SessionType
 
   createdAt DateTime @default(now()) @db.Timestamp
   updatedAt DateTime @default(now()) @updatedAt @db.Timestamp
 
   user   User   @relation(fields: [userId], references: [id])
   course Course @relation(fields: [courseId], references: [id])
+
+  UserCourseSubscription UserCourseSubscription?
+}
+
+model UserCourseSubscription {
+  id           Int         @id @default(autoincrement())
+  userCourseId Int        @unique
+  userCourse   UserCourse? @relation(fields: [userCourseId], references: [id])
+
+  subscriptionStatus   SubscriptionStatus @default(UNSUBSCRIBED)
+  subscriptionMethod   SubscriptionMethod?
+
+  paypalSubscriptionId String?
+  paymobSubscriptionId String?
 }
 
 model UserSession {
@@ -134,20 +158,6 @@ model UserSession {
 
   user    User         @relation(fields: [userId], references: [id])
   session GroupSession @relation(fields: [sessionId], references: [id])
-}
-
-model subscribtionHistory {
-  id Int @id @default(autoincrement())
-
-  amountPaid Float
-
-  createdAt DateTime @default(now()) @db.Timestamp
-
-  courseId Int
-  course   Course @relation(fields: [courseId], references: [id])
-
-  userId Int
-  user   User @relation(fields: [userId], references: [id])
 }
 
 model CalendarDate {
@@ -164,9 +174,9 @@ model CalendarDate {
 }
 
 model Quiz {
-  id Int @id @default(autoincrement())
-  courseId Int
-  link String @db.VarChar(255)
+  id        Int      @id @default(autoincrement())
+  courseId  Int
+  link      String   @db.VarChar(255)
   createdAt DateTime @default(now()) @db.Timestamp
 
   course Course @relation(fields: [courseId], references: [id])
@@ -193,7 +203,7 @@ enum SessionType {
   GROUP
 }
 
-enum SubscribtionStatus {
+enum SubscriptionStatus {
   SUBSCRIBED
   UNSUBSCRIBED
 }
@@ -201,4 +211,8 @@ enum SubscribtionStatus {
 enum Gender {
   MALE
   FEMALE
+}
+
+enum SubscriptionMethod {
+  PAYPAL
 }

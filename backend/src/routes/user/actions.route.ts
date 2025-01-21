@@ -5,4 +5,9 @@ export const router = express.Router();
 
 router.post('/applyForCourse', userController.applyForCourse)
 router.post('/joinSession/:courseId/:sessionId', userController.joinSession)
-// router.get('/nextWeekSessions', userController.applyForCourse)
+
+router.post('/approvePaypal/:courseId', userController.approvePaypal)
+router.post('/intentPaymob/:courseId', userController.paymobIntention)
+
+router.get('/nextWeekSessions', userController.nextWeekSessions)
+router.get('/enrolledCourses', userController.getUserCourses)

@@ -1,11 +1,11 @@
 import { NextFunction, Request, Response } from "express";
 import { validateDate, validateEmail, validateName, validatePassword, validateQuizesLink, validateSessionType, validateString } from "../utils/validation.util";
 import { authenticateUser, createUser, emailExists, getUserByEmail, getUserSession, nameExists, userExists, verifyGoogleToken } from "../services/user.service";
-import { createCourse, getAllCourses, getCourse, getCourseUser } from "../services/course.service";
+import { createCourse, getAllCourses, getCourse, getUserCourse } from "../services/course.service";
 import { createGroupSessionService, createIndividualSessionService, createRecording, endSessionService, getSession, saveGruopStudentNotes, saveIndividualStudentNotes, startSessionService, uploadRecording } from "../services/session.service";
 import { isDateAvailable } from "../services/calendar.service";
 import { SessionStatus, SessionType } from "@prisma/client";
-import { createMeeting, getAccessToken } from "../services/zoom.service";
+import { createMeeting, getZoomAccessToken } from "../services/zoom.service";
 
 export const createGroupSession = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -85,15 +85,15 @@ export const createIndividualSession = async (req: Request, res: Response, next:
       return;
     }
 
-    const courseUser = await getCourseUser(userId, courseId);
-    if (courseUser == null) {
+    const userCourse = await getUserCourse(userId, courseId);
+    if (userCourse == null) {
       res.status(409).json({
         name: "USER_COURSE_DOESNT_EXIST",
         message: "This user hasn't applier for this course yet"
       });
       return;
     }
-    if (courseUser.sessionType != SessionType.INDIVIDUAL) {
+    if (userCourse.sessionType != SessionType.INDIVIDUAL) {
       res.status(409).json({
         name: "NOT_INDIVIDUAL",
         message: "Can't scedule individual session for user unless he applied as individual"
@@ -168,7 +168,7 @@ export const startSession = async (req: Request, res: Response, next: NextFuncti
       return;
     }
 
-    const accessToken = await getAccessToken();
+    const accessToken = await getZoomAccessToken();
 
     const { id: meetingId, start_url } = await createMeeting(accessToken, session.title);
     await startSessionService(meetingId, sessionId, SessionType[sessionType as keyof typeof SessionType]);

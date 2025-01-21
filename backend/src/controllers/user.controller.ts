@@ -1,14 +1,17 @@
 import { NextFunction, Request, Response } from "express";
 import { validateAge, validateEmail, validateGender, validateName, validatePassword, validateSessionType, validateString } from "../utils/validation.util";
-import { authenticateUser, createUser, createUserSession, emailExists, getUserByEmail, getUserSession, nameExists, updateUser, verifyGoogleToken } from "../services/user.service";
+import { authenticateUser, createUser, createUserSession, emailExists, getUserByEmail, getUserSession, getUserCourseSubscriptionStatus, nameExists, updateUser, verifyGoogleToken, getUserEnrolledCourses, getUserNextWeekSessions } from "../services/user.service";
 import { compare } from "bcrypt";
 import axios from "axios";
 import { OAuth2Client } from "google-auth-library";
-import { addCourseUser, getCourse, getCourseUser } from "../services/course.service";
+import { addUserCourse, addUserCourseSubscriptionStatus, approvePaypalSubscription, getCourse, getPaymentDetails, getUserCourse, getUserSubscriptionDetails, savePaymobSubscription } from "../services/course.service";
 import { getRecordings, getSession, getSessions } from "../services/session.service";
-import { IndividualSession, SessionStatus, SessionType, SubscribtionStatus } from "@prisma/client";
+import { IndividualSession, SessionStatus, SessionType, SubscriptionStatus } from "@prisma/client";
 import { getDateSession } from "../services/calendar.service";
-import { getAccessToken, getMeeting } from "../services/zoom.service";
+import { getZoomAccessToken, getMeeting } from "../services/zoom.service";
+import { getPaypalAccessToken, getPaypalSubscription } from "../services/paypal.service";
+import { prisma } from "../configs/db.config";
+import { createPaymobSubscription } from "../services/paymob.service";
 
 export const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -256,7 +259,7 @@ export const applyForCourse = async (req: Request, res: Response, next: NextFunc
       return;
     }
 
-    if (await getCourseUser(userId, courseId)) {
+    if (await getUserCourse(userId, courseId)) {
       res.status(409).json({
         name: "USER_COURSE_ALERADY_EXIST",
         message: "This user has already applied for this course"
@@ -264,7 +267,8 @@ export const applyForCourse = async (req: Request, res: Response, next: NextFunc
       return;
     }
 
-    await addCourseUser(userId, courseId, sessionType, availableTime, userNotes);
+    const userCourse = await addUserCourse(userId, courseId, sessionType, availableTime, userNotes);
+    await addUserCourseSubscriptionStatus(userCourse.id);
 
     res.json({
       message: "User applied for course successfully",
@@ -308,7 +312,7 @@ export const getCourseSessions = async (req: Request, res: Response, next: NextF
       return;
     }
 
-    const userCourse = await getCourseUser(userId, courseId);
+    const userCourse = await getUserCourse(userId, courseId);
     if (!userCourse) {
       res.status(409).json({
         name: "USER_COURSE_DOESNT_EXIST",
@@ -318,6 +322,8 @@ export const getCourseSessions = async (req: Request, res: Response, next: NextF
     }
 
     console.log(userCourse)
+    const subscriptionStatus = await getUserCourseSubscriptionStatus(userCourse.id);
+
     const sessions = await Promise.all(
       (await getSessions({
         courseId
@@ -335,9 +341,9 @@ export const getCourseSessions = async (req: Request, res: Response, next: NextF
 
         const recordings = await getRecordings(session.id, userCourse.sessionType) ?? [];
         const recordingsGuids: string[] = [];
-        recordings.forEach(recording => {
-          recordingsGuids.push(userCourse.subscribtionStatus == SubscribtionStatus.SUBSCRIBED ? recording.bunnyGuid : "")
-        });
+        await Promise.allSettled(recordings.map(async recording => {
+          recordingsGuids.push(subscriptionStatus == SubscriptionStatus.SUBSCRIBED ? recording.bunnyGuid : "")
+        }));
         
         return { id, description, isFree, status, title, teacherNotes, startedAt, recordings: recordingsGuids };
       })
@@ -346,7 +352,7 @@ export const getCourseSessions = async (req: Request, res: Response, next: NextF
     res.json({
       message: "Course Sessions returned Successfully",
       data: {
-        subscribtionStatus: userCourse.subscribtionStatus,
+        subscriptionStatus,
         sessions: JSON.parse(JSON.stringify(sessions, (_, v) => typeof v === 'bigint' ? v.toString() : v))
       }
     })
@@ -385,7 +391,7 @@ export const joinSession = async (req: Request, res: Response, next: NextFunctio
     }
 
     console.log(userId);
-    const userCourse = await getCourseUser(userId, courseId);
+    const userCourse = await getUserCourse(userId, courseId);
     if (!userCourse) {
       res.status(409).json({
         name: "USER_COURSE_DOESNT_EXIST",
@@ -404,7 +410,9 @@ export const joinSession = async (req: Request, res: Response, next: NextFunctio
       return;
     }
 
-    if (userCourse.subscribtionStatus != SubscribtionStatus.SUBSCRIBED && !session.isFree) {
+    const subscriptionStatus = await getUserCourseSubscriptionStatus(userCourse.id);
+
+    if (subscriptionStatus != SubscriptionStatus.SUBSCRIBED && !session.isFree) {
       res.status(409).json({
         name: "CANT_JOIN",
         message: "Renew the subscription to join this meeting"
@@ -420,7 +428,7 @@ export const joinSession = async (req: Request, res: Response, next: NextFunctio
       return;
     }
 
-    const accessToken = await getAccessToken();
+    const accessToken = await getZoomAccessToken();
     const { join_url } = await getMeeting(accessToken, session.meetingId);
 
     if (userCourse.sessionType == SessionType.GROUP) {
@@ -433,6 +441,218 @@ export const joinSession = async (req: Request, res: Response, next: NextFunctio
       message: "User joined session Successfully",
       data: {
         join_url
+      }
+    })
+
+  } catch (err: any) {
+    console.log("ERROR: ", err);
+    res.status(500).json({
+      name: "INTERNAL_SERVER_ERROR",
+      message: "Internal Server Error"
+    });
+    next(err);
+  }
+}
+
+export const approvePaypal = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const courseId = Number(req.params.courseId);
+    const { id: userId } = res.locals.user;
+    const { subscriptionId } = req.body;
+
+    if (!courseId || !subscriptionId) {
+      res.status(400).json({
+        name: "INVALID_PAYLOAD",
+        message: "Invalid payload data"
+      });
+      return;
+    }
+
+    const course = await getCourse({ id: courseId });
+    if (!course) {
+      res.status(409).json({
+        name: "COURSE_DOESNT_EXIST",
+        message: "No course with this id"
+      });
+      return;
+    }
+
+    console.log(userId);
+    const userCourse = await getUserCourse(userId, courseId);
+    if (!userCourse) {
+      res.status(409).json({
+        name: "USER_COURSE_DOESNT_EXIST",
+        message: "This user has not applied for this course"
+      });
+      return;
+    }
+
+    const subscriptionStatus = await getUserCourseSubscriptionStatus(userCourse.id);
+
+    if (subscriptionStatus == SubscriptionStatus.SUBSCRIBED) {
+      res.status(409).json({
+        name: "ALREADY_SUBSCRIBED",
+        message: "User already subscribed to this course"
+      });
+      return;
+    }
+
+    const accessToken = await getPaypalAccessToken();
+    const subscription = await getPaypalSubscription(subscriptionId, accessToken);
+
+    if(subscription.status != 'ACTIVE') {
+      res.status(409).json({
+        name: "SUBSCRIBTION_NOT_VALID",
+        message: "This subscription is not valid"
+      })
+    }
+
+    const alreadyUsed = await getUserSubscriptionDetails({ paypalSubscriptionId: subscriptionId });
+    if(alreadyUsed) {
+      res.status(409).json({
+        name: "SUBSCRIBTION_NOT_VALID",
+        message: "This subscription is not valid"
+      })
+    }
+
+    await approvePaypalSubscription(userCourse.id, subscriptionId);
+
+    res.json({
+      message: "Subscription Completed Successfully",
+      data: {
+      }
+    })
+
+  } catch (err: any) {
+    console.log("ERROR: ", err);
+    res.status(500).json({
+      name: "INTERNAL_SERVER_ERROR",
+      message: "Internal Server Error"
+    });
+    next(err);
+  }
+}
+
+export const paymobIntention = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const courseId = Number(req.params.courseId);
+    const { id: userId, ...user } = res.locals.user;
+  
+    if (!courseId) {
+      res.status(400).json({
+        name: "INVALID_PAYLOAD",
+        message: "Invalid payload data"
+      });
+      return;
+    }
+
+    const course = await getCourse({ id: courseId });
+    if (!course) {
+      res.status(409).json({
+        name: "COURSE_DOESNT_EXIST",
+        message: "No course with this id"
+      });
+      return;
+    }
+
+    const userCourse = await getUserCourse(userId, courseId);
+    if (!userCourse) {
+      res.status(409).json({
+        name: "USER_COURSE_DOESNT_EXIST",
+        message: "This user has not applied for this course"
+      });
+      return;
+    }
+
+    const subscriptionStatus = await getUserCourseSubscriptionStatus(userCourse.id);
+
+    if (subscriptionStatus == SubscriptionStatus.SUBSCRIBED) {
+      res.status(409).json({
+        name: "ALREADY_SUBSCRIBED",
+        message: "User already subscribed to this course"
+      });
+      return;
+    }
+
+    const paymentDetails = await getPaymentDetails(course.id);
+    const planId = userCourse.sessionType == SessionType.GROUP ? paymentDetails.paymobGroupPlanId : paymentDetails.paymobIndividualPlanId;
+    if(!planId) throw Error("Plan id not found");
+
+    const subscription = await createPaymobSubscription(user.name, 
+      user.email, 
+      userCourse.sessionType == SessionType.GROUP ? course.groupPrice! : course.individualPrice!, 
+      planId);
+    if(!subscription) throw Error("Error while creating subscription intent");
+
+    await savePaymobSubscription(userCourse.id, subscription.id);
+
+    res.json({
+      message: "Subscription Intention Completed Successfully",
+      data: {
+        clientSecret: subscription.client_secret
+      }
+    })
+
+  } catch (err: any) {
+    console.log("ERROR: ", err);
+    console.log(err.response.data);
+    res.status(500).json({
+      name: "INTERNAL_SERVER_ERROR",
+      message: "Internal Server Error"
+    });
+    next(err);
+  }
+}
+
+export const paymobResponse = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    console.log("PAYMOB Response params:");
+    console.log(req.query);
+
+    res.status(200).end();
+  } catch (err: any) {
+    console.log("ERROR: ", err);
+    res.status(500).json({
+      name: "INTERNAL_SERVER_ERROR",
+      message: "Internal Server Error"
+    });
+    next(err);
+  }
+}
+
+export const getUserCourses = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id: userId } = res.locals.user;
+
+    const enrolledCourses = await getUserEnrolledCourses(userId);
+
+    res.json({
+      message: "Enrolled Courses Retreived Successfully",
+      data: {
+        courses: enrolledCourses
+      }
+    })
+
+  } catch (err: any) {
+    console.log("ERROR: ", err);
+    res.status(500).json({
+      name: "INTERNAL_SERVER_ERROR",
+      message: "Internal Server Error"
+    });
+    next(err);
+  }
+}
+
+export const nextWeekSessions = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id: userId } = res.locals.user;
+
+    const nextWeekSessions = await getUserNextWeekSessions(userId);
+
+    res.json({
+      message: "Enrolled Courses Retreived Successfully",
+      data: {
+        sessions: nextWeekSessions
       }
     })
 
