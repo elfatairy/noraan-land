@@ -15,8 +15,8 @@ model Course {
   groupPrice         Float?
   individualPrice    Float?
   description        String?             @db.VarChar(1024)
-  createdAt          DateTime            @default(CURRENT_TIMESTAMP) @db.Timestamp(6)
-  updatedAt          DateTime            @default(CURRENT_TIMESTAMP) @updatedAt @db.Timestamp(6)
+  createdAt          DateTime            @default(now()) @db.Timestamp
+  updatedAt          DateTime            @default(now()) @updatedAt @db.Timestamp
   groupSessions      GroupSession[]
   individualSessions IndividualSession[]
   userCourses        UserCourse[]
@@ -48,9 +48,9 @@ model GroupSession {
 
   meetingId BigInt?
 
-  startedAt DateTime? @db.Timestamp(6)
-  createdAt DateTime  @default(CURRENT_TIMESTAMP) @db.Timestamp(6)
-  updatedAt DateTime  @default(CURRENT_TIMESTAMP) @updatedAt @db.Timestamp(6)
+  startedAt DateTime? @db.Timestamp
+  createdAt DateTime  @default(now()) @db.Timestamp
+  updatedAt DateTime  @default(now()) @updatedAt @db.Timestamp
 
   course         Course        @relation(fields: [courseId], references: [id])
   userSessions   UserSession[]
@@ -72,9 +72,9 @@ model IndividualSession {
 
   meetingId BigInt?
 
-  startedAt DateTime? @db.Timestamp(6)
-  createdAt DateTime  @default(CURRENT_TIMESTAMP) @db.Timestamp(6)
-  updatedAt DateTime  @default(CURRENT_TIMESTAMP) @updatedAt @db.Timestamp(6)
+  startedAt DateTime? @db.Timestamp
+  createdAt DateTime  @default(now()) @db.Timestamp
+  updatedAt DateTime  @default(now()) @updatedAt @db.Timestamp
 
   course Course @relation(fields: [courseId], references: [id])
   user   User   @relation(fields: [userId], references: [id])
@@ -89,8 +89,8 @@ model Recording {
   sessionType SessionType
   bunnyGuid   String
 
-  createdAt DateTime @default(CURRENT_TIMESTAMP) @db.Timestamp(6)
-  updatedAt DateTime @default(CURRENT_TIMESTAMP) @updatedAt @db.Timestamp(6)
+  createdAt DateTime @default(now()) @db.Timestamp
+  updatedAt DateTime @default(now()) @updatedAt @db.Timestamp
 
   IndividualSession   IndividualSession? @relation(fields: [IndividualSessionid], references: [id])
   IndividualSessionid Int?
@@ -108,8 +108,8 @@ model User {
   location String?
   gender   Gender?
 
-  createdAt DateTime @default(CURRENT_TIMESTAMP) @db.Timestamp(6)
-  updatedAt DateTime @default(CURRENT_TIMESTAMP) @updatedAt @db.Timestamp(6)
+  createdAt DateTime @default(now()) @db.Timestamp
+  updatedAt DateTime @default(now()) @updatedAt @db.Timestamp
 
   userCourses            UserCourse[]
   userSessions           UserSession[]
@@ -126,8 +126,8 @@ model UserCourse {
 
   sessionType SessionType
 
-  createdAt DateTime @default(CURRENT_TIMESTAMP) @db.Timestamp(6)
-  updatedAt DateTime @default(CURRENT_TIMESTAMP) @updatedAt @db.Timestamp(6)
+  createdAt DateTime @default(now()) @db.Timestamp
+  updatedAt DateTime @default(now()) @updatedAt @db.Timestamp
 
   user   User   @relation(fields: [userId], references: [id])
   course Course @relation(fields: [courseId], references: [id])
@@ -153,8 +153,8 @@ model UserSession {
   sessionId Int
   notes     String? @db.VarChar(255)
 
-  createdAt DateTime @default(CURRENT_TIMESTAMP) @db.Timestamp(6)
-  updatedAt DateTime @default(CURRENT_TIMESTAMP) @updatedAt @db.Timestamp(6)
+  createdAt DateTime @default(now()) @db.Timestamp
+  updatedAt DateTime @default(now()) @updatedAt @db.Timestamp
 
   user    User         @relation(fields: [userId], references: [id])
   session GroupSession @relation(fields: [sessionId], references: [id])
@@ -169,15 +169,15 @@ model CalendarDate {
   status            CalendarDateStatus @default(AVAILABLE)
   groupSession      GroupSession?
   individualSession IndividualSession?
-  createdAt         DateTime           @default(CURRENT_TIMESTAMP) @db.Timestamp(6)
-  updatedAt         DateTime           @default(CURRENT_TIMESTAMP) @updatedAt @db.Timestamp(6)
+  createdAt         DateTime           @default(now()) @db.Timestamp
+  updatedAt         DateTime           @default(now()) @updatedAt @db.Timestamp
 }
 
 model Quiz {
   id        Int      @id @default(autoincrement())
   courseId  Int
   link      String   @db.VarChar(255)
-  createdAt DateTime @default(CURRENT_TIMESTAMP) @db.Timestamp(6)
+  createdAt DateTime @default(now()) @db.Timestamp
 
   course Course @relation(fields: [courseId], references: [id])
 }
