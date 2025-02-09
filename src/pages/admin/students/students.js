@@ -43,8 +43,8 @@ const Students = () => {
     return students.map((student) => (
       <div key={student.id} className="student-card">
         <div className="student-header">
-          <h3>Student ID: {student.userId}</h3>
-          <span className={`status-badge ${student.subscribtionStatus}`}>
+        <h3>Student Name: {student.user.name} <br></br>Student ID: {student.userId}</h3>
+        <span className={`status-badge ${student.subscribtionStatus}`}>
             {student.subscribtionStatus}
           </span>
         </div>

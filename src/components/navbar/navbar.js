@@ -8,14 +8,12 @@ const Navbar = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   
-  const { user, isLoggedIn, logout } = useAuth(); // Changed from isAuthenticated to isLoggedIn
+  const { user, isLoggedIn, logout } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
-  const isAdmin = location.pathname.includes('/admin');
-  const isStudent = location.pathname.includes('/student');
+  const isAdmin = true;
 
-  // Handle scroll effect
   useEffect(() => {
     const handleScroll = () => {
       const isScrolled = window.scrollY > 20;
@@ -69,14 +67,6 @@ const Navbar = () => {
           <li><Link to="/">Back to Home</Link></li>
         </ul>
       );
-    } else if (isStudent) {
-      return (
-        <ul className="nav-links mobile-links">
-          <li><Link to="/student/upcoming-sessions">Upcoming Sessions</Link></li>
-          <li><Link to="/student/enrolled-courses">Enrolled Courses</Link></li>
-          <li><Link to="/">Back to Home</Link></li>
-        </ul>
-      );
     } else {
       return (
         <ul className="nav-links mobile-links">
@@ -107,9 +97,9 @@ const Navbar = () => {
 
         {/* Desktop Navigation */}
         <div className="nav-content desktop">
-          {renderDesktopLinks()}
+          {/* {renderDesktopLinks()} */}
           <div className="auth-section">
-            {isLoggedIn && user ? ( // Changed from isAuthenticated to isLoggedIn
+            {isLoggedIn && user ? (
               <div className="user-menu">
                 <button className="user-button" onClick={toggleDropdown}>
                   <span>{user.name}</span>
@@ -129,16 +119,13 @@ const Navbar = () => {
                 </button>
                 {isDropdownOpen && (
                   <div className="dropdown-menu">
-                    <Link to="/dashboard" onClick={() => setIsDropdownOpen(false)}>Dashboard</Link>
-                    <Link to="/profile" onClick={() => setIsDropdownOpen(false)}>Profile</Link>
                     <button onClick={handleLogout}>Logout</button>
                   </div>
                 )}
               </div>
             ) : (
               <div className="auth-buttons">
-                <Link to="/login" className="login-btn">Login</Link>
-                <Link to="/register" className="signup-btn">Sign Up</Link>
+                <Link to="/admin/login" className="login-btn">Login</Link>
               </div>
             )}
           </div>
@@ -150,7 +137,7 @@ const Navbar = () => {
             {renderMobileLinks()}
           </ul>
           <div className="auth-section">
-            {isLoggedIn && user ? ( // Changed from isAuthenticated to isLoggedIn
+            {isLoggedIn && user ? (
               <div className="user-menu">
                 <button className="user-button" onClick={toggleDropdown}>
                   <span>{user.name}</span>
@@ -170,16 +157,15 @@ const Navbar = () => {
                 </button>
                 {isDropdownOpen && (
                   <div className="dropdown-menu">
-                    <Link to="/dashboard" onClick={() => setIsDropdownOpen(false)}>Dashboard</Link>
-                    <Link to="/profile" onClick={() => setIsDropdownOpen(false)}>Profile</Link>
+                    <Link to="/admin/dashboard" onClick={() => setIsDropdownOpen(false)}>Dashboard</Link>
+                    <Link to="/admin/profile" onClick={() => setIsDropdownOpen(false)}>Profile</Link>
                     <button onClick={handleLogout}>Logout</button>
                   </div>
                 )}
               </div>
             ) : (
               <div className="auth-buttons">
-                <Link to="/login" onClick={closeMenu} className="login-btn">Login</Link>
-                <Link to="/register" onClick={closeMenu} className="signup-btn">Sign Up</Link>
+                <Link to="/admin/login" onClick={closeMenu} className="login-btn">Login</Link>
               </div>
             )}
           </div>

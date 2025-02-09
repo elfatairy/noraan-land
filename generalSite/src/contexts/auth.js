@@ -1,4 +1,4 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react'; // Add useEffect
 import { toast } from 'react-toastify';
 import useLogin from '../hooks/loginhook';
 import useRegister from '../hooks/registerhook';
@@ -14,6 +14,22 @@ export const AuthProvider = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
   const isAuthenticated = !!user && isLoggedIn && !!getStorageData('token');
+
+  // Add this useEffect to check storage on mount
+  useEffect(() => {
+    const token = getStorageData('token');
+    const storedUser = {
+      id: getStorageData('id'),
+      name: getStorageData('name'),
+      email: getStorageData('email'),
+      isAdmin: getStorageData('isAdmin') === 'true'
+    };
+
+    if (token && storedUser.name) {
+      setUser(storedUser);
+      setIsLoggedIn(true);
+    }
+  }, []);
 
   const { isLoading, execute: executeLogin } = useLogin();
   const { isLoadingAdminLogin, execute: executeAdminLogin } = useAdminLogin();
@@ -94,6 +110,7 @@ export const AuthProvider = ({ children }) => {
   };
 
 
+  // Modify adminLogin to also store isAdmin flag
   const adminLogin = async (username, password) => {
     if (!username || username.length < 3) {
       toast.error("Username must be at least 3 characters", { autoClose: 3000 });
@@ -110,9 +127,9 @@ export const AuthProvider = ({ children }) => {
       
       if (response?.data?.token) {
         setStorageData('token', response.data.token);
-        setUser({name : "Admin", isAdmin: true });
-        console.log(user);
-        console.log(getStorageData('token'))
+        setStorageData('name', "Admin");
+        setStorageData('isAdmin', 'true');
+        setUser({name: "Admin", isAdmin: true});
         setIsLoggedIn(true);
         return { success: true };
       }
@@ -145,10 +162,15 @@ export const AuthProvider = ({ children }) => {
     toast.error(errorMessage || "An error occurred during registration", { autoClose: 3000 });
   };
 
+  // Modify logout to clear all stored data
   const logout = () => {
     setIsLoggedIn(false);
     setUser(null);
     localStorage.removeItem('token');
+    localStorage.removeItem('id');
+    localStorage.removeItem('name');
+    localStorage.removeItem('email');
+    localStorage.removeItem('isAdmin');
   };
 
   const value = {

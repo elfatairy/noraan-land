@@ -12,8 +12,8 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const isAdmin = location.pathname.includes('/admin');
-  const isStudent = location.pathname.includes('/student');
+  const isAdmin = false;
+  const isStudent = true;
 
   // Handle scroll effect
   useEffect(() => {
@@ -129,7 +129,7 @@ const Navbar = () => {
                 </button>
                 {isDropdownOpen && (
                   <div className="dropdown-menu">
-                    <Link to="/dashboard" onClick={() => setIsDropdownOpen(false)}>Dashboard</Link>
+                    <Link to="/student/upcoming-sessions" onClick={() => setIsDropdownOpen(false)}>Dashboard</Link>
                     <Link to="/profile" onClick={() => setIsDropdownOpen(false)}>Profile</Link>
                     <button onClick={handleLogout}>Logout</button>
                   </div>

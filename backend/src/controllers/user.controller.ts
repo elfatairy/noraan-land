@@ -13,6 +13,13 @@ import { getPaypalAccessToken, getPaypalSubscription } from "../services/paypal.
 import { prisma } from "../configs/db.config";
 import { createPaymobSubscription } from "../services/paymob.service";
 
+// Helper function to serialize BigInt values
+const serializeBigInt = (data: any) => {
+  return JSON.parse(JSON.stringify(data, (_, value) => 
+    typeof value === 'bigint' ? value.toString() : value
+  ));
+};
+
 export const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { email, password } = req.body;
@@ -648,13 +655,16 @@ export const nextWeekSessions = async (req: Request, res: Response, next: NextFu
     const { id: userId } = res.locals.user;
 
     const nextWeekSessions = await getUserNextWeekSessions(userId);
+    
+    // Serialize the sessions before sending the response
+    const serializedSessions = serializeBigInt(nextWeekSessions);
 
     res.json({
-      message: "Enrolled Courses Retreived Successfully",
+      message: "Enrolled Courses Retrieved Successfully",
       data: {
-        sessions: nextWeekSessions
+        sessions: serializedSessions
       }
-    })
+    });
 
   } catch (err: any) {
     console.log("ERROR: ", err);
