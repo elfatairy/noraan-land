@@ -114,6 +114,17 @@ export const approvePaypalSubscription = async (userCourseId: number, paypalSubs
     }
 })
 
+export const approvePaypalSubscriptionSandBox = async (userCourseId: number) => await prisma.userCourseSubscription.update({
+    where: {
+        userCourseId
+    },
+    data: {
+        subscriptionStatus: SubscriptionStatus.SUBSCRIBED,
+        subscriptionMethod: SubscriptionMethod.PAYPAL,
+        paymobSubscriptionId: 'SANDBOX'
+    }
+})
+
 export const savePaymobSubscription = async (userCourseId: number, paymobSubscriptionId: string) => await prisma.userCourseSubscription.update({
     where: {
         userCourseId

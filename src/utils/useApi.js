@@ -2,7 +2,8 @@ import { useState, useCallback } from "react";
 import { getStorageData } from "./data";
 import axios from "axios";
 
-const BASE_URL = 'http://localhost:3001/api';
+console.log(process.env)
+const BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
 export const useApiFetch = () => {
   const [isLoading, setIsLoading] = useState(false);

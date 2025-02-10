@@ -4,7 +4,7 @@ import { authenticateUser, createUser, createUserSession, emailExists, getUserBy
 import { compare } from "bcrypt";
 import axios from "axios";
 import { OAuth2Client } from "google-auth-library";
-import { addUserCourse, addUserCourseSubscriptionStatus, approvePaypalSubscription, getCourse, getPaymentDetails, getUserCourse, getUserSubscriptionDetails, savePaymobSubscription } from "../services/course.service";
+import { addUserCourse, addUserCourseSubscriptionStatus, approvePaypalSubscription, approvePaypalSubscriptionSandBox, getCourse, getPaymentDetails, getUserCourse, getUserSubscriptionDetails, savePaymobSubscription } from "../services/course.service";
 import { getRecordings, getSession, getSessions } from "../services/session.service";
 import { IndividualSession, SessionStatus, SessionType, SubscriptionStatus } from "@prisma/client";
 import { getDateSession } from "../services/calendar.service";
@@ -516,6 +516,57 @@ export const approvePaypal = async (req: Request, res: Response, next: NextFunct
     }
 
     await approvePaypalSubscription(userCourse.id, subscriptionId);
+
+    res.json({
+      message: "Subscription Completed Successfully",
+      data: {
+      }
+    })
+
+  } catch (err: any) {
+    console.log("ERROR: ", err);
+    res.status(500).json({
+      name: "INTERNAL_SERVER_ERROR",
+      message: "Internal Server Error"
+    });
+    next(err);
+  }
+}
+
+export const approvePaypalSandbox = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const courseId = Number(req.params.courseId);
+    const { id: userId } = res.locals.user;
+    const { subscriptionId } = req.body;
+
+    if (!courseId || !subscriptionId) {
+      res.status(400).json({
+        name: "INVALID_PAYLOAD",
+        message: "Invalid payload data"
+      });
+      return;
+    }
+
+    const course = await getCourse({ id: courseId });
+    if (!course) {
+      res.status(409).json({
+        name: "COURSE_DOESNT_EXIST",
+        message: "No course with this id"
+      });
+      return;
+    }
+
+    console.log(userId);
+    const userCourse = await getUserCourse(userId, courseId);
+    if (!userCourse) {
+      res.status(409).json({
+        name: "USER_COURSE_DOESNT_EXIST",
+        message: "This user has not applied for this course"
+      });
+      return;
+    }
+
+    await approvePaypalSubscriptionSandBox(userCourse.id);
 
     res.json({
       message: "Subscription Completed Successfully",
