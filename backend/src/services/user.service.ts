@@ -170,15 +170,17 @@ export const getUserEnrolledCourses = async (userId: number) => (await prisma.us
 
 export const getUserNextWeekSessions = async (userId: number) => {
     const now = new Date();
-    const nextWeekDate = new Date(now.getTime() + 604800000);
+    const nextWeekDate = new Date(now.getTime() + 604800000); // 7 days in milliseconds
 
-    return (await prisma.userCourse.findMany({
+    const userCourses = await prisma.userCourse.findMany({
         where: {
             userId
         },
         include: {
             course: {
-                include: {
+                select: {
+                    id: true,
+                    name: true,
                     groupSessions: {
                         where: {
                             calendarDate: {
@@ -189,6 +191,18 @@ export const getUserNextWeekSessions = async (userId: number) => {
                                     gt: now
                                 }
                             }
+                        },
+                        select: {
+                            id: true,
+                            title: true,
+                            description: true,
+                            status: true,
+                            isFree: true,
+                            meetingId: true,
+                            startedAt: true,
+                            createdAt: true,
+                            updatedAt: true,
+                            calendarDateId: true
                         }
                     },
                     individualSessions: {
@@ -201,17 +215,52 @@ export const getUserNextWeekSessions = async (userId: number) => {
                                     gt: now
                                 }
                             }
+                        },
+                        select: {
+                            id: true,
+                            title: true,
+                            description: true,
+                            status: true,
+                            isFree: true,
+                            meetingId: true,
+                            startedAt: true,
+                            createdAt: true,
+                            updatedAt: true,
+                            calendarDateId: true
                         }
                     }
                 }
             }
         }
-    })).map(item => [
-        ...item.course.groupSessions,
-        ...item.course.individualSessions
-    ].map(session => ({
-        ...session,
-        courseId: item.course.id,
-        courseName: item.course.name,
-    }))).reduce((acc, cur) => [...acc, ...cur], []);
-}
+    });
+
+    // Process and combine sessions with BigInt conversion
+    const sessions = userCourses.flatMap(userCourse => {
+        const course = userCourse.course;
+        const allSessions = [
+            ...course.groupSessions,
+            ...course.individualSessions
+        ];
+
+        return allSessions.map(session => ({
+            id: Number(session.id),
+            courseId: Number(course.id),
+            courseName: course.name,
+            title: session.title,
+            description: session.description,
+            status: session.status,
+            isFree: session.isFree,
+            meetingId: session.meetingId,
+            startedAt: session.startedAt,
+            createdAt: session.createdAt,
+            updatedAt: session.updatedAt,
+            calendarDateId: Number(session.calendarDateId)
+        }));
+    });
+
+    return sessions.sort((a, b) => {
+        const dateA = a.startedAt || a.createdAt;
+        const dateB = b.startedAt || b.createdAt;
+        return new Date(dateA).getTime() - new Date(dateB).getTime();
+    });
+};

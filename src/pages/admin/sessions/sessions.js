@@ -38,7 +38,7 @@ const Sessions = () => {
   const { execute: createIndividual, isLoading: isLoadingIndividual } = useCreateIndividualSession();
   const { execute: startMeeting, isLoading: isLoadingStart } = useStartMeeting();
   const { execute: endSession, isLoading: isLoadingEnd } = useEndSession();
-  const { execute: uploadRecords, isLoading: isLoadingUpload } = useUploadRecords();
+  const { execute: uploadRecordings, isLoading: isLoadingUpload } = useUploadRecords();
 
   useEffect(() => {
     fetchSessions();
@@ -116,28 +116,32 @@ const Sessions = () => {
       toast.error(error?.response?.data?.message || 'Failed to end session');
     }
   };
+
+
   const handleUploadRecords = async (e) => {
     e.preventDefault();
     if (!selectedFile) {
-        toast.error('Please select a file');
-        return;
+      toast.error('Please select a file');
+      return;
     }
-
+  
     const formData = new FormData();
-    // Explicitly use 'files' as the key
+    // Change from append to append as array element
     formData.append('files', selectedFile);
-
+    // or formData.append('files', selectedFile);
+  
     try {
-        const sessionType = selectedSession.userId ? 'INDIVIDUAL' : 'GROUP';
-        await uploadRecords.execute(sessionType, selectedSession.id, formData);
-        toast.success('Records uploaded successfully');
-        fetchSessions();
+      const sessionType = selectedSession.userId ? 'INDIVIDUAL' : 'GROUP';
+      await uploadRecordings(sessionType, selectedSession.id, formData);
+      toast.success('Records uploaded successfully');
+      fetchSessions();
+      setIsUploadModalOpen(false);
+      setSelectedFile(null);
     } catch (error) {
-        console.error('Upload error:', error);
-        toast.error('Failed to upload records');
+      console.error('Upload error:', error);
+      toast.error('Failed to upload records');
     }
-    setIsUploadModalOpen(false);
-};
+  };
 
   const filteredSessions = sessions.filter(session => {
     const matchesSearch = session.title.toLowerCase().includes(searchTerm.toLowerCase());

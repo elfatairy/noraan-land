@@ -2,8 +2,8 @@ import { useState, useCallback } from "react";
 import { getStorageData } from "./data";
 import axios from "axios";
 
-console.log(process.env)
-const BASE_URL = process.env.REACT_APP_API_BASE_URL;
+const BASE_URL = 'https://nooranland.com/api';
+// const BASE_URL = 'http://localhost:3000/api';
 
 export const useApiFetch = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -14,7 +14,7 @@ export const useApiFetch = () => {
     try {
       setIsLoading(true);
       const token = await getStorageData("token");
-      
+
       const config = {
         ...options,
         headers: {
