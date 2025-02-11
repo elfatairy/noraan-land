@@ -6,6 +6,7 @@ import { toast } from 'react-toastify';
 import { FcGoogle } from 'react-icons/fc';
 import { useAuth } from '../../../contexts/auth';
 import { useGoogleLogin } from '@react-oauth/google';
+import { setStorageData } from '../../../utils/data';
 
 const Profile = () => {
     const [initialProfile, setInitialProfile] = useState("");
@@ -42,7 +43,7 @@ const Profile = () => {
     }
 
     const validateAge = (age) => {
-        return (typeof age == "number") && Number.isInteger(age) && age > 0 && age < 100;
+        return Number.isInteger(Number(age)) && Number(age) > 0 && Number(age) < 100;
     }
 
     const handleUpdateProfileError = (error) => {
@@ -77,9 +78,18 @@ const Profile = () => {
             try {
                 const res = await updateProfile(payload);
                 if (res?.data?.user) {
+                    if (name != initialProfile.name)
+                        setStorageData('name', name);
+
                     setInitialProfile(res.data.user);
+                    toast.success("Profile updated successfully");
+
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000)
+                } else {
+                    toast.error("Error updating the profile")
                 }
-                toast.error("Error updating the profile")
             } catch (error) {
                 handleUpdateProfileError(error);
             }
@@ -156,16 +166,26 @@ const Profile = () => {
                             <span className="error-message">{errors.age}</span>
                         )}
                     </div>
-                    <div className="auth-form-group">
-                        <label htmlFor="gender">Gender</label>
-                        <input
-                            type="gender"
-                            id="gender"
-                            value={gender}
-                            onChange={(e) => setGender(e.target.value)}
-                            placeholder="Enter your gender"
-                            className={errors.gender ? "error" : ""}
-                        />
+                    <div className="profile-radio-group auth-form-group">
+                        <label>Gender</label>
+                        <label>
+                            <input
+                                type="radio"
+                                value="MALE"
+                                checked={gender == 'MALE'}
+                                onChange={e => setGender(e.target.value)}
+                            />
+                            Male
+                        </label>
+                        <label>
+                            <input
+                                type="radio"
+                                value="FEMALE"
+                                checked={gender === 'FEMALE'}
+                                onChange={e => setGender(e.target.value)}
+                            />
+                            Female
+                        </label>
                         {errors.gender && (
                             <span className="error-message">{errors.gender}</span>
                         )}

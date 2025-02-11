@@ -23,24 +23,6 @@
     margin-bottom: 0.5rem;
   }
   
-  .radio-group {
-    display: flex;
-    gap: 2rem;
-    margin-top: 0.5rem;
-  }
-  
-  .radio-group label {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    color: #666;
-    cursor: pointer;
-  }
-  
-  .radio-group input[type="radio"] {
-    accent-color: #95345C;
-  }
-  
   .courses-container {
     padding: 2rem;
   }

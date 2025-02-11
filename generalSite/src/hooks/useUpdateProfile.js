@@ -12,7 +12,7 @@ export const useUpdateProfile = () => {
             gender,
             location
          };
-         const response = await _execute('users/auth/update-profile', 'POST', requestData, options);
+         const response = await _execute('users/auth/update-profile', 'PATCH', requestData, options);
          return response;
       } catch (error) {
          setError(error);

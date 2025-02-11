@@ -140,3 +140,21 @@
         padding: 1.5rem;
     }
 }
+
+
+.profile-radio-group {
+    display: flex;
+    gap: 2rem;
+    margin-top: 0.5rem;
+}
+
+.profile-radio-group label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.profile-radio-group input[type="radio"] {
+    accent-color: #95345C;
+}

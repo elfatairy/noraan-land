@@ -176,12 +176,12 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
     }
 
     const options: any = {};
-    if (age)
-      options.age = age;
+    if (age != undefined) 
+      options.age = age != '' ? Number(age) : null;
     if (location)
-      options.location = location;
+      options.location = location != '' ? location : null;
     if (gender)
-      options.gender = gender;
+      options.gender = gender != '' ? gender : null;
 
     const { id: userId } = await createUser(name, email, options, password);
     const { user, token } = await authenticateUser(userId, email);
@@ -235,7 +235,7 @@ export const updateProfile = async (req: Request, res: Response, next: NextFunct
     if (name)
       data.name = name;
     if (age != undefined) 
-      data.age = age != '' ? age : null;
+      data.age = age != '' ? Number(age) : null;
     if (location)
       data.location = location != '' ? location : null;
     if (gender)
