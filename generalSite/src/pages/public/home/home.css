@@ -1,0 +1,290 @@
+.home {
+    width: 100vw;
+}
+
+.container {
+    width: 90%;
+}
+
+/***** HERO ********/
+
+.hero {
+    width: 100%;
+    height: 112vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.hero-top {
+    display: flex;
+    justify-content: center;
+    width: 100vw;
+    flex: 1;
+    position: relative;
+}
+
+.hero-top:before {
+    content: "";
+    inset: 0;
+    position: absolute;
+    background-color: #902953;
+    z-index: -1;
+    opacity: .95;
+}
+
+.hero-top .container {
+    display: flex;
+    align-items: center;
+    gap: 20px
+}
+
+.hero-top .container .text {
+    flex: 1;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    gap: 10px
+}
+
+.hero-top .container .text h1 {
+    color: #fff;
+    font-size: 5rem;
+    margin: 0;
+    line-height: 1;
+}
+
+.hero-top .container .text p {
+    color: #e0e0e0;
+    font-size: 2rem;
+    max-width: 500px;
+    line-height: 1.2;
+    margin: 0;
+}
+
+.hero-top .container .text a.button {
+    padding: 5px;
+    margin-top: 10px;
+    border-radius: 25px;
+    display: flex;
+    /* gap: 10px; */
+    background-color: #db9e30;
+    border: 1px solid #db9e30;
+    outline: none;
+    text-decoration: none;
+    align-items: center;
+    transition: all 0.5s ease-in-out;
+    cursor: pointer;
+}
+
+.hero-top .container .text a.button:hover {
+    background-color: #fff;
+}
+
+.hero-top .container .text a.button .icon {
+    aspect-ratio: 1;
+    padding: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #fff;
+    border-radius: 50%;
+}
+
+.hero-top .container .text a.button span {
+    padding: 0 20px;
+    font-size: 1.3rem;
+    transition: all 0.5s ease-in-out;
+    color: #fff;
+}
+
+.hero-top .container .text a.button:hover span {
+    color: #db9e30;
+}
+
+.hero-top .container .text a.button .icon svg {
+    /* fill: #902953; */
+    width: 25px;
+    height: 25px;
+}
+
+.hero-top .container .img {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.hero-top .container .img img {
+    width: 80%
+}
+
+.hero-bottom {
+    background-image: url('../../../../public/images/hero_bottom.png');
+    height: 250px;
+    width: 100%;
+}
+
+.overlay-image {
+    width: 100%;
+    /* height: 200px; */
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    z-index: -2;
+}
+
+@media screen and (max-width: 1024px) {
+    .hero-top .container .img {
+        display: none;
+    }
+}
+
+/***** US ********/
+
+.us {
+    display: flex;
+    justify-content: center;
+    padding: 50px 0;
+}
+
+.us .container {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+
+.us .us-header {
+    text-align: center;
+}
+
+.us .us-header h3,
+.us .us-header h2 {
+    line-height: 1;
+    margin: 0;
+}
+
+.us .us-header h3 {
+    color: #555;
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+}
+
+.us .us-header h2 {
+    font-size: 4.5rem;
+}
+
+.us .content {
+    display: flex;
+    gap: 80px;
+    align-items: center;
+    padding-top: 25px;
+}
+
+.us .content .left,
+.us .content .right {
+    flex: 1;
+}
+
+.us .content .left p {
+    color: #555;
+    font-size: 1.2rem;
+}
+
+.us .content .left a.button {
+    margin-top: 10px;
+    border-radius: 25px;
+    display: flex;
+    border: 2px solid #db9e30;
+    background-color: #fff;
+    outline: none;
+    align-items: center;
+    transition: all 0.5s ease-in-out;
+    cursor: pointer;
+    padding: 8px 30px;
+    font-size: 1.1rem;
+    transition: all 0.5s ease-in-out;
+    color: #000;
+    display: inline-block;
+    text-decoration: none;
+}
+
+.us .content .left a.button:hover {
+    color: #db9e30;
+}
+
+.us .content .right {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.us .content .right li {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    margin-bottom: 50px;
+}
+
+.us .content .right li img {
+    width: 80px;
+    height: 80px;
+}
+
+.us .content .right li h4 {
+    margin: 0;
+    font-size: 1.8rem;
+    line-height: 1;
+}
+
+.us .content .right li p {
+    margin: 10px 0 0;
+    color: #555;
+    font-size: 1.2rem;
+    line-height: 1.2;
+}
+
+@media screen and (max-width: 1024px) {
+    .us .content {
+        flex-direction: column;
+    }
+}
+
+/******* Courses *********/
+
+.courses {
+    display: flex;
+    justify-content: center;
+    padding: 50px 0;
+}
+
+.courses .container {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+}
+
+.courses h2 {
+    text-align: center;
+    font-size: 4rem;
+    line-height: 1;
+    margin-bottom: 40px;
+}
+
+.courses .content {
+    display: flex;
+    justify-content: space-between;
+    flex-direction: row;
+    width: 100%;
+    gap: 10px;
+}
+
+.courses .content .course-card {
+    flex: 1;
+}
+
+@media screen and (max-width: 1024px) {
+    .courses .content {
+        flex-direction: column;
+    }
+}

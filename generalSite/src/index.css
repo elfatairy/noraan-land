@@ -1,5 +1,39 @@
-
 @import 'react-toastify/dist/ReactToastify.css';
+
+@font-face {
+  font-family: 'BalooBhaijaan';
+  src: url('../public/fonts/BalooBhaijaan2-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'BalooBhaijaan';
+  src: url('../public/fonts/BalooBhaijaan2-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'BalooBhaijaan';
+  src: url('../public/fonts/BalooBhaijaan2-SemiBold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'BalooBhaijaan';
+  src: url('../public/fonts/BalooBhaijaan2-Bold.ttf') format('truetype');
+  font-weight: 800;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'BalooBhaijaan';
+  src: url('../public/fonts/BalooBhaijaan2-ExtraBold.ttf') format('truetype');
+  font-weight: 900;
+  font-style: normal;
+}
 
 body {
   margin: 0;
@@ -8,6 +42,13 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+* {
+  box-sizing: border-box;
+  font-family: BalooBhaijaan;
 }
 
 code {

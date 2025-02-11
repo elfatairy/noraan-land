@@ -1,4 +1,4 @@
-.admin-layout {
+.student-layout .admin-layout {
     display: flex;
     flex-direction: column;
     min-height: 100vh; 
@@ -6,14 +6,14 @@
     position: relative;
 }
 
-.navbar {
+.student-layout .navbar {
     position: sticky;
     top: 0;
     width: 100%;
     z-index: 1000;
 }
 
-.main-content {
+.student-layout .main-content {
     margin-left: 60px;
     width: calc(100% - 60px); /* Adjust width to prevent content shift */
     transition: all 0.3s ease;
@@ -21,58 +21,58 @@
 }
 
 
-.footer {
+.student-layout .footer {
     width: 100%;
     margin-top: auto;
     z-index: 100;
 }
 
 
-.content-wrapper {
+.student-layout .content-wrapper {
     padding-top: 84px; /* Add padding for navbar */
     position: relative;
     overflow-x: hidden; /* Prevent horizontal scroll */
 }
 
-.sidebar {
+.student-layout .sidebar {
     position: fixed;
-    height: calc(100vh - 84px); /* Subtract navbar height */
+    height: calc(100vh - 64px);
+    bottom: 0;
     width: 70px;
     background: #333;
-    transition: width 0.3s ease;
+    transition: width 0.student-layout .3s ease;
     left: 0;
-    top: 100px; /* Match navbar height */
     z-index: 10;
 
 }
 
-.sidebar:hover {
+.student-layout .sidebar:hover {
     width: 240px;
 }
 
-.main-content {
+.student-layout .main-content {
     margin-left: 60px;
-    transition: margin-left 0.3s ease;
-    min-height: 1000px;
+    transition: margin-left 0 .3s ease;
+    /* min-height: 1000px; */
 }
 
-.sidebar ul {
+.student-layout .sidebar ul {
     padding: 0; /* Remove default padding */
     margin: 0; /* Remove default margin */
     list-style-type: none; /* Remove bullets */
     padding-top: 20px;
 }
 
-.sidebar li {
+.student-layout .sidebar li {
     margin-bottom: 10px;
 }
 
-.sidebar li.active a {
+.student-layout .sidebar li .active a {
     background: #444;
     border-left: 4px solid #95345C;
 }
 
-.sidebar a {
+.student-layout .sidebar a {
     padding: 15px 20px;
     color: #fff;
     text-decoration: none;
@@ -82,32 +82,32 @@
     border-left: 4px solid transparent;
 }
 
-.sidebar a:hover {
+.student-layout .sidebar a:hover {
     background: #444;
     border-left: 4px solid #95345C;
 }
 
-.sidebar i {
+.student-layout .sidebar i {
     min-width: 30px;
     font-size: 20px;
     text-align: center;
 }
 
-.sidebar span {
+.student-layout .sidebar span {
     margin-left: 15px;
     opacity: 0;
-    transition: opacity 0.3s ease;
+    transition: opacity 0 .3s ease;
 }
 
-.sidebar:hover span {
+.student-layout .sidebar:hover span {
     opacity: 1;
 }
 
 @media (max-width: 767px) {
-    .sidebar {
+    .student-layout .sidebar {
         display: none;
     }
-    .main-content {
+    .student-layout .main-content {
         margin-left: 0;
     }
 }

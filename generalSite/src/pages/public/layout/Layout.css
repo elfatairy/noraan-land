@@ -14,7 +14,6 @@
 }
 
 .main-content {
-
     position: relative;
 }
 
@@ -34,12 +33,12 @@
 
 .sidebar {
     position: fixed;
-    height: calc(100vh - 84px); /* Subtract navbar height */
+    height: calc(100vh - 64px);
+    bottom: 0;
     width: 70px;
     background: #333;
     transition: width 0.3s ease;
     left: 0;
-    top: 100px; /* Match navbar height */
     z-index: 10;
 }
 

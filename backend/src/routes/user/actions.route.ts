@@ -3,6 +3,8 @@ import { verifyToken } from "../../middlewares/auth.middleware";
 import * as userController from "../../controllers/user.controller"
 export const router = express.Router();
 
+router.get('/getMe', userController.getMe)
+
 router.post('/applyForCourse', userController.applyForCourse)
 router.post('/joinSession/:courseId/:sessionId', userController.joinSession)
 

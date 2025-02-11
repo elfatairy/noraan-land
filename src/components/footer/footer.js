@@ -10,18 +10,18 @@ const Footer = () => {
             <img src="/images/logo-no-bg.png" alt="Logo" />
           </div>
 
-          <nav className="navf-links">
+          <div className="navf-links">
             <a href="/home">Home</a>
             <a href="/about">About</a>
             <a href="/courses">Courses</a>
-            <a href="/pricing">Pricing</a>
-          </nav>
+          </div>
 
-          <div className="social-icons">
+          <div></div>
+          {/* <div className="social-icons">
             <a
               href="https://instagram.com/yourprofile"
               target="_blank"
-              rel="noopener noreferrer" 
+              rel="noopener noreferrer"
               aria-label="Instagram"
             >
               <svg
@@ -78,20 +78,19 @@ const Footer = () => {
                 <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z" />
               </svg>
             </a>
-          </div>
+          </div> */}
         </div>
 
         <div className="copyright">
-          <p style={{ margin: "0.5rem", marginBottom: "0" }}>
+          <p>
             Nouran Land © 2024
           </p>
-          <p style={{ margin: "0.3rem" }}>
+          <p className="developers">
+            Developed by Youssuf, Omar
+          </p>
+          <p>
             All Creative Rights Protected by Nouran Land
           </p>
-        </div>
-
-        <div className="developers">
-          <p>Developed by Youssuf, Omar</p>
         </div>
       </div>
     </footer>
