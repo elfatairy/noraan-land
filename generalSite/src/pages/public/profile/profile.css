@@ -1,0 +1,160 @@
+.auth-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background-color: #fff;
+    position: relative;
+    overflow: hidden;
+}
+
+.auth-container::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: 125%;
+    background-image: url('/public/mosque.svg');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    opacity: 0.03;
+    z-index: 1;
+    filter: invert(27%) sepia(51%) saturate(1000%) hue-rotate(295deg) brightness(100%) contrast(97%);
+}
+
+.auth-box {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(149, 52, 92, 0.1);
+    width: 100%;
+    max-width: 400px;
+    position: relative;
+    z-index: 2;
+}
+
+.auth-box h2 {
+    color: #95345C;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    font-size: 2rem;
+}
+
+.auth-form-group {
+    margin-bottom: 1rem;
+}
+
+.auth-form-group label {
+    display: block;
+    /* margin-bottom: 0.5rem; */
+    color: #95345C;
+    font-size: 0.9rem;
+}
+
+.auth-form-group input {
+    width: 92%;
+    padding: 0.8rem;
+    border: 2px solid #F9C7C5;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.auth-form-group input:focus {
+    outline: none;
+    border-color: #95345C;
+}
+
+.auth-form-group input.error {
+    border-color: #ff3333;
+}
+
+.auth-redirect {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    color: #B3666D;
+    font-size: 0.9rem;
+}
+
+.auth-redirect a {
+    color: #95345C;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+.auth-redirect a:hover {
+    color: #B3666D;
+}
+
+.error-message {
+    color: #ff3333;
+    font-size: 0.8rem;
+    margin-top: 0.2rem;
+    display: block;
+}
+
+.auth-forgot-password {
+    display: block;
+    text-align: right;
+    color: #B3666D;
+    text-decoration: none;
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+    transition: color 0.3s ease;
+}
+
+.auth-forgot-password:hover {
+    color: #95345C;
+}
+
+.auth-submit-btn {
+    width: 100%;
+    padding: 1rem;
+    background-color: #95345C;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    margin-top: 10px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.auth-submit-btn:hover {
+    background-color: #B3666D;
+}
+
+@media (max-width: 768px) {
+    .auth-box {
+        padding: 2rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .auth-box {
+        padding: 1.5rem;
+    }
+}
+
+
+.profile-radio-group {
+    display: flex;
+    gap: 2rem;
+    margin-top: 0.5rem;
+}
+
+.profile-radio-group label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.profile-radio-group input[type="radio"] {
+    accent-color: #95345C;
+}

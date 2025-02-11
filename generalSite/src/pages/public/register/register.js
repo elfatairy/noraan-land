@@ -18,8 +18,7 @@ const Register = () => {
   const navigate = useNavigate();
 
   const validateUsername = (username) => {
-    const regex = /^[a-zA-Z0-9]{4,}$/;
-    return regex.test(username);
+    return username.length >= 4 && username.length < 255;
   };
 
   const validateEmail = (email) => {
@@ -68,7 +67,7 @@ const Register = () => {
       newErrors.username = "Username is required";
     } else if (!validateUsername(username)) {
       newErrors.username =
-        "Username must be at least 4 characters and contain no special characters";
+        "User name should be atleast 4 charachters, and at max 255 charachters  ";
     }
 
     if (!email) {

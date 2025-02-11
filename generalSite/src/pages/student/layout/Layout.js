@@ -9,7 +9,7 @@ const StudentLayout = () => {
     const location = useLocation();
   
     return (
-      <div className="admin-layout">
+      <div className="student-layout admin-layout">
         <Navbar className="navbar" />
         <div className="content-wrapper">
           <aside className="sidebar">

@@ -6,6 +6,8 @@ import { setStorageData , getStorageData } from "../utils/data";
 import useAdminLogin from '../hooks/adminloginhook';
 import { useGoogleLogin as useGoogleLoginHook } from '../hooks/googleloginhook';
 import { useGoogleRegister as useGoogleRegisterHook } from '../hooks/googleregisterhook';
+import { useGetMe } from '../hooks/getMe';
+import { useUpdateProfile } from '../hooks/useUpdateProfile';
 
 
 const AuthContext = createContext(null);
@@ -34,8 +36,10 @@ export const AuthProvider = ({ children }) => {
   const { isLoading, execute: executeLogin } = useLogin();
   const { isLoadingAdminLogin, execute: executeAdminLogin } = useAdminLogin();
   const { isLoading: isLoadingRegister, execute: executeRegister } = useRegister();
+  const { isLoading: isLoadingUpdateProfile, execute: executeUpdateProfile } = useUpdateProfile();
   const { execute: executeGoogleLogin } = useGoogleLoginHook();
   const { execute: executeGoogleRegister } = useGoogleRegisterHook();
+  const { isLoading: isLoadingGetMe, execute: executeGetMe } = useGetMe();
 
   const handleAuthSuccess = (response) => {
     setStorageData('token', response.data.token);
@@ -162,6 +166,19 @@ export const AuthProvider = ({ children }) => {
     toast.error(errorMessage || "An error occurred during registration", { autoClose: 3000 });
   };
 
+  const getProfile = async () => {
+    try {
+      const response = await executeGetMe();
+      
+      if (response?.data) {
+        return { success: true, data: response?.data?.user};
+      }
+      return { success: false, error: 'Error getting the profile' };
+    } catch (error) {
+      return { success: false, error: error?.response?.data?.message || 'Admin login failed' };
+    }
+  }
+
   // Modify logout to clear all stored data
   const logout = () => {
     setIsLoggedIn(false);
@@ -183,7 +200,11 @@ export const AuthProvider = ({ children }) => {
     register,
     logout,
     adminLogin,
-    isLoadingAdminLogin
+    getProfile,
+    isLoadingGetMe,
+    isLoadingAdminLogin,
+    updateProfile: executeUpdateProfile,
+    isLoadingUpdateProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

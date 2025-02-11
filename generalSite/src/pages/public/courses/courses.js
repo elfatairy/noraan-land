@@ -82,7 +82,7 @@ const Courses = () => {
     course.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (isLoadingGet || isLoadingApply) {
+  if (isLoadingGet) {
     return <Loading isVisible={true} />;
   }
 

@@ -1,7 +1,8 @@
-import { lazy } from 'react';
+import { lazy, Profiler } from 'react';
 import { Navigate } from 'react-router-dom';
 import { PATHS } from './paths';
 import { ProtectedRoute } from './ProtectedRoute';
+import Profile from '../pages/public/profile/profile';
 
 // Lazy load layouts
 const PublicLayout = lazy(() => import('../pages/public/layout/Layout'));
@@ -11,7 +12,6 @@ const StudentLayout = lazy(() => import('../pages/student/layout/Layout'));
 const Home = lazy(() => import('../pages/public/home/home'));
 const About = lazy(() => import('../pages/public/about/about'));
 const Courses = lazy(() => import('../pages/public/courses/courses'));
-const Pricing = lazy(() => import('../pages/public/pricing/pricing'));
 const Login = lazy(() => import('../pages/public/login/login'));
 const Register = lazy(() => import('../pages/public/register/register'));
 
@@ -29,7 +29,7 @@ export const routes = [
       { path: PATHS.HOME, element: <Home /> },
       { path: PATHS.ABOUT, element: <About /> },
       { path: PATHS.COURSES, element: <Courses /> },
-      { path: PATHS.PRICING, element: <Pricing /> },
+      { path: PATHS.PROFILE, element: <Profile /> },
       { path: PATHS.LOGIN, element: <Login /> },
       { path: PATHS.REGISTER, element: <Register /> },
     ],

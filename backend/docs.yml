@@ -215,7 +215,7 @@ paths:
           content:
             application/json:
               examples:
-                COURSE_DOESNT_EXIST:
+                NAME_ALREADY_EXISTS:
                   value:
                     name: "NAME_ALREADY_EXISTS"
                     message: "Name already exists"
@@ -328,6 +328,48 @@ paths:
                   "availableTime": "From sundays to thursdays 3pm-8pm"
                   "userNotes": "Some notes"
 
+  /api/users/actions/getMe:
+    get:
+      tags:
+        - Authentication
+      summary: Get User's Profile
+      description: Get the profile of the user (his details)
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              examples:
+                UNAUTHENTICATED:
+                  value:
+                    name: "UNAUTHENTICATED"
+                    message: "User is unauthenticated and this request requires authentication payload data"
+                TOKEN_EXPIRED:
+                  value:
+                    name: "TOKEN_EXPIRED"
+                    message: "The token you are using expird, please log in again to retrieve another token."
+                UNAUTHORIZED:
+                  value:
+                    name: "UNAUTHORIZED"
+                    message: "This request needs permessions the user doesn't have"
+        "200":
+          description: Success
+          content:
+            application/json:
+              example:
+                message: "Subscription Completed Successfully"
+                data:
+                  {
+                    "user":
+                      {
+                        "id": 2,
+                        "name": "Omar Hassan2",
+                        "email": "omar2@gmail.com",
+                        "age": 20,
+                        "location": "cairo helmyat",
+                        "gender": "MALE",
+                      },
+                  }
   /api/users/actions/approvePaypal/:courseId:
     post:
       tags:
@@ -460,9 +502,10 @@ paths:
             application/json:
               example:
                 message: "Subscription Intention Completed Successfully"
-                data: {
-                  "clientSecret": "egy_csk_test_af72417dbc5dd1f7593274966f9ea89e"
-                }
+                data:
+                  {
+                    "clientSecret": "egy_csk_test_af72417dbc5dd1f7593274966f9ea89e",
+                  }
   /api/users/actions/enrolledCourses:
     get:
       tags:
@@ -497,17 +540,17 @@ paths:
             application/json:
               example:
                 message: "Enrolled Courses Retreived Successfully"
-                data: 
-                  courses: 
+                data:
+                  courses:
                     - {
-                      "id": 1,
-                      "name": "testing updateing",
-                      "groupPrice": 100,
-                      "individualPrice": 200,
-                      "description": "test updating decription",
-                      "createdAt": "2024-12-12T16:31:46.000Z",
-                      "updatedAt": "2024-12-23T17:16:02.000Z"
-                    }
+                        "id": 1,
+                        "name": "testing updateing",
+                        "groupPrice": 100,
+                        "individualPrice": 200,
+                        "description": "test updating decription",
+                        "createdAt": "2024-12-12T16:31:46.000Z",
+                        "updatedAt": "2024-12-23T17:16:02.000Z",
+                      }
   /api/users/actions/nextWeekSessions:
     get:
       tags:
@@ -542,7 +585,7 @@ paths:
             application/json:
               example:
                 message: "Enrolled Courses Retreived Successfully"
-                data: 
+                data:
                   sessions:
                     - {
                         "id": 6,
@@ -556,9 +599,8 @@ paths:
                         "createdAt": "2024-12-31T15:42:33.000Z",
                         "updatedAt": "2024-12-31T15:42:33.000Z",
                         "calendarDateId": 10,
-                        "courseName": "Test notes Course"
+                        "courseName": "Test notes Course",
                       }
-
 
   /api/users/actions/joinSession/:courseId/:sessionId:
     post:

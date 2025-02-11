@@ -15,10 +15,31 @@ import { createPaymobSubscription } from "../services/paymob.service";
 
 // Helper function to serialize BigInt values
 const serializeBigInt = (data: any) => {
-  return JSON.parse(JSON.stringify(data, (_, value) => 
+  return JSON.parse(JSON.stringify(data, (_, value) =>
     typeof value === 'bigint' ? value.toString() : value
   ));
 };
+
+export const getMe = (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const user = res.locals.user;
+
+    res.json({
+      message: "Profile Updated Successfully",
+      data: {
+        user
+      }
+    })
+
+  } catch (err: any) {
+    console.log("ERROR: ", err);
+    res.status(500).json({
+      name: "INTERNAL_SERVER_ERROR",
+      message: "Internal Server Error"
+    });
+    next(err);
+  }
+}
 
 export const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -155,12 +176,12 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
     }
 
     const options: any = {};
-    if(age) 
-      options.age = age;
-    if(location) 
-      options.location = location;
-    if(gender) 
-      options.gender = gender;
+    if (age != undefined) 
+      options.age = age != '' ? Number(age) : null;
+    if (location)
+      options.location = location != '' ? location : null;
+    if (gender)
+      options.gender = gender != '' ? gender : null;
 
     const { id: userId } = await createUser(name, email, options, password);
     const { user, token } = await authenticateUser(userId, email);
@@ -211,14 +232,14 @@ export const updateProfile = async (req: Request, res: Response, next: NextFunct
     }
 
     const data: any = {};
-    if(name) 
+    if (name)
       data.name = name;
-    if(age) 
-      data.age = age;
-    if(location) 
-      data.location = location;
-    if(gender) 
-      data.gender = gender;
+    if (age != undefined) 
+      data.age = age != '' ? Number(age) : null;
+    if (location)
+      data.location = location != '' ? location : null;
+    if (gender)
+      data.gender = gender != '' ? gender : null;
 
     const user = await updateUser(userId, data);
 
@@ -341,7 +362,7 @@ export const getCourseSessions = async (req: Request, res: Response, next: NextF
           teacherNotes = (<IndividualSession>session).notes ?? "";
         } else if (userCourse.sessionType == SessionType.GROUP) {
           const userSession = await getUserSession(userId, session.id);
-          if(userSession) {
+          if (userSession) {
             teacherNotes = userSession.notes ?? "";
           }
         }
@@ -351,7 +372,7 @@ export const getCourseSessions = async (req: Request, res: Response, next: NextF
         await Promise.allSettled(recordings.map(async recording => {
           recordingsGuids.push(subscriptionStatus == SubscriptionStatus.SUBSCRIBED ? recording.bunnyGuid : "")
         }));
-        
+
         return { id, description, isFree, status, title, teacherNotes, startedAt, recordings: recordingsGuids };
       })
     );
@@ -440,7 +461,7 @@ export const joinSession = async (req: Request, res: Response, next: NextFunctio
 
     if (userCourse.sessionType == SessionType.GROUP) {
       const userSession = await getUserSession(userId, sessionId);
-      if(!userSession)
+      if (!userSession)
         await createUserSession(userId, sessionId);
     }
 
@@ -507,7 +528,7 @@ export const approvePaypal = async (req: Request, res: Response, next: NextFunct
     const accessToken = await getPaypalAccessToken();
     const subscription = await getPaypalSubscription(subscriptionId, accessToken);
 
-    if(subscription.status != 'ACTIVE') {
+    if (subscription.status != 'ACTIVE') {
       res.status(409).json({
         name: "SUBSCRIBTION_NOT_VALID",
         message: "This subscription is not valid"
@@ -515,7 +536,7 @@ export const approvePaypal = async (req: Request, res: Response, next: NextFunct
     }
 
     const alreadyUsed = await getUserSubscriptionDetails({ paypalSubscriptionId: subscriptionId });
-    if(alreadyUsed) {
+    if (alreadyUsed) {
       res.status(409).json({
         name: "SUBSCRIBTION_NOT_VALID",
         message: "This subscription is not valid"
@@ -595,7 +616,7 @@ export const paymobIntention = async (req: Request, res: Response, next: NextFun
   try {
     const courseId = Number(req.params.courseId);
     const { id: userId, ...user } = res.locals.user;
-  
+
     if (!courseId) {
       res.status(400).json({
         name: "INVALID_PAYLOAD",
@@ -634,13 +655,13 @@ export const paymobIntention = async (req: Request, res: Response, next: NextFun
 
     const paymentDetails = await getPaymentDetails(course.id);
     const planId = userCourse.sessionType == SessionType.GROUP ? paymentDetails.paymobGroupPlanId : paymentDetails.paymobIndividualPlanId;
-    if(!planId) throw Error("Plan id not found");
+    if (!planId) throw Error("Plan id not found");
 
-    const subscription = await createPaymobSubscription(user.name, 
-      user.email, 
-      userCourse.sessionType == SessionType.GROUP ? course.groupPrice! : course.individualPrice!, 
+    const subscription = await createPaymobSubscription(user.name,
+      user.email,
+      userCourse.sessionType == SessionType.GROUP ? course.groupPrice! : course.individualPrice!,
       planId);
-    if(!subscription) throw Error("Error while creating subscription intent");
+    if (!subscription) throw Error("Error while creating subscription intent");
 
     await savePaymobSubscription(userCourse.id, subscription.id);
 
@@ -706,7 +727,7 @@ export const nextWeekSessions = async (req: Request, res: Response, next: NextFu
     const { id: userId } = res.locals.user;
 
     const nextWeekSessions = await getUserNextWeekSessions(userId);
-    
+
     // Serialize the sessions before sending the response
     const serializedSessions = serializeBigInt(nextWeekSessions);
 
