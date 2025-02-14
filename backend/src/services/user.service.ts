@@ -4,7 +4,7 @@ import bcrypt from 'bcrypt';
 import { generateToken } from "../utils/token.util";
 import { OAuth2Client } from "google-auth-library";
 import { ROLES } from "../utils/constants.util";
-import { Gender, Prisma } from "@prisma/client";
+import { Gender, Prisma, SessionType } from "@prisma/client";
 
 export const userExists = async (conditions: Prisma.UserWhereInput) => {
     const user = await prisma.user.findFirst({
@@ -163,10 +163,17 @@ export const getUserCourseSubscriptionStatus = async (userCourseId: number) => (
 
 export const getUserEnrolledCourses = async (userId: number) => (await prisma.userCourse.findMany({
     where: { userId },
-    include: {
-        course: {}
+    select: {
+        course: {},
+        sessionType: true
     }
-})).map(item => item.course);
+})).map(item => {
+    const {groupZoomLink, individualZoomLink, ...rest} = {
+        ...item.course,
+        zoomLink: item.sessionType == SessionType.GROUP ? item.course.groupZoomLink : item.course.individualZoomLink
+    }
+    return rest
+});
 
 export const getUserNextWeekSessions = async (userId: number) => {
     const now = new Date();
@@ -176,11 +183,14 @@ export const getUserNextWeekSessions = async (userId: number) => {
         where: {
             userId
         },
-        include: {
+        select: {
+            sessionType: true,
             course: {
                 select: {
                     id: true,
                     name: true,
+                    groupZoomLink: true,
+                    individualZoomLink: true,
                     groupSessions: {
                         where: {
                             calendarDate: {
@@ -198,11 +208,15 @@ export const getUserNextWeekSessions = async (userId: number) => {
                             description: true,
                             status: true,
                             isFree: true,
-                            meetingId: true,
                             startedAt: true,
                             createdAt: true,
                             updatedAt: true,
-                            calendarDateId: true
+                            calendarDateId: true,
+                            calendarDate: {
+                                select: {
+                                    startDate: true
+                                }
+                            }
                         }
                     },
                     individualSessions: {
@@ -222,11 +236,15 @@ export const getUserNextWeekSessions = async (userId: number) => {
                             description: true,
                             status: true,
                             isFree: true,
-                            meetingId: true,
                             startedAt: true,
                             createdAt: true,
                             updatedAt: true,
-                            calendarDateId: true
+                            calendarDateId: true,
+                            calendarDate: {
+                                select: {
+                                    startDate: true
+                                }
+                            }
                         }
                     }
                 }
@@ -243,19 +261,17 @@ export const getUserNextWeekSessions = async (userId: number) => {
         ];
 
         return allSessions.map(session => ({
+            ...session,
             id: Number(session.id),
             courseId: Number(course.id),
             courseName: course.name,
-            title: session.title,
-            description: session.description,
-            status: session.status,
-            isFree: session.isFree,
-            meetingId: session.meetingId,
-            startedAt: session.startedAt,
-            createdAt: session.createdAt,
-            updatedAt: session.updatedAt,
+            zoomLink: userCourse.sessionType == SessionType.GROUP ? course.groupZoomLink : course.individualZoomLink,
+            showLink: new Date(session.calendarDate.startDate).getTime() - new Date().getTime() <= 30 * 60 * 1000,
             calendarDateId: Number(session.calendarDateId)
-        }));
+        })).map(session => {
+            const { calendarDate, ...seesionContent } = session;
+            return seesionContent;
+        });
     });
 
     return sessions.sort((a, b) => {

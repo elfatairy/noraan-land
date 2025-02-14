@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { validateEmail, validateName, validatePassword, validateString } from "../utils/validation.util";
+import { validateEmail, validateName, validatePassword, validateString, validateZoomLink } from "../utils/validation.util";
 import { authenticateUser, createUser, emailExists, getUserByEmail, nameExists, verifyGoogleToken } from "../services/user.service";
 import bcrypt, { compare } from "bcrypt";
 import axios from "axios";
@@ -10,10 +10,11 @@ import { SessionType } from "@prisma/client";
 import { getZoomAccessToken } from "../services/zoom.service";
 import { createPaypalPlan, createPaypalProduct, getPaypalAccessToken } from "../services/paypal.service";
 import { createPaymobPlan, getPaymobAcceessToken } from "../services/paymob.service";
+import { ROLES } from "../utils/constants.util";
 
 export const create = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { name, description, individualPrice, groupPrice } = req.body;
+    const { name, description, individualPrice, groupPrice, groupZoomLink, individualZoomLink } = req.body;
     if (!name || (description && (description && (description && !validateString(description, 255, 0))))) {
       res.status(400).json({
         name: "INVALID_PAYLOAD",
@@ -39,7 +40,23 @@ export const create = async (req: Request, res: Response, next: NextFunction) =>
       return;
     }
 
-    const createdCourse = await createCourse(name, groupPrice, individualPrice, description);
+    if(groupZoomLink && !validateZoomLink(groupZoomLink)) {
+      res.status(400).json({
+        name: "GROUP_ZOOM_INVALID",
+        message: "The group zoom link is invalid"
+      });
+      return;
+    }
+
+    if(individualZoomLink && !validateZoomLink(individualZoomLink)) {
+      res.status(400).json({
+        name: "INDIVIDUAL_ZOOM_INVALID",
+        message: "The individual zoom link is invalid"
+      });
+      return;
+    }
+
+    const createdCourse = await createCourse(name, groupPrice, individualPrice, description, {groupZoomLink, individualZoomLink});
     
     // PAYPAL
     const paypalAccessToken = await getPaypalAccessToken();
@@ -81,7 +98,7 @@ export const create = async (req: Request, res: Response, next: NextFunction) =>
 
 export const update = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { name, description, individualPrice, groupPrice } = req.body;
+    const { name, description, individualPrice, groupPrice, groupZoomLink, individualZoomLink } = req.body;
     const courseId = Number(req.params.id);
 
     if (!courseId ||
@@ -102,6 +119,22 @@ export const update = async (req: Request, res: Response, next: NextFunction) =>
       return;
     }
 
+    if(groupZoomLink && !validateZoomLink(groupZoomLink)) {
+      res.status(400).json({
+        name: "GROUP_ZOOM_INVALID",
+        message: "The group zoom link is invalid"
+      });
+      return;
+    }
+
+    if(individualZoomLink && !validateZoomLink(individualZoomLink)) {
+      res.status(400).json({
+        name: "INDIVIDUAL_ZOOM_INVALID",
+        message: "The individual zoom link is invalid"
+      });
+      return;
+    }
+
     const options: any = {};
 
     if(name)
@@ -115,6 +148,12 @@ export const update = async (req: Request, res: Response, next: NextFunction) =>
     
     if(groupPrice)
       options.groupPrice = groupPrice;
+    
+    if(groupZoomLink)
+      options.groupZoomLink = groupZoomLink;
+    
+    if(individualZoomLink)
+      options.individualZoomLink = individualZoomLink;
 
     const updatedCourse = await updateCourse(courseId, options);
 
@@ -138,6 +177,13 @@ export const update = async (req: Request, res: Response, next: NextFunction) =>
 export const getAll = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const courses = await getAllCourses();
+
+    if(res.locals.role = ROLES.USER) {
+      courses.forEach(course => {
+        course.groupZoomLink = null;
+        course.individualZoomLink = null;
+      })
+    }
 
     res.json({
       message: "Courses retrieved successfully",
@@ -173,6 +219,11 @@ export const get = async (req: Request, res: Response, next: NextFunction) => {
         message: "No course with this id"
       });
       return;
+    }
+
+    if(res.locals.role == ROLES.USER) {
+      course.groupZoomLink = null;
+      course.individualZoomLink = null;
     }
 
     const paymentDetails = await getPaymentDetails(courseId);
@@ -283,7 +334,6 @@ export const groupUsers = async (req: Request, res: Response, next: NextFunction
     next(err);
   }
 }
-
 
 export const individualUsers = async (req: Request, res: Response, next: NextFunction) => {
   try {

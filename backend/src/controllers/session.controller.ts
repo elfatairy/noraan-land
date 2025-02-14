@@ -168,15 +168,11 @@ export const startSession = async (req: Request, res: Response, next: NextFuncti
       return;
     }
 
-    const accessToken = await getZoomAccessToken();
-
-    const { id: meetingId, start_url } = await createMeeting(accessToken, session.title);
-    await startSessionService(meetingId, sessionId, SessionType[sessionType as keyof typeof SessionType]);
+    await startSessionService(sessionId, SessionType[sessionType as keyof typeof SessionType]);
 
     res.json({
       message: "Meeting Started Successfully",
       data: {
-        startUrl: start_url
       }
     })
 

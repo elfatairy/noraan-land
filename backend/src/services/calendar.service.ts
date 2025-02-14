@@ -54,6 +54,10 @@ export const getDates = async (dateCondition: Prisma.CalendarDateWhereInput | {}
     where: dateCondition
 })
 
+export const getDate = async (dateCondition: Prisma.CalendarDateWhereInput | {} = {}) => await prisma.calendarDate.findFirstOrThrow({
+    where: dateCondition
+})
+
 export const getDateSession = async (id: number) => {
     const date = await prisma.calendarDate.findFirstOrThrow({
         where: {

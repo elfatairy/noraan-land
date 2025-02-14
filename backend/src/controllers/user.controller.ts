@@ -7,7 +7,7 @@ import { OAuth2Client } from "google-auth-library";
 import { addUserCourse, addUserCourseSubscriptionStatus, approvePaypalSubscription, approvePaypalSubscriptionSandBox, getCourse, getPaymentDetails, getUserCourse, getUserSubscriptionDetails, savePaymobSubscription } from "../services/course.service";
 import { getRecordings, getSession, getSessions } from "../services/session.service";
 import { IndividualSession, SessionStatus, SessionType, SubscriptionStatus } from "@prisma/client";
-import { getDateSession } from "../services/calendar.service";
+import { getDate, getDates, getDateSession } from "../services/calendar.service";
 import { getZoomAccessToken, getMeeting } from "../services/zoom.service";
 import { getPaypalAccessToken, getPaypalSubscription } from "../services/paypal.service";
 import { prisma } from "../configs/db.config";
@@ -367,13 +367,22 @@ export const getCourseSessions = async (req: Request, res: Response, next: NextF
           }
         }
 
+        const sessionDate = await getDate({
+          id: session.calendarDateId
+        });
+
+        let zoomLink = null;
+        if(subscriptionStatus == SubscriptionStatus.SUBSCRIBED && sessionDate.startDate.getTime() - new Date().getTime() <= 30 * 60 * 1000) {
+          zoomLink = userCourse.sessionType == SessionType.GROUP ? course.groupZoomLink : course.individualZoomLink;
+        }
+
         const recordings = await getRecordings(session.id, userCourse.sessionType) ?? [];
         const recordingsGuids: string[] = [];
         await Promise.allSettled(recordings.map(async recording => {
           recordingsGuids.push(subscriptionStatus == SubscriptionStatus.SUBSCRIBED ? recording.bunnyGuid : "")
         }));
 
-        return { id, description, isFree, status, title, teacherNotes, startedAt, recordings: recordingsGuids };
+        return { id, description, isFree, status, title, teacherNotes, zoomLink, startedAt, recordings: recordingsGuids };
       })
     );
 
@@ -448,16 +457,13 @@ export const joinSession = async (req: Request, res: Response, next: NextFunctio
       return;
     }
 
-    if (session.status != SessionStatus.RUNNING || !session.meetingId) {
+    if (session.status != SessionStatus.RUNNING) {
       res.status(409).json({
         name: "MEETING_NOT_RUNNING",
         message: "This meeting is not running now"
       });
       return;
     }
-
-    const accessToken = await getZoomAccessToken();
-    const { join_url } = await getMeeting(accessToken, session.meetingId);
 
     if (userCourse.sessionType == SessionType.GROUP) {
       const userSession = await getUserSession(userId, sessionId);
@@ -468,7 +474,6 @@ export const joinSession = async (req: Request, res: Response, next: NextFunctio
     res.json({
       message: "User joined session Successfully",
       data: {
-        join_url
       }
     })
 

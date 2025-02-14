@@ -543,14 +543,15 @@ paths:
                 data:
                   courses:
                     - {
-                        "id": 1,
-                        "name": "testing updateing",
+                        "id": 13,
+                        "name": "Test zoom link 4",
                         "groupPrice": 100,
-                        "individualPrice": 200,
-                        "description": "test updating decription",
-                        "createdAt": "2024-12-12T16:31:46.000Z",
-                        "updatedAt": "2024-12-23T17:16:02.000Z",
-                      }
+                        "individualPrice": 500,
+                        "description": null,
+                        "createdAt": "2025-02-14T10:00:10.452Z",
+                        "updatedAt": "2025-02-14T10:00:10.452Z",
+                        "zoomLink": "http://us02web.zoom.us/j/12345678910?pwd=xyz-987"
+                    }
   /api/users/actions/nextWeekSessions:
     get:
       tags:
@@ -588,18 +589,19 @@ paths:
                 data:
                   sessions:
                     - {
-                        "id": 6,
-                        "courseId": 2,
-                        "status": "UPCOMING",
-                        "title": "Session notes test",
+                        "id": 9,
+                        "title": "Test show session link",
                         "description": null,
+                        "status": "UPCOMING",
                         "isFree": false,
-                        "meetingId": null,
                         "startedAt": null,
-                        "createdAt": "2024-12-31T15:42:33.000Z",
-                        "updatedAt": "2024-12-31T15:42:33.000Z",
-                        "calendarDateId": 10,
-                        "courseName": "Test notes Course",
+                        "createdAt": "2025-02-14T09:35:25.845Z",
+                        "updatedAt": "2025-02-14T09:35:25.845Z",
+                        "calendarDateId": 13,
+                        "courseId": 1,
+                        "courseName": "testing updateing",
+                        "zoomLink": null,
+                        "showLink": true
                       }
 
   /api/users/actions/joinSession/:courseId/:sessionId:
@@ -765,13 +767,27 @@ paths:
                   message: "Course retrieved successfully"
                   data:
                     course:
-                      id: 1
-                      name: name
-                      description: description
-                      individualPrice: 500
-                      groupPrice: 200
-                      createdAt: 2024-12-11T13:46:10.000Z
-                      updatedAt: 2024-12-11T13:46:10.000Z
+                      {
+                        "course": {
+                          "id": 13,
+                          "name": "testing updateing",
+                          "groupPrice": 100,
+                          "individualPrice": 200,
+                          "description": "test updating decription",
+                          "groupZoomLink": "https://us04web.zoom.us/j/987654321?pwd=abc123",
+                          "individualZoomLink": "https://zoom.us/j/123456789",
+                          "createdAt": "2025-02-14T10:00:10.452Z",
+                          "updatedAt": "2025-02-14T12:39:44.143Z"
+                        },
+                        "paymentDetails": {
+                            "id": 4,
+                            "courseId": 13,
+                            "paypalGroupPlanId": "P-6Y594163WF201125VM6XRILA",
+                            "paypalIndividualPlanId": "P-9PU00421TM598521FM6XRILI",
+                            "paymobGroupPlanId": 2242,
+                            "paymobIndividualPlanId": 2243
+                        }
+                      }
     patch:
       tags:
         - Course
@@ -814,6 +830,14 @@ paths:
                   value:
                     name: "INVALID_PAYLOAD"
                     message: "Invalid payload data"
+                GROUP_ZOOM_INVALID:
+                  value:
+                    name: "GROUP_ZOOM_INVALID"
+                    message: "The group zoom link is invalid"
+                INDIVIDUAL_ZOOM_INVALID:
+                  value:
+                    name: "INDIVIDUAL_ZOOM_INVALID"
+                    message: "The individual zoom link is invalid"
         "409":
           description: Conflict
           content:
@@ -831,13 +855,17 @@ paths:
                 message: "Coursee updated successfully"
                 data:
                   course:
-                    id: 1
-                    name: name
-                    groupPrice: 100
-                    individualPrice: 500
-                    description: description2
-                    createdAt: 2024-12-11T13:46:10.000Z
-                    updatedAt: 2024-12-11T13:46:10.000Z
+                    {
+                      "id": 13,
+                      "name": "testing updateing",
+                      "groupPrice": 100,
+                      "individualPrice": 200,
+                      "description": "test updating decription",
+                      "groupZoomLink": "https://us04web.zoom.us/j/987654321?pwd=abc123",
+                      "individualZoomLink": "https://zoom.us/j/123456789",
+                      "createdAt": "2025-02-14T10:00:10.452Z",
+                      "updatedAt": "2025-02-14T12:39:44.143Z"
+                    }
   /api/course:
     post:
       tags:
@@ -855,10 +883,17 @@ paths:
                   type: string
                 description:
                   type: string
+                  maxLength: 255
                 groupPrice:
                   type: string
                 individualPrice:
                   type: string
+                groupZoomLink:
+                  type: string
+                  maxLength: 255
+                individualZoomLink:
+                  type: string
+                  maxLength: 255
               required:
                 - name
       responses:
@@ -887,6 +922,14 @@ paths:
                   value:
                     name: "REQUIRED_PRICE"
                     message: "At least one of group price / individual price should have a value"
+                GROUP_ZOOM_INVALID:
+                  value:
+                    name: "GROUP_ZOOM_INVALID"
+                    message: "The group zoom link is invalid"
+                INDIVIDUAL_ZOOM_INVALID:
+                  value:
+                    name: "INDIVIDUAL_ZOOM_INVALID"
+                    message: "The individual zoom link is invalid"
         "409":
           description: Conflict
           content:
@@ -904,13 +947,17 @@ paths:
                 message: "Course created successfully"
                 data:
                   course:
-                    id: 1
-                    name: name
-                    groupPrice: 100
-                    individualPrice: 500
-                    description: description2
-                    createdAt: 2024-12-11T13:46:10.000Z
-                    updatedAt: 2024-12-11T13:46:10.000Z
+                    {
+                      "id": 13,
+                      "name": "Test zoom link 4",
+                      "groupPrice": 100,
+                      "individualPrice": 500,
+                      "description": null,
+                      "groupZoomLink": "https://us04web.zoom.us/j/987654321?pwd=abc123",
+                      "individualZoomLink": "http://us02web.zoom.us/j/12345678910?pwd=xyz-987",
+                      "createdAt": "2025-02-14T10:00:10.452Z",
+                      "updatedAt": "2025-02-14T10:00:10.452Z"
+                    }
     get:
       tags:
         - Course
@@ -935,13 +982,17 @@ paths:
                   message: "Courses retrieved successfully"
                   data:
                     courses:
-                      - id: 1
-                        name: name
-                        description: description
-                        individualPrice: 500
-                        groupPrice: 200
-                        createdAt: 2024-12-11T13:46:10.000Z
-                        updatedAt: 2024-12-11T13:46:10.000Z
+                      {
+                        "id": 13,
+                        "name": "Test zoom link 4",
+                        "groupPrice": 100,
+                        "individualPrice": 500,
+                        "description": null,
+                        "groupZoomLink": null,
+                        "individualZoomLink": null,
+                        "createdAt": "2025-02-14T10:00:10.452Z",
+                        "updatedAt": "2025-02-14T10:00:10.452Z"
+                      }
   /api/:courseId/courseSessions:
     get:
       tags:
@@ -996,13 +1047,15 @@ paths:
                   subscriptionStatus: SUBSCRIBED
                   sessions:
                     - {
-                        "id": 3,
-                        "description": "Testing the content thing",
+                        "id": 5,
+                        "description": null,
                         "isFree": false,
-                        "status": "ENDED",
-                        "title": "Session notes test",
-                        "startedAt": "2024-12-18T15:37:51.000Z",
-                        "recordings": [],
+                        "status": "UPCOMING",
+                        "title": "Session test",
+                        "teacherNotes": "",
+                        "zoomLink": null,
+                        "startedAt": null,
+                        "recordings": []
                       }
 
   /api/session/group:
@@ -1081,7 +1134,6 @@ paths:
                         "title": "Session notes test",
                         "description": null,
                         "isFree": false,
-                        "meetingId": null,
                         "startedAt": null,
                         "createdAt": "2024-12-31T15:42:33.000Z",
                         "updatedAt": "2024-12-31T15:42:33.000Z",

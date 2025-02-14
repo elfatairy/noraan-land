@@ -1,0 +1,115 @@
+.about .top {
+    background-color: #95345C;
+    padding: 80px 5vw 140px;
+    display: flex;
+    gap: 0;
+    flex-direction: column;
+    align-items: center;
+}
+
+.about .top h2 {
+    margin: 8px 0 20px;
+    font-size: 4rem;
+    color: #fff;
+    line-height: 1;
+}
+
+.about .top .breadcrumb {
+    line-height: 1;
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.about .top .breadcrumb a {
+    text-decoration: none;
+    color: #fff;
+    transition: color 0.5s ease-in-out;
+}
+
+.about .top .breadcrumb a:hover {
+    color: #fabe4f;
+}
+
+.about .top .breadcrumb .slash {
+    color: #fff;
+    padding: 0 8px;
+    /* display: inline-block; */
+}
+
+.about .top .breadcrumb .colored {
+    color: #fabe4f;
+}
+
+.about .top img {
+    filter: grayscale(1);
+}
+
+
+/***    block1   *****/
+
+.block1 {
+    padding: 100px 5vw;
+    display: flex;
+    gap: 25px;
+    align-items: center;
+}
+
+.block1 .left,
+.block1 .right {
+    flex: 1
+}
+
+.block1 .left h3,
+.block1 .left h4 {
+    text-align: center;
+    margin: 0;
+}
+
+.block1 .left h4 {
+    color: #db9e30;
+    font-size: 1.3rem;
+    font-weight: 700;
+}
+
+.block1 .left h3 {
+    font-size: 3rem;
+    padding: 0 15%;
+    line-height: 1;
+    margin-bottom: 40px;
+}
+
+.block1 .left p,
+.block1 .right p {
+    color: #555;
+    font-size: 1.2rem;
+}
+
+.block1 .right {
+    display: flex;
+    flex-direction: column;
+    gap: 20px
+}
+
+.block1 .right .block h4 {
+    font-size: 2rem;
+    margin: 0;
+    line-height: 1;
+}
+
+@media screen and (max-width: 1024px) {
+    .block1 {
+        flex-direction: column;
+        gap: 30px;
+    }
+
+    .block1 .right {
+        gap: 30px
+    }
+}
+
+@media screen and (max-width: 375px) {
+    .block1 .left h3 {
+        font-size: 2.5rem;
+        padding: 0 5%;
+    }
+}

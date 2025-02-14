@@ -30,7 +30,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
       console.log("ERROR: ", correctPass, correctUserName);
       res.status(404).json({
         name: "USERNAME_PASSWORD_INCORRECT",
-        message: `either the username or password is incorrect ${correctPass}, ${correctUserName}`
+        message: `either the username or password is incorrect`
       });
       return;
     }

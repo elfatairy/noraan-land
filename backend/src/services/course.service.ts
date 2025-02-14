@@ -1,13 +1,18 @@
 import { prisma } from "../configs/db.config";
 import { Prisma, SessionType, SubscriptionMethod, SubscriptionStatus } from "@prisma/client";
 
-export const createCourse = async (name: string, groupPrice: number, individualPrice: number, description: string) => {
+export const createCourse = async (name: string, groupPrice: number, individualPrice: number, description: string, zoomLinks: {
+    groupZoomLink?: string,
+    individualZoomLink?: string
+}) => {
     const course = await prisma.course.create({
         data: {
             name,
             groupPrice, 
             individualPrice,
-            description
+            description,
+            groupZoomLink: zoomLinks.groupZoomLink,
+            individualZoomLink: zoomLinks.individualZoomLink
         }
     })
 

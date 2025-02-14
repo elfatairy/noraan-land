@@ -1,5 +1,5 @@
 import { prisma } from "../configs/db.config";
-import { CalendarDateStatus, CalendarDateType, Prisma, SessionStatus, SessionType } from "@prisma/client";
+import { CalendarDateStatus, CalendarDateType, GroupSession, IndividualSession, Prisma, SessionStatus, SessionType } from "@prisma/client";
 import { createCalendarDate } from "./calendar.service";
 import fileUpload from "express-fileupload";
 import axios from "axios";
@@ -61,24 +61,42 @@ export const getSession = async (id: number, type: SessionType) => {
 export const getSessions = async (conditions: Prisma.GroupSessionWhereInput | Prisma.IndividualSessionWhereInput, type: SessionType) => {
     if (type == SessionType.GROUP)
         return await prisma.groupSession.findMany({
-            where: conditions as Prisma.GroupSessionWhereInput
+            where: conditions as Prisma.GroupSessionWhereInput,
+            select: {
+                id: true, 
+                description: true, 
+                isFree: true, 
+                status: true, 
+                title: true, 
+                calendarDateId: true,
+                startedAt: true
+            }
         })
     else if (type == SessionType.INDIVIDUAL)
         return await prisma.individualSession.findMany({
-            where: conditions as Prisma.IndividualSessionWhereInput
+            where: conditions as Prisma.IndividualSessionWhereInput,
+            select: {
+                id: true, 
+                description: true, 
+                notes: true,
+                isFree: true, 
+                status: true, 
+                title: true, 
+                calendarDateId: true,
+                startedAt: true
+            }
         })
     else
         throw Error("UNREACHABLE")
 }
 
-export const startSessionService = async (meetingId: number, sessionId: number, sessionType: SessionType) => {
+export const startSessionService = async (sessionId: number, sessionType: SessionType) => {
     if (sessionType == SessionType.GROUP)
         await prisma.groupSession.update({
             where: {
                 id: sessionId
             },
             data: {
-                meetingId,
                 status: SessionStatus.RUNNING,
                 startedAt: new Date()
             }
@@ -89,7 +107,6 @@ export const startSessionService = async (meetingId: number, sessionId: number, 
                 id: sessionId
             },
             data: {
-                meetingId,
                 status: SessionStatus.RUNNING,
                 startedAt: new Date()
             }
@@ -106,7 +123,6 @@ export const endSessionService = async (sessionId: number, sessionType: SessionT
                 id: sessionId
             },
             data: {
-                meetingId: null,
                 status: SessionStatus.ENDED,
                 description
             }
@@ -117,7 +133,6 @@ export const endSessionService = async (sessionId: number, sessionType: SessionT
                 id: sessionId
             },
             data: {
-                meetingId: null,
                 status: SessionStatus.ENDED,
                 description
             }

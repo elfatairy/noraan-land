@@ -18,3 +18,5 @@ export const validateSessionType = (type: any) => Object.values(SessionType).inc
 
 // TODO IMPLEMENT QUIZES LINK VALIDATION
 export const validateQuizesLink = (link: string) => true
+
+export const validateZoomLink = (link: string) => link.match(/^https?:\/\/([a-z0-9]+\.)?zoom\.us\/j\/(\d+)(\?pwd=[\w-]+)?/)
