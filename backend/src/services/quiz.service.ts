@@ -1,5 +1,5 @@
 import { prisma } from "../configs/db.config";
-import { Prisma, SessionType } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 
 
 export const getQuiz = async (conditions: Prisma.QuizWhereInput) => await prisma.quiz.findFirst({

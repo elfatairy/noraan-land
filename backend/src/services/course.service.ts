@@ -1,140 +1,162 @@
 import { prisma } from "../configs/db.config";
-import { Prisma, SessionType, SubscriptionMethod, SubscriptionStatus } from "@prisma/client";
+import {
+  Prisma,
+  SessionType,
+  SubscriptionMethod,
+  SubscriptionStatus,
+} from "@prisma/client";
 
-export const createCourse = async (name: string, groupPrice: number, individualPrice: number, description: string, zoomLinks: {
-    groupZoomLink?: string,
-    individualZoomLink?: string
-}) => {
-    const course = await prisma.course.create({
-        data: {
-            name,
-            groupPrice, 
-            individualPrice,
-            description,
-            groupZoomLink: zoomLinks.groupZoomLink,
-            individualZoomLink: zoomLinks.individualZoomLink
-        }
-    })
+export const createCourse = async (
+  name: string,
+  privatePrice: number,
+  groupPrice: number,
+  description: string,
+  zoomLink: string
+) => {
+  const course = await prisma.course.create({
+    data: {
+      name,
+      privatePrice,
+      groupPrice,
+      description,
+      zoomLink,
+    },
+  });
 
-    return course;
-}
-
-export const createCoursePaymentDetails = async (courseId: number, paypalGroupPlanId: string, paypalIndividualPlanId: string, paymobGroupPlanId: number, paymobIndividualPlanId: number) => {
-    const paymentDetails = await prisma.paymentDetails.create({
-        data: {
-            courseId,
-            paypalGroupPlanId,
-            paypalIndividualPlanId,
-            paymobGroupPlanId, 
-            paymobIndividualPlanId
-        }
-    });
-
-    return paymentDetails;
-}
-
-export const getPaymentDetails = async (courseId: number) => await prisma.paymentDetails.findFirstOrThrow({
-    where: {
-        courseId
-    }
-})
+  return course;
+};
 
 export const updateCourse = async (courseId: number, options: any) => {
-    const course = await prisma.course.update({
-        where: {
-            id: courseId
-        },
-        data: options
-    })
-
-    return course;
-}
-
-export const getCourse = async (conditions: Prisma.CourseWhereInput) => await prisma.course.findFirst({
-    where: conditions
-})
-
-export const getAllCourses = async () => await prisma.course.findMany()
-
-export const getUserCourses = async (courseId: number, conditions: Prisma.UserCourseWhereInput) => await prisma.course.findFirst({
+  const course = await prisma.course.update({
     where: {
-        id: courseId
-    }
-}).userCourses({
+      id: courseId,
+    },
+    data: options,
+  });
+
+  return course;
+};
+
+export const getCourse = async (conditions: Prisma.CourseWhereInput) =>
+  await prisma.course.findFirst({
+    where: conditions,
+  });
+
+export const getAllCourses = async () => await prisma.course.findMany();
+
+export const getStudentCourses = async (
+  courseId: number,
+  conditions: Prisma.StudentCourseWhereInput
+) =>
+  await prisma.course
+    .findFirst({
+      where: {
+        id: courseId,
+      },
+    })
+    .studentCourses({
+      where: conditions,
+      include: {
+        student: {
+          select: {
+            name: true,
+          }
+        },
+        StudentCourseSubscription: {}
+      },
+    });
+
+export const getUnasignedStudentCourse = async () =>
+  await prisma.studentCourse.findMany({
+    where: {
+      hours: null,
+    },
+    include: {
+      student: {},
+      course: {},
+    },
+  });
+
+export const getStudentCourse = async (conditions: Prisma.StudentCourseWhereInput) =>
+  await prisma.studentCourse.findFirst({
     where: conditions,
     include: {
-        user: {
-            select: {
-                name: true
-            }
+      StudentCourseSubscription: {
+        select: {
+          subscriptionStatus: true
         }
+      }
     }
-})
+  });
 
-export const viewUserCourse = async (courseId: number, userId: number) => (await prisma.userCourse.updateMany({
+
+export const addStudentCourse = async (
+  studentId: number,
+  courseId: number,
+  sessionType: SessionType,
+  availableTime: string,
+  studentNotes?: string
+) =>
+  await prisma.studentCourse.create({
+    data: {
+      studentId,
+      courseId,
+      availableTime,
+      studentNotes,
+      preferredSessionType: sessionType,
+    },
+  });
+
+export const addStudentCourseSubscriptionStatus = async (studentCourseId: number) =>
+  await prisma.studentCourseSubscription.create({
+    data: {
+      studentCourseId,
+    },
+  });
+
+export const getStudentSubscriptionDetails = async (
+  conditions: Prisma.StudentCourseSubscriptionWhereInput
+) =>
+  await prisma.studentCourseSubscription.findFirst({
+    where: conditions,
+  });
+
+export const approvePaypalSubscription = async (
+  studentCourseId: number,
+  paypalSubscriptionId: string
+) =>
+  await prisma.studentCourseSubscription.update({
     where: {
-        userId,
-        courseId
+      studentCourseId,
     },
     data: {
-        viewedByAdmin: true
-    }
-})).count == 1
-
-export const getUserCourse = async (userId: number, courseId: number) => await prisma.userCourse.findFirst({
-    where: {
-        userId,
-        courseId
-    }
-})
-
-export const addUserCourse = async (userId: number, courseId: number, sessionType: SessionType, availableTime: string, userNotes?: string) => await prisma.userCourse.create({
-    data: {
-        userId,
-        courseId,
-        availableTime,
-        userNotes,
-        sessionType
+      subscriptionStatus: SubscriptionStatus.SUBSCRIBED,
+      subscriptionMethod: SubscriptionMethod.PAYPAL,
+      paypalSubscriptionId,
     },
-})
+  });
 
-export const addUserCourseSubscriptionStatus = async (userCourseId: number) => await prisma.userCourseSubscription.create({
-    data: {
-        userCourseId
-    }
-})
-
-export const getUserSubscriptionDetails = async (conditions: Prisma.UserCourseSubscriptionWhereInput) => await prisma.userCourseSubscription.findFirst({
-    where: conditions
-})
-
-export const approvePaypalSubscription = async (userCourseId: number, paypalSubscriptionId: string) => await prisma.userCourseSubscription.update({
+export const approvePaypalSubscriptionSandBox = async (studentCourseId: number) =>
+  await prisma.studentCourseSubscription.update({
     where: {
-        userCourseId
+      studentCourseId,
     },
     data: {
-        subscriptionStatus: SubscriptionStatus.SUBSCRIBED,
-        subscriptionMethod: SubscriptionMethod.PAYPAL,
-        paypalSubscriptionId
-    }
-})
+      subscriptionStatus: SubscriptionStatus.SUBSCRIBED,
+      subscriptionMethod: SubscriptionMethod.PAYPAL,
+      paymobSubscriptionId: "SANDBOX",
+    },
+  });
 
-export const approvePaypalSubscriptionSandBox = async (userCourseId: number) => await prisma.userCourseSubscription.update({
+export const savePaymobSubscription = async (
+  studentCourseId: number,
+  paymobSubscriptionId: string
+) =>
+  await prisma.studentCourseSubscription.update({
     where: {
-        userCourseId
+      studentCourseId,
     },
     data: {
-        subscriptionStatus: SubscriptionStatus.SUBSCRIBED,
-        subscriptionMethod: SubscriptionMethod.PAYPAL,
-        paymobSubscriptionId: 'SANDBOX'
-    }
-})
-
-export const savePaymobSubscription = async (userCourseId: number, paymobSubscriptionId: string) => await prisma.userCourseSubscription.update({
-    where: {
-        userCourseId
+      paymobSubscriptionId,
     },
-    data: {
-        paymobSubscriptionId
-    }
-})
+  });

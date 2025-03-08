@@ -1,32 +1,43 @@
 import { NextFunction, Request, Response } from "express";
-import { validateEmail, validateName, validatePassword, validateString, validateZoomLink } from "../utils/validation.util";
-import { authenticateUser, createUser, emailExists, getUserByEmail, nameExists, verifyGoogleToken } from "../services/user.service";
-import bcrypt, { compare } from "bcrypt";
-import axios from "axios";
-import { OAuth2Client } from "google-auth-library";
-import { generateToken } from "../utils/token.util";
-import { getCourse, createCourse, getAllCourses, getUserCourses, viewUserCourse, updateCourse, createCoursePaymentDetails, getPaymentDetails } from "../services/course.service";
-import { SessionType } from "@prisma/client";
-import { getZoomAccessToken } from "../services/zoom.service";
-import { createPaypalPlan, createPaypalProduct, getPaypalAccessToken } from "../services/paypal.service";
-import { createPaymobPlan, getPaymobAcceessToken } from "../services/paymob.service";
+import {
+  validateString,
+  validateZoomLink,
+} from "../utils/validation.util";
+import {
+  getCourse,
+  createCourse,
+  getAllCourses,
+  getStudentCourses,
+  updateCourse,
+  getUnasignedStudentCourse,
+} from "../services/course.service";
 import { ROLES } from "../utils/constants.util";
+import {
+  createGroupService,
+  deleteGroupService,
+  getCourseGroups,
+  getGroup,
+} from "../services/group.service";
+import { Group } from "@prisma/client";
 
-export const create = async (req: Request, res: Response, next: NextFunction) => {
+export const create = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
-    const { name, description, individualPrice, groupPrice, groupZoomLink, individualZoomLink } = req.body;
-    if (!name || (description && (description && (description && !validateString(description, 255, 0))))) {
+    const { name, description, privatePrice, groupPrice, zoomLink } = req.body;
+    if (
+      !name ||
+      !privatePrice ||
+      !groupPrice ||
+      !zoomLink ||
+      (description &&
+        !validateString(description, 255, 0))
+    ) {
       res.status(400).json({
         name: "INVALID_PAYLOAD",
-        message: "Invalid payload data"
-      });
-      return;
-    }
-
-    if (!individualPrice && !groupPrice) {
-      res.status(400).json({
-        name: "REQUIRED_PRICE",
-        message: "At least one of group price / individual price should have a value"
+        message: "Invalid payload data",
       });
       return;
     }
@@ -35,29 +46,28 @@ export const create = async (req: Request, res: Response, next: NextFunction) =>
     if (courseExistsRes) {
       res.status(409).json({
         name: "COURSE_ALREADY_EXISTS",
-        message: "This course name is already used, use a different one"
+        message: "This course name is already used, use a different one",
       });
       return;
     }
 
-    if(groupZoomLink && !validateZoomLink(groupZoomLink)) {
+    if (!validateZoomLink(zoomLink)) {
       res.status(400).json({
-        name: "GROUP_ZOOM_INVALID",
-        message: "The group zoom link is invalid"
+        name: "ZOOM_LINK_INVALID",
+        message: "The zoom link is invalid",
       });
       return;
     }
 
-    if(individualZoomLink && !validateZoomLink(individualZoomLink)) {
-      res.status(400).json({
-        name: "INDIVIDUAL_ZOOM_INVALID",
-        message: "The individual zoom link is invalid"
-      });
-      return;
-    }
+    const createdCourse = await createCourse(
+      name,
+      privatePrice,
+      groupPrice,
+      description,
+      zoomLink
+    );
 
-    const createdCourse = await createCourse(name, groupPrice, individualPrice, description, {groupZoomLink, individualZoomLink});
-    
+    /*
     // PAYPAL
     const paypalAccessToken = await getPaypalAccessToken();
     if(!paypalAccessToken) throw Error("Error getting access token");
@@ -79,33 +89,41 @@ export const create = async (req: Request, res: Response, next: NextFunction) =>
     console.log(paymobGroupPlanId, paymobIndividualPlanId);
 
     await createCoursePaymentDetails(createdCourse.id, paypalGroupPlanId, paypalIndividualPlanId, paymobGroupPlanId, paymobIndividualPlanId);
+    */
 
     res.json({
       message: "Coursee created successfully",
       data: {
-        course: createdCourse
-      }
-    })
+        course: createdCourse,
+      },
+    });
   } catch (err: any) {
     console.log("ERROR: ", err);
     res.status(500).json({
       name: "INTERNAL_SERVER_ERROR",
-      message: "Internal Server Error"
+      message: "Internal Server Error",
     });
     next(err);
   }
-}
+};
 
-export const update = async (req: Request, res: Response, next: NextFunction) => {
+export const update = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
-    const { name, description, individualPrice, groupPrice, groupZoomLink, individualZoomLink } = req.body;
-    const courseId = Number(req.params.id);
+    const { name, description, privatePrice, groupPrice, zoomLink } = req.body;
+    const courseId = Number(req.params.courseId);
 
-    if (!courseId ||
-      (!name && (description && !validateString(description, 255, 0)) && !individualPrice && !groupPrice)) {
+    if (
+      !courseId ||
+      (!name && !description && !privatePrice && !groupPrice && !zoomLink) ||
+      (description && !validateString(description, 255, 0))
+    ) {
       res.status(400).json({
         name: "INVALID_PAYLOAD",
-        message: "Invalid payload data"
+        message: "Invalid payload data",
       });
       return;
     }
@@ -114,100 +132,92 @@ export const update = async (req: Request, res: Response, next: NextFunction) =>
     if (!courseExistsRes) {
       res.status(409).json({
         name: "COURSE_DOESNT_EXIST",
-        message: "No course with this id"
+        message: "No course with this id",
       });
       return;
     }
 
-    if(groupZoomLink && !validateZoomLink(groupZoomLink)) {
+    if (zoomLink && !validateZoomLink(zoomLink)) {
       res.status(400).json({
         name: "GROUP_ZOOM_INVALID",
-        message: "The group zoom link is invalid"
-      });
-      return;
-    }
-
-    if(individualZoomLink && !validateZoomLink(individualZoomLink)) {
-      res.status(400).json({
-        name: "INDIVIDUAL_ZOOM_INVALID",
-        message: "The individual zoom link is invalid"
+        message: "The zoom link is invalid",
       });
       return;
     }
 
     const options: any = {};
 
-    if(name)
-      options.name = name;
-    
-    if(description)
-      options.description = description;
-    
-    if(individualPrice)
-      options.individualPrice = individualPrice;
-    
-    if(groupPrice)
+    if (name) options.name = name;
+
+    if (description) options.description = description;
+
+    if (privatePrice) {
+      // TODO DISABLE ALL SUBSCRIPTIONS
+      options.privatePrice = privatePrice;
+    }
+
+    if (groupPrice) {
+      // TODO DISABLE ALL SUBSCRIPTIONS
       options.groupPrice = groupPrice;
-    
-    if(groupZoomLink)
-      options.groupZoomLink = groupZoomLink;
-    
-    if(individualZoomLink)
-      options.individualZoomLink = individualZoomLink;
+    }
+
+    if (zoomLink) options.zoomLink = zoomLink;
 
     const updatedCourse = await updateCourse(courseId, options);
 
     res.json({
       message: "Coursee updated successfully",
       data: {
-        course: updatedCourse
-      }
-    })
-
+        course: updatedCourse,
+      },
+    });
   } catch (err: any) {
     console.log("ERROR: ", err);
     res.status(500).json({
       name: "INTERNAL_SERVER_ERROR",
-      message: "Internal Server Error"
+      message: "Internal Server Error",
     });
     next(err);
   }
-}
+};
 
-export const getAll = async (req: Request, res: Response, next: NextFunction) => {
+export const getAll = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const courses = await getAllCourses();
 
-    if(res.locals.role = ROLES.USER) {
-      courses.forEach(course => {
-        course.groupZoomLink = null;
-        course.individualZoomLink = null;
-      })
+    if ((res.locals.role = ROLES.USER)) {
+      courses.forEach((course) => {
+        course.zoomLink = "";
+      });
     }
 
     res.json({
       message: "Courses retrieved successfully",
       data: {
-        courses
-      }
-    })
-
+        courses,
+      },
+    });
   } catch (err: any) {
     console.log("ERROR: ", err);
     res.status(500).json({
       name: "INTERNAL_SERVER_ERROR",
-      message: "Internal Server Error"
+      message: "Internal Server Error",
     });
     next(err);
   }
-}
+};
+
 export const get = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const courseId = Number(req.params.id);
+    const courseId = Number(req.params.courseId);
     if (!courseId) {
       res.status(400).json({
         name: "INVALID_PAYLOAD",
-        message: "Invalid payload data"
+        message: "Invalid payload data",
       });
       return;
     }
@@ -216,42 +226,42 @@ export const get = async (req: Request, res: Response, next: NextFunction) => {
     if (!course) {
       res.status(409).json({
         name: "COURSE_DOESNT_EXIST",
-        message: "No course with this id"
+        message: "No course with this id",
       });
       return;
     }
 
-    if(res.locals.role == ROLES.USER) {
-      course.groupZoomLink = null;
-      course.individualZoomLink = null;
+    if (res.locals.role == ROLES.USER) {
+      course.zoomLink = "";
     }
 
-    const paymentDetails = await getPaymentDetails(courseId);
     res.json({
       message: "Course retrieved successfully",
       data: {
         course,
-        paymentDetails
-      }
-    })
-
+      },
+    });
   } catch (err: any) {
     console.log("ERROR: ", err);
     res.status(500).json({
       name: "INTERNAL_SERVER_ERROR",
-      message: "Internal Server Error"
+      message: "Internal Server Error",
     });
     next(err);
   }
-}
+};
 
-export const newUsers = async (req: Request, res: Response, next: NextFunction) => {
+export const newCourseStudents = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const courseId = Number(req.params.courseId);
     if (!courseId) {
       res.status(400).json({
         name: "INVALID_PAYLOAD",
-        message: "Invalid payload data"
+        message: "Invalid payload data",
       });
       return;
     }
@@ -260,47 +270,69 @@ export const newUsers = async (req: Request, res: Response, next: NextFunction) 
     if (!course) {
       res.status(409).json({
         name: "COURSE_DOESNT_EXIST",
-        message: "No course with this id"
+        message: "No course with this id",
       });
       return;
     }
 
-    const lastWeekDate = new Date(new Date().getTime() - 604800000);
-    const newUsers = await getUserCourses(courseId, {
-      OR: [
-        { viewedByAdmin: false },
-        { createdAt: { gt: lastWeekDate } }
-      ]
-    }) ?? [];
-
-    await Promise.all(newUsers?.map(async newUser => {
-      await viewUserCourse(courseId, newUser.userId);
-    }))
+    const newStudents =
+      (await getStudentCourses(courseId, {
+        hours: null,
+      })) ?? [];
 
     res.json({
-      message: "New Course users retrieved successfully",
+      message: "New Course students retrieved successfully",
       data: {
-        newUsers
-      }
-    })
-
+        newStudents,
+      },
+    });
   } catch (err: any) {
     console.log("ERROR: ", err);
     res.status(500).json({
       name: "INTERNAL_SERVER_ERROR",
-      message: "Internal Server Error"
+      message: "Internal Server Error",
     });
     next(err);
   }
-}
+};
 
-export const groupUsers = async (req: Request, res: Response, next: NextFunction) => {
+export const newStudents = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const newStudents = await getUnasignedStudentCourse();
+
+    res.json({
+      message: "New students retrieved successfully",
+      data: {
+        newStudents,
+      },
+    });
+  } catch (err: any) {
+    console.log("ERROR: ", err);
+    res.status(500).json({
+      name: "INTERNAL_SERVER_ERROR",
+      message: "Internal Server Error",
+    });
+    next(err);
+  }
+};
+
+export const groupStudents = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const courseId = Number(req.params.courseId);
-    if (!courseId) {
+    const groupId = Number(req.params.groupId);
+
+    if (!courseId || !groupId) {
       res.status(400).json({
         name: "INVALID_PAYLOAD",
-        message: "Invalid payload data"
+        message: "Invalid payload data",
       });
       return;
     }
@@ -309,39 +341,52 @@ export const groupUsers = async (req: Request, res: Response, next: NextFunction
     if (!course) {
       res.status(409).json({
         name: "COURSE_DOESNT_EXIST",
-        message: "No course with this id"
+        message: "No course with this id",
       });
       return;
     }
 
-    const userCourses = await getUserCourses(courseId, {
-      sessionType: SessionType.GROUP
-    }) ?? [];
+    const group = await getGroup({ id: groupId, courseId });
+    if (!group) {
+      res.status(409).json({
+        name: "GROUP_DOESNT_EXIST",
+        message: "Group doesn't exist or doesn't belong to this course",
+      });
+      return;
+    }
+
+    const courseStudents =
+      (await getStudentCourses(courseId, {
+        groupId,
+      })) ?? [];
 
     res.json({
-      message: "Course users retrieved successfully",
+      message: "Course students retrieved successfully",
       data: {
-        userCourses
-      }
-    })
-
+        students: courseStudents,
+      },
+    });
   } catch (err: any) {
     console.log("ERROR: ", err);
     res.status(500).json({
       name: "INTERNAL_SERVER_ERROR",
-      message: "Internal Server Error"
+      message: "Internal Server Error",
     });
     next(err);
   }
-}
+};
 
-export const individualUsers = async (req: Request, res: Response, next: NextFunction) => {
+export const privateStudents = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const courseId = Number(req.params.courseId);
     if (!courseId) {
       res.status(400).json({
         name: "INVALID_PAYLOAD",
-        message: "Invalid payload data"
+        message: "Invalid payload data",
       });
       return;
     }
@@ -350,28 +395,202 @@ export const individualUsers = async (req: Request, res: Response, next: NextFun
     if (!course) {
       res.status(409).json({
         name: "COURSE_DOESNT_EXIST",
-        message: "No course with this id"
+        message: "No course with this id",
       });
       return;
     }
 
-    const userCourses = await getUserCourses(courseId, {
-      sessionType: SessionType.INDIVIDUAL
-    }) ?? [];
+    const studentCourses =
+      (await getStudentCourses(courseId, {
+        groupId: null,
+      })) ?? [];
 
     res.json({
-      message: "Course users retrieved successfully",
+      message: "Course students retrieved successfully",
       data: {
-        userCourses
-      }
-    })
-
+        students: studentCourses,
+      },
+    });
   } catch (err: any) {
     console.log("ERROR: ", err);
     res.status(500).json({
       name: "INTERNAL_SERVER_ERROR",
-      message: "Internal Server Error"
+      message: "Internal Server Error",
     });
     next(err);
   }
-}
+};
+
+export const courseGroups = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const courseId = Number(req.params.courseId);
+    if (!courseId) {
+      res.status(400).json({
+        name: "INVALID_PAYLOAD",
+        message: "Invalid payload data",
+      });
+      return;
+    }
+
+    const course = await getCourse({ id: courseId });
+    if (!course) {
+      res.status(409).json({
+        name: "COURSE_DOESNT_EXIST",
+        message: "No course with this id",
+      });
+      return;
+    }
+
+    const groups: (Group & { studentsCount?: number })[] =
+      await getCourseGroups(courseId);
+    await Promise.allSettled(
+      groups.map(async (group) => {
+        const students =
+          (await getStudentCourses(courseId, {
+            groupId: group.id,
+          })) ?? [];
+        group.studentsCount = students.length;
+      })
+    );
+
+    res.json({
+      message: "Course groups retrieved successfully",
+      data: {
+        groups,
+      },
+    });
+  } catch (err: any) {
+    console.log("ERROR: ", err);
+    res.status(500).json({
+      name: "INTERNAL_SERVER_ERROR",
+      message: "Internal Server Error",
+    });
+    next(err);
+  }
+};
+
+export const createGroup = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const courseId = Number(req.params.courseId);
+    if (!courseId) {
+      res.status(400).json({
+        name: "INVALID_PAYLOAD",
+        message: "Invalid payload data",
+      });
+      return;
+    }
+
+    const course = await getCourse({ id: courseId });
+    if (!course) {
+      res.status(409).json({
+        name: "COURSE_DOESNT_EXIST",
+        message: "No course with this id",
+      });
+      return;
+    }
+
+    const groups = await getCourseGroups(courseId);
+    groups.sort(
+      (groupA, groupB) =>
+        groupA.name.charCodeAt("Group ".length) -
+        groupB.name.charCodeAt("Group ".length)
+    );
+    let letterCode = 65;
+    for (const group of groups) {
+      if (group.name.charCodeAt("Group ".length) != letterCode) break;
+      letterCode++;
+    }
+
+    const groupName = `Group ${String.fromCharCode(letterCode)}`;
+
+    const group = await createGroupService(courseId, groupName);
+
+    res.json({
+      message: "Course group created successfully",
+      data: {
+        group,
+      },
+    });
+  } catch (err: any) {
+    console.log("ERROR: ", err);
+    res.status(500).json({
+      name: "INTERNAL_SERVER_ERROR",
+      message: "Internal Server Error",
+    });
+    next(err);
+  }
+};
+
+export const deleteGroup = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const courseId = Number(req.params.courseId);
+    const groupId = Number(req.params.groupId);
+
+    if (!courseId || !groupId) {
+      res.status(400).json({
+        name: "INVALID_PAYLOAD",
+        message: "Invalid payload data",
+      });
+      return;
+    }
+
+    const course = await getCourse({ id: courseId });
+    if (!course) {
+      res.status(409).json({
+        name: "COURSE_DOESNT_EXIST",
+        message: "No course with this id",
+      });
+      return;
+    }
+
+    const group = await getGroup({ courseId, id: groupId });
+    if (!group) {
+      res.status(409).json({
+        name: "GROUP_DOESNT_EXIST",
+        message: "Group doesn't exist or doesn't belong to this course",
+      });
+      return;
+    }
+
+    const students =
+      (await getStudentCourses(courseId, {
+        groupId,
+      })) ?? [];
+
+    if (students.length > 0) {
+      res.status(409).json({
+        name: "GROUP_ISNT_EMPTY",
+        message: "Group should be empty to delete it",
+      });
+      return;
+    }
+
+    await deleteGroupService(groupId);
+
+    res.json({
+      message: "Course group deleted successfully",
+      data: {
+        group,
+      },
+    });
+  } catch (err: any) {
+    console.log("ERROR: ", err);
+    res.status(500).json({
+      name: "INTERNAL_SERVER_ERROR",
+      message: "Internal Server Error",
+    });
+    next(err);
+  }
+};

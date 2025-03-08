@@ -8,7 +8,7 @@ export const logRequest = (req: Request, res: Response, next: NextFunction) => {
         const ip =
             req.headers["x-forwarded-for"] || req.connection.remoteAddress;
         const headers = req.headers;
-        const userAgent = headers["user-agent"];
+        const studentAgent = headers["student-agent"];
         const origin = headers["origin"];
         const host = headers["host"];
 
@@ -19,7 +19,7 @@ export const logRequest = (req: Request, res: Response, next: NextFunction) => {
             params,
             query,
             ip,
-            userAgent,
+            studentAgent,
             origin,
             host,
         };

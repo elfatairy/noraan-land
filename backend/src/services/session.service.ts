@@ -1,287 +1,298 @@
 import { prisma } from "../configs/db.config";
-import { CalendarDateStatus, CalendarDateType, GroupSession, IndividualSession, Prisma, SessionStatus, SessionType } from "@prisma/client";
+import {
+  CalendarDateChangingStatus,
+  CalendarDateStatus,
+  Prisma,
+  SessionStatus,
+  SessionType,
+} from "@prisma/client";
 import { createCalendarDate } from "./calendar.service";
 import fileUpload from "express-fileupload";
 import axios from "axios";
 import * as fs from "fs";
 import path from "path";
+import { Report } from "../../types";
 
-export const createGroupSessionService = async (courseId: number, title: string, date: string, duration: number, isFree: boolean, description?: string) => {
-    const calendarDateId = await createCalendarDate(date, duration, CalendarDateType.GROUP_SESSION);
-    const session = await prisma.groupSession.create({
-        data: {
-            title,
-            description,
-            courseId,
-            calendarDateId,
-            isFree
-        }
-    });
+export const createSessionService = async (
+  courseId: number,
+  title: string,
+  sessionType: SessionType,
+  privateStudentId: number,
+  groupId: number,
+  date: string,
+  duration: number,
+  isFree: boolean,
+  description?: string
+) => {
+  const calendarDateId = await createCalendarDate(date, duration);
+  const session = await prisma.session.create({
+    data: {
+      title,
+      description,
+      courseId,
+      calendarDateId,
+      isFree,
+      sessionType,
+      groupId: sessionType == SessionType.GROUP ? groupId : null,
+      privateStudentId: sessionType == SessionType.PRIVATE ? privateStudentId : null,
+    },
+  });
 
-    return session;
-}
+  return session;
+};
 
-export const createIndividualSessionService = async (courseId: number, userId: number, title: string, date: string, duration: number, isFree: boolean, description?: string) => {
-    const calendarDateId = await createCalendarDate(date, duration, CalendarDateType.INDIVIDUAL_SESSION);
-    const session = await prisma.individualSession.create({
-        data: {
-            courseId,
-            userId,
-            title,
-            calendarDateId,
-            description,
-            isFree
-        }
-    });
-
-    return session;
-}
-
-export const getGroupSession = async (id: number) => await prisma.groupSession.findFirst({
+export const updateSessionDateService = async (
+  sessionId: number,
+  oldCalendarDateId: number,
+  newDate: string,
+  newDuration: number
+) => {
+  const newCalendarDateId = await createCalendarDate(
+    newDate,
+    newDuration,
+    true
+  );
+  const session = await prisma.session.update({
     where: {
-        id,
-    }
-})
+      id: sessionId,
+    },
+    data: {
+      calendarDateId: newCalendarDateId,
+    },
+  });
 
-export const getIndividualSession = async (id: number) => await prisma.individualSession.findFirst({
+  await prisma.calendarDate.delete({
     where: {
-        id,
-    }
-})
+      id: oldCalendarDateId,
+    },
+  });
 
-export const getSession = async (id: number, type: SessionType) => {
-    if (type == SessionType.GROUP)
-        return await getGroupSession(id);
-    else if (type == SessionType.INDIVIDUAL)
-        return await getIndividualSession(id);
-    else
-        throw Error("UNREACHABLE")
-}
+  return session;
+};
 
-export const getSessions = async (conditions: Prisma.GroupSessionWhereInput | Prisma.IndividualSessionWhereInput, type: SessionType) => {
-    if (type == SessionType.GROUP)
-        return await prisma.groupSession.findMany({
-            where: conditions as Prisma.GroupSessionWhereInput,
-            select: {
-                id: true, 
-                description: true, 
-                isFree: true, 
-                status: true, 
-                title: true, 
-                calendarDateId: true,
-                startedAt: true
-            }
-        })
-    else if (type == SessionType.INDIVIDUAL)
-        return await prisma.individualSession.findMany({
-            where: conditions as Prisma.IndividualSessionWhereInput,
-            select: {
-                id: true, 
-                description: true, 
-                notes: true,
-                isFree: true, 
-                status: true, 
-                title: true, 
-                calendarDateId: true,
-                startedAt: true
-            }
-        })
-    else
-        throw Error("UNREACHABLE")
-}
+export const cancelSessionService = async (
+  sessionId: number,
+  oldCalendarDateId: number
+) => {
+  await prisma.calendarDate.update({
+    where: {
+      id: oldCalendarDateId,
+    },
+    data: {
+      changingStatus: CalendarDateChangingStatus.CANCELED,
+      status: CalendarDateStatus.DONE
+    },
+  });
 
-export const startSessionService = async (sessionId: number, sessionType: SessionType) => {
-    if (sessionType == SessionType.GROUP)
-        await prisma.groupSession.update({
-            where: {
-                id: sessionId
-            },
-            data: {
-                status: SessionStatus.RUNNING,
-                startedAt: new Date()
-            }
-        });
-    else if (sessionType == SessionType.INDIVIDUAL)
-        await prisma.individualSession.update({
-            where: {
-                id: sessionId
-            },
-            data: {
-                status: SessionStatus.RUNNING,
-                startedAt: new Date()
-            }
-        });
-    else
-        throw Error("UNREACHABLE")
-}
+  const session = await prisma.session.update({
+    where: {
+      id: sessionId,
+    },
+    data: {
+      status: SessionStatus.ENDED,
+    },
+  });
 
-export const endSessionService = async (sessionId: number, sessionType: SessionType, description: string) => {
-    let calendarDateId: number | null = null;
-    if (sessionType == SessionType.GROUP) {
-        calendarDateId = (await prisma.groupSession.update({
-            where: {
-                id: sessionId
-            },
-            data: {
-                status: SessionStatus.ENDED,
-                description
-            }
-        })).calendarDateId;
-    } else if (sessionType == SessionType.INDIVIDUAL) {
-        calendarDateId = (await prisma.individualSession.update({
-            where: {
-                id: sessionId
-            },
-            data: {
-                status: SessionStatus.ENDED,
-                description
-            }
-        })).calendarDateId;
-    }
-    else
-        throw Error("UNREACHABLE")
+  return session;
+};
 
-    if (!calendarDateId)
-        throw Error("UNREACHABLE")
-
-    await prisma.calendarDate.update({
-        where: {
-            id: calendarDateId
+export const getSession = async (id: number) =>
+  await prisma.session.findFirst({
+    where: {
+      id,
+    },
+    include: {
+      calendarDate: {
+        select: {
+          startDate: true,
         },
-        data: {
-            status: CalendarDateStatus.PASSED
-        }
-    })
-}
+      },
+    },
+  });
 
-export const saveIndividualStudentNotes = async (sessionId: number, notes: string) => await prisma.individualSession.update({
+export const getRecurringSessions = async (sessionId: number) => {
+  const firstSession = (await getSession(sessionId))!;
+
+  const sessions = [];
+
+  for (let i = 1; i < 52; i++) {
+    const _date = new Date(
+      new Date(firstSession.calendarDate.startDate).getTime() + i * 604800000
+    );
+
+    const session = await prisma.session.findFirst({
+      where: {
+        title: firstSession.title,
+        calendarDate: {
+          startDate: _date,
+        },
+      },
+    });
+
+    if (session) sessions.push({ session, week: i });
+  }
+
+  return sessions;
+};
+
+export const getSessions = async (conditions: Prisma.SessionWhereInput) => {
+  return await prisma.session.findMany({
+    where: conditions,
+    select: {
+      id: true,
+      description: true,
+      isFree: true,
+      status: true,
+      sessionType: true,
+      groupId: true,
+      privateStudentId: true,
+      title: true,
+      calendarDateId: true,
+      startedAt: true,
+    },
+  });
+};
+
+export const startSessionService = async (sessionId: number) => {
+  await prisma.session.update({
     where: {
-        id: sessionId
+      id: sessionId,
     },
     data: {
-        notes
-    }
-})
+      status: SessionStatus.RUNNING,
+      startedAt: new Date(),
+    },
+  });
+};
 
-export const saveGruopStudentNotes = async (userSessionId: number, notes: string) => await prisma.userSession.update({
+export const endSessionService = async (
+  sessionId: number,
+  description: string
+) => {
+  let { calendarDateId } = await prisma.session.update({
     where: {
-        id: userSessionId
+      id: sessionId,
     },
     data: {
-        notes
-    }
-})
+      status: SessionStatus.ENDED,
+      description,
+    },
+  });
+
+  await prisma.calendarDate.update({
+    where: {
+      id: calendarDateId,
+    },
+    data: {
+      status: CalendarDateStatus.DONE,
+    },
+  });
+};
+
+export const saveStudentReport = async (
+  studentSessionId: number,
+  report: Report
+) =>
+  await prisma.studentSession.update({
+    where: {
+      id: studentSessionId,
+    },
+    data: {
+      notes: report.notes,
+      attendence: report.attendence,
+      tardy: report.tardy,
+      homeWork: report.homeWork,
+    },
+  });
 
 const createBunnyVideo = async (title: string) => {
-    const res = await axios.post(`${process.env.BUNNY_BASE_URL}/library/${process.env.BUNNY_LIBRARY_ID}/videos`, {
-        title
-    }, {
-        headers: {
-            "AccessKey": process.env.BUNNY_ACCESS_KEY
-        }
-    });
-
-    if (res.status != 200) {
-        throw Error("error creating bunny video");
+  const res = await axios.post(
+    `${process.env.BUNNY_BASE_URL}/library/${process.env.BUNNY_LIBRARY_ID}/videos`,
+    {
+      title,
+    },
+    {
+      headers: {
+        AccessKey: process.env.BUNNY_ACCESS_KEY,
+      },
     }
+  );
 
-    return res.data.guid;
-}
+  if (res.status != 200) {
+    throw Error("error creating bunny video");
+  }
+
+  return res.data.guid;
+};
 
 const uploadVideoToBunny = async (videoGuid: string, filePath: string) => {
-    const videoStream = fs.createReadStream(filePath);
+  const videoStream = fs.createReadStream(filePath);
 
-    const res = await axios.put(`${process.env.BUNNY_BASE_URL}/library/${process.env.BUNNY_LIBRARY_ID}/videos/${videoGuid}`,
-        videoStream,
-        {
-            headers: {
-                "AccessKey": process.env.BUNNY_ACCESS_KEY
-            }
-        });
-
-    if (res.status != 200 || res.data.statusCode != 200) {
-        throw Error("couldn't upload the video");
+  const res = await axios.put(
+    `${process.env.BUNNY_BASE_URL}/library/${process.env.BUNNY_LIBRARY_ID}/videos/${videoGuid}`,
+    videoStream,
+    {
+      headers: {
+        AccessKey: process.env.BUNNY_ACCESS_KEY,
+      },
     }
+  );
 
-    return true;
-}
+  if (res.status != 200 || res.data.statusCode != 200) {
+    throw Error("couldn't upload the video");
+  }
 
-export const uploadRecording = async (file: fileUpload.UploadedFile, sessionId: number, sessionType: SessionType) => {
-    try {
-        let title = "";
-        if (sessionType == SessionType.GROUP) {
-            title = (await prisma.groupSession.findFirstOrThrow({
-                where: {
-                    id: sessionId
-                }
-            })).title;
-        } else if (sessionType == SessionType.INDIVIDUAL) {
-            title = (await prisma.individualSession.findFirstOrThrow({
-                where: {
-                    id: sessionId
-                }
-            })).title;
-        }
+  return true;
+};
 
-        const videoGuid = await createBunnyVideo(title);
+export const uploadRecording = async (
+  file: fileUpload.UploadedFile,
+  sessionId: number
+) => {
+  try {
+    const { title } = await prisma.session.findFirstOrThrow({
+      where: {
+        id: sessionId,
+      },
+    });
 
-        const uploadPath = path.join(__dirname, 'uploads', file.name);
-        file.mv(uploadPath, async (err) => {
-            if (err) {
-                throw Error(err);
-            }
+    const videoGuid = await createBunnyVideo(title);
 
-            try {
-                await uploadVideoToBunny(videoGuid, uploadPath);
+    const uploadPath = path.join(__dirname, "uploads", file.name);
+    file.mv(uploadPath, async (err) => {
+      if (err) {
+        throw Error(err);
+      }
 
-                fs.unlinkSync(uploadPath);
+      try {
+        await uploadVideoToBunny(videoGuid, uploadPath);
 
-            } catch (error) {
-                throw Error('Error uploading to Bunny CDN: ' + error);
-            }
-        });
+        fs.unlinkSync(uploadPath);
+      } catch (error) {
+        throw Error("Error uploading to Bunny CDN: " + error);
+      }
+    });
 
-        return videoGuid;
-    } catch (error) {
-        console.log(error);
-        return false;
-    }
-}
+    return videoGuid;
+  } catch (error) {
+    console.log(error);
+    return false;
+  }
+};
 
-export const createRecording = async (sessionId: number, sessionType: SessionType, videoGuid: string) => {
-    if(sessionType == SessionType.GROUP) {
-        await prisma.recording.create({
-            data: {
-                groupSessionId: sessionId,
-                sessionType,
-                bunnyGuid: videoGuid
-            }
-        });
-    } else if (sessionType == SessionType.INDIVIDUAL) {
-        await prisma.recording.create({
-            data: {
-                IndividualSessionid: sessionId,
-                sessionType,
-                bunnyGuid: videoGuid
-            }
-        });
-    }
-}
+export const createRecording = async (sessionId: number, videoGuid: string) => {
+  await prisma.recording.create({
+    data: {
+      sessionId: sessionId,
+      bunnyGuid: videoGuid,
+    },
+  });
+};
 
-export const getRecordings = async (sessionId: number, sessionType: SessionType) => {
-    if(sessionType == SessionType.GROUP) {
-        return await prisma.recording.findMany({
-            where: {
-                groupSessionId: sessionId,
-                sessionType
-            }
-        });
-    } else if (sessionType == SessionType.INDIVIDUAL) {
-        return await prisma.recording.findMany({
-            where: {
-                IndividualSessionid: sessionId,
-                sessionType
-            }
-        });
-    }
-}
+export const getRecordings = async (sessionId: number) => {
+  return await prisma.recording.findMany({
+    where: {
+      sessionId: sessionId,
+    },
+  });
+};

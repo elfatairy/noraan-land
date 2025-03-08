@@ -16,8 +16,11 @@ export const allowedMaterialTypes = [
     'video/quicktime',
     'video/x-msvideo',
     'video/x-flv',
-    'video/webm'
+    'video/webm',
+    'text/plain'
 ];
 
 // Define file size limit (e.g., 10MB)
 export const MAX_FILE_SIZE = 20 * 1024 * 1024;
+
+export const JOIN_LINK_SHOW = 10 * 60 * 1000;

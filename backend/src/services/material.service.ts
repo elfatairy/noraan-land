@@ -1,9 +1,6 @@
-import { mkdir, mkdirSync, readdirSync, renameSync, rmSync } from "fs";
-import { prisma } from "../configs/db.config";
-import { Prisma, SessionType } from "@prisma/client";
+import { mkdirSync, readdirSync, renameSync, rmSync } from "fs";
 import { join } from "path";
-import fileUpload, { UploadedFile } from "express-fileupload";
-
+import { UploadedFile } from "express-fileupload";
 
 export const createFolder = async (name: string, path: string) => {
     mkdirSync(join(path, name), { recursive: true });

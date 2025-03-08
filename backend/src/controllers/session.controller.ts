@@ -1,19 +1,68 @@
 import { NextFunction, Request, Response } from "express";
-import { validateDate, validateEmail, validateName, validatePassword, validateQuizesLink, validateSessionType, validateString } from "../utils/validation.util";
-import { authenticateUser, createUser, emailExists, getUserByEmail, getUserSession, nameExists, userExists, verifyGoogleToken } from "../services/user.service";
-import { createCourse, getAllCourses, getCourse, getUserCourse } from "../services/course.service";
-import { createGroupSessionService, createIndividualSessionService, createRecording, endSessionService, getSession, saveGruopStudentNotes, saveIndividualStudentNotes, startSessionService, uploadRecording } from "../services/session.service";
+import {
+  validateDate,
+  validateObjectWithKeys,
+  validateReports,
+  validateSessionType,
+  validateString,
+} from "../utils/validation.util";
+import {
+  createStudentSession,
+  getStudentSession,
+} from "../services/student.service";
+import { getCourse, getStudentCourse } from "../services/course.service";
+import {
+  cancelSessionService,
+  createRecording,
+  createSessionService,
+  endSessionService,
+  getRecurringSessions,
+  getSession,
+  saveStudentReport,
+  startSessionService,
+  updateSessionDateService,
+  uploadRecording,
+} from "../services/session.service";
 import { isDateAvailable } from "../services/calendar.service";
 import { SessionStatus, SessionType } from "@prisma/client";
-import { createMeeting, getZoomAccessToken } from "../services/zoom.service";
+import { getGroup } from "../services/group.service";
+import { Report } from "../../types";
 
-export const createGroupSession = async (req: Request, res: Response, next: NextFunction) => {
+export const createSession = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
-    const { courseId, title, description, date, duration, isFree = false } = req.body;
-    if (!courseId || !title || !date || !validateDate(date) || !duration || (description && !validateString(description, 255, 0))) {
+    const courseId = Number(req.params.courseId);
+    const {
+      title,
+      description,
+      date,
+      duration,
+      sessionType,
+      groupId,
+      isRecurring,
+      privateStudentId,
+      isFree = false,
+    } = req.body;
+
+    if (
+      !courseId ||
+      !title ||
+      !date ||
+      !validateDate(date) ||
+      !duration ||
+      (description && !validateString(description, 255, 0)) ||
+      (isRecurring && (isRecurring == true || isRecurring == false)) ||
+      !sessionType ||
+      !validateSessionType(sessionType) ||
+      (sessionType == SessionType.GROUP && !groupId) ||
+      (sessionType == SessionType.PRIVATE && !privateStudentId)
+    ) {
       res.status(400).json({
         name: "INVALID_PAYLOAD",
-        message: "Invalid payload data"
+        message: "Invalid payload data",
       });
       return;
     }
@@ -22,140 +71,261 @@ export const createGroupSession = async (req: Request, res: Response, next: Next
     if (!courseExistsRes) {
       res.status(409).json({
         name: "COURSE_DOESNT_EXIST",
-        message: "No course with this id"
+        message: "No course with this id",
       });
       return;
     }
 
-    const dateAvailable = await isDateAvailable(date, duration);
-    if (!dateAvailable) {
-      res.status(409).json({
-        name: "DATE_NOT_AVAILABLE",
-        message: "This date is not available, please choose another date/duration"
-      });
-      return;
-    }
+    for (let i = 0; i < (isRecurring ? 52 : 1); i++) {
+      console.log("repeat"); 
+      const _date = new Date(
+        new Date(date).getTime() + i * 604800000
+      ).toISOString();
 
-    const createdSession = await createGroupSessionService(courseId, title, date, duration, isFree, description);
-    res.json({
-      message: "Session created successfully",
-      data: {
-        session: createdSession
+      const dateAvailable = await isDateAvailable(_date, duration);
+      if (!dateAvailable) {
+        res.status(409).json({
+          name: "DATE_NOT_AVAILABLE",
+          message:
+            "This date is not available, please choose another date/duration",
+        });
+        return;
       }
-    })
+    }
 
-    throw Error("Shouldn't happen");
+    if (groupId) {
+      const group = await getGroup({ id: groupId, courseId });
+      if (!group) {
+        res.status(409).json({
+          name: "GROUP_DOESNT_EXIST",
+          message:
+            "This group id is not valid, or this group doesn't belong to this course",
+        });
+        return;
+      }
+    } else if (privateStudentId) {
+      const studentCourse = await getStudentCourse({
+        studentId: privateStudentId,
+        courseId,
+      });
+      if (!studentCourse || studentCourse.courseId != courseId) {
+        res.status(409).json({
+          name: "USER_COURSE_INVALID",
+          message:
+            "This student doesn't exist or doesn't belong to this course",
+        });
+        return;
+      }
+    }
 
+    const firstSession = await createSessionService(
+      courseId,
+      title,
+      sessionType,
+      privateStudentId,
+      groupId,
+      date,
+      duration,
+      isFree,
+      description
+    );
+
+    if (isRecurring) {
+      for (let i = 1; i < 52; i++) {
+        const newDate = new Date(
+          new Date(date).getTime() + i * 604800000
+        ).toISOString();
+
+        await createSessionService(
+          courseId,
+          title,
+          sessionType,
+          privateStudentId,
+          groupId,
+          newDate,
+          duration,
+          isFree,
+          description
+        );
+      }
+    }
+
+    res.json({
+      message: "Session[s] created successfully",
+      data: {
+        nextSession: firstSession,
+      },
+    });
   } catch (err: any) {
     console.log("ERROR: ", err);
     res.status(500).json({
       name: "INTERNAL_SERVER_ERROR",
-      message: "Internal Server Error"
+      message: "Internal Server Error",
     });
     next(err);
   }
-}
+};
 
-export const createIndividualSession = async (req: Request, res: Response, next: NextFunction) => {
+export const updateSessionDate = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
-    const { courseId, userId, title, description, date, duration, isFree = false } = req.body;
-    if (!courseId || !userId || !title || !date || !validateDate(date) || !duration || (description && !validateString(description, 255, 0))) {
-      res.status(400).json({
-        name: "INVALID_PAYLOAD",
-        message: "Invalid payload data"
-      });
-      return;
-    }
-
-    const courseExistsRes = await getCourse({ id: courseId });
-    if (!courseExistsRes) {
-      res.status(409).json({
-        name: "COURSE_DOESNT_EXIST",
-        message: "No course with this id"
-      });
-      return;
-    }
-
-    const userExistsRes = await userExists({ id: userId });
-    if (!userExistsRes) {
-      res.status(409).json({
-        name: "USER_DOESNT_EXIST",
-        message: "No user with this id"
-      });
-      return;
-    }
-
-    const userCourse = await getUserCourse(userId, courseId);
-    if (userCourse == null) {
-      res.status(409).json({
-        name: "USER_COURSE_DOESNT_EXIST",
-        message: "This user hasn't applier for this course yet"
-      });
-      return;
-    }
-    if (userCourse.sessionType != SessionType.INDIVIDUAL) {
-      res.status(409).json({
-        name: "NOT_INDIVIDUAL",
-        message: "Can't scedule individual session for user unless he applied as individual"
-      });
-      return;
-    }
-
-    const dateAvailable = await isDateAvailable(date, duration);
-    if (!dateAvailable) {
-      res.status(409).json({
-        name: "DATE_NOT_AVAILABLE",
-        message: "This date is not available, please choose another date/duration"
-      });
-      return;
-    }
-
-    // if (quizzesLink && !validateQuizesLink(quizzesLink)) {
-    //   res.status(400).json({
-    //     name: "QUIZES_NOT_VALID",
-    //     message: "The quizes link isn't a valid link"
-    //   });
-    //   return;
-    // }
-
-    const createdSession = await createIndividualSessionService(courseId, userId, title, date, duration, isFree, description);
-    res.json({
-      message: "Session created successfully",
-      data: {
-        session: createdSession
-      }
-    })
-
-    throw Error("Shouldn't happen");
-
-  } catch (err: any) {
-    console.log("ERROR: ", err);
-    res.status(500).json({
-      name: "INTERNAL_SERVER_ERROR",
-      message: "Internal Server Error"
-    });
-    next(err);
-  }
-}
-
-export const startSession = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { sessionType } = req.params;
     const sessionId = Number(req.params.sessionId);
 
-    if (!sessionId || !validateSessionType(sessionType)) {
+    const { newDate, newDuration, isRecurring } = req.body;
+    if (!sessionId || !newDate || !newDuration || !validateDate(newDate)) {
       res.status(400).json({
         name: "INVALID_PAYLOAD",
-        message: "Invalid payload data"
+        message: "Invalid payload data",
       });
       return;
     }
 
-    const session = await getSession(sessionId, SessionType[sessionType as keyof typeof SessionType]);
+    const session = await getSession(sessionId);
     if (!session) {
       res.status(409).json({
         name: "SESSION_DOESNT_EXIST",
-        message: "No sesesion with that id"
+        message: "No session with this id",
+      });
+      return;
+    }
+
+    let recurringSessions = [];
+    if(isRecurring) recurringSessions.push(...(await getRecurringSessions(sessionId)));
+
+    for (let i = 0; i < (isRecurring ? 52 : 1); i++) {
+      const _date = new Date(
+        new Date(newDate).getTime() + i * 604800000
+      ).toISOString();
+      const ignoreIds = [session.id, ...recurringSessions.map(recurringSession => recurringSession.session.id)]
+      const dateAvailable = await isDateAvailable(_date, newDuration, ignoreIds);
+      if (!dateAvailable) {
+        res.status(409).json({
+          name: "DATE_NOT_AVAILABLE",
+          message:
+            "This date is not available, please choose another date/duration",
+        });
+        return;
+      }
+    }
+
+    const updatedNextSession = await updateSessionDateService(
+      sessionId,
+      session.calendarDateId,
+      newDate,
+      newDuration
+    );
+
+    if (isRecurring) {
+      await Promise.allSettled(
+        recurringSessions.map(async (_session) => {
+          const _date = new Date(
+            new Date(newDate).getTime() + _session.week * 604800000
+          ).toISOString();
+
+          await updateSessionDateService(
+            sessionId,
+            _session.session.calendarDateId,
+            _date,
+            newDuration
+          );
+        })
+      );
+    }
+
+    res.json({
+      message: "Session[s] date updated successfully",
+      data: {
+        nextSession: updatedNextSession,
+      },
+    });
+  } catch (err: any) {
+    console.log("ERROR: ", err);
+    res.status(500).json({
+      name: "INTERNAL_SERVER_ERROR",
+      message: "Internal Server Error",
+    });
+    next(err);
+  }
+};
+
+export const cancelSession = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const sessionId = Number(req.params.sessionId);
+
+    const { isRecurring } = req.body;
+    if (!sessionId) {
+      res.status(400).json({
+        name: "INVALID_PAYLOAD",
+        message: "Invalid payload data",
+      });
+      return;
+    }
+
+    const session = await getSession(sessionId);
+    if (!session) {
+      res.status(409).json({
+        name: "SESSION_DOESNT_EXIST",
+        message: "No session with this id",
+      });
+      return;
+    }
+
+    await cancelSessionService(sessionId, session.calendarDateId);
+
+    if (isRecurring) {
+      const sessions = await getRecurringSessions(sessionId);
+      await Promise.allSettled(
+        sessions.map(async (_session) => {
+          await cancelSessionService(
+            sessionId,
+            _session.session.calendarDateId
+          );
+        })
+      );
+    }
+
+    res.json({
+      message: "Session canceled successfully",
+      data: {},
+    });
+  } catch (err: any) {
+    console.log("ERROR: ", err);
+    res.status(500).json({
+      name: "INTERNAL_SERVER_ERROR",
+      message: "Internal Server Error",
+    });
+    next(err);
+  }
+};
+
+export const startSession = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const sessionId = Number(req.params.sessionId);
+
+    if (!sessionId) {
+      res.status(400).json({
+        name: "INVALID_PAYLOAD",
+        message: "Invalid payload data",
+      });
+      return;
+    }
+
+    const session = await getSession(sessionId);
+    if (!session) {
+      res.status(409).json({
+        name: "SESSION_DOESNT_EXIST",
+        message: "No sesesion with that id",
       });
       return;
     }
@@ -163,57 +333,54 @@ export const startSession = async (req: Request, res: Response, next: NextFuncti
     if (session.status != SessionStatus.UPCOMING) {
       res.status(409).json({
         name: "MEETING_STARTED_ENDED",
-        message: "Can't start a meeting that had already started / ended"
+        message: "Can't start a meeting that had already started / ended",
       });
       return;
     }
 
-    await startSessionService(sessionId, SessionType[sessionType as keyof typeof SessionType]);
+    await startSessionService(sessionId);
 
     res.json({
       message: "Meeting Started Successfully",
-      data: {
-      }
-    })
-
+      data: {},
+    });
   } catch (err: any) {
     console.log("ERROR: ", err);
     res.status(500).json({
       name: "INTERNAL_SERVER_ERROR",
-      message: "Internal Server Error"
+      message: "Internal Server Error",
     });
     next(err);
   }
-}
+};
 
-export const endSession = async (req: Request, res: Response, next: NextFunction) => {
+export const endSession = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
-    const { sessionType } = req.params;
     const sessionId = Number(req.params.sessionId);
-    const { sessionContent, notes } = req.body;
+    const { sessionContent, reports } = req.body;
 
-    const validNotes =
-      !notes ||
-      (sessionType == SessionType.GROUP && Array.isArray(notes)) ||
-      (sessionType == SessionType.INDIVIDUAL && typeof notes == "string");
-
-    if (!sessionId || !validateSessionType(sessionType) ||
+    if (
+      !sessionId ||
       (sessionContent && !validateString(sessionContent, 255, 1)) ||
-      !validNotes) {
-
+      !validateObjectWithKeys(reports) ||
+      !validateReports(reports)
+    ) {
       res.status(400).json({
         name: "INVALID_PAYLOAD",
-        message: "Invalid payload data"
+        message: "Invalid payload data",
       });
       return;
-
     }
 
-    const session = await getSession(sessionId, SessionType[sessionType as keyof typeof SessionType]);
+    const session = await getSession(sessionId);
     if (!session) {
       res.status(409).json({
         name: "SESSION_DOESNT_EXIST",
-        message: "No sesesion with that id"
+        message: "No sesesion with that id",
       });
       return;
     }
@@ -221,50 +388,59 @@ export const endSession = async (req: Request, res: Response, next: NextFunction
     if (session.status != SessionStatus.RUNNING) {
       res.status(409).json({
         name: "MEETING_HASNT_STARTED",
-        message: "You can't end the meeting before starting it"
+        message: "You can't end the meeting before starting it",
       });
       return;
     }
 
-    if (sessionType == SessionType.GROUP) {
-      notes.forEach(async (note: Record<string, string>) => {
-        if (note.userId) {
-          const userSession = await getUserSession(Number(note.userId), sessionId);
-          if (userSession) {
-            await saveGruopStudentNotes(userSession.id, note.notes);
-          }
-        }
-      });
-    } else if (sessionType == SessionType.INDIVIDUAL) {
-      await saveIndividualStudentNotes(session.id, notes);
+    for (const studentId in reports) {
+      const report: Report = reports[studentId];
+
+      let studentSession = await getStudentSession(
+        Number(studentId),
+        sessionId
+      );
+      if (!studentSession) {
+        studentSession = await createStudentSession(
+          Number(studentId),
+          sessionId
+        );
+      }
+
+      await saveStudentReport(studentSession.id, report);
     }
 
-    await endSessionService(sessionId, SessionType[sessionType as keyof typeof SessionType], sessionContent);
+    await endSessionService(sessionId, sessionContent);
 
     res.json({
       message: "Session Ended Successfully",
-      data: {
-      }
-    })
-
+      data: {},
+    });
   } catch (err: any) {
     console.log("ERROR: ", err);
     res.status(500).json({
       name: "INTERNAL_SERVER_ERROR",
-      message: "Internal Server Error"
+      message: "Internal Server Error",
     });
     next(err);
   }
-}
+};
 
-export const uploadRecords = async (req: Request, res: Response, next: NextFunction) => {
+export const uploadRecords = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
-    const sessionType = SessionType[req.params.sessionType as keyof typeof SessionType];
     const sessionId = Number(req.params.sessionId);
 
     // Updated validation to handle both array and single file
-    const files = req.files?.['files'];
-    if (!files || (Array.isArray(files) && files.length === 0) || (!Array.isArray(files) && !files)) {
+    const files = req.files?.["files"];
+    if (
+      !files ||
+      (Array.isArray(files) && files.length === 0) ||
+      (!Array.isArray(files) && !files)
+    ) {
       res.status(400).json({
         name: "NO_FILES",
         message: "There is no recordings being uploaded",
@@ -275,7 +451,7 @@ export const uploadRecords = async (req: Request, res: Response, next: NextFunct
     // Convert single file to array if needed
     const fileArray = Array.isArray(files) ? files : [files];
 
-    if (!sessionId || !validateSessionType(sessionType)) {
+    if (!sessionId) {
       res.status(400).json({
         name: "INVALID_PAYLOAD",
         message: "Invalid payload data",
@@ -283,7 +459,7 @@ export const uploadRecords = async (req: Request, res: Response, next: NextFunct
       return;
     }
 
-    const session = await getSession(sessionId, sessionType);
+    const session = await getSession(sessionId);
     if (!session) {
       res.status(409).json({
         name: "SESSION_DOESNT_EXIST",
@@ -295,7 +471,7 @@ export const uploadRecords = async (req: Request, res: Response, next: NextFunct
     // Process file uploads
     await Promise.all(
       fileArray.map(async (file) => {
-        const videoGuid = await uploadRecording(file, session.id, sessionType);
+        const videoGuid = await uploadRecording(file, session.id);
         if (!videoGuid) {
           res.status(500).json({
             name: "ERROR_UPLOADING",
@@ -303,7 +479,7 @@ export const uploadRecords = async (req: Request, res: Response, next: NextFunct
           });
           return;
         }
-        await createRecording(session.id, sessionType, videoGuid);
+        await createRecording(session.id, videoGuid);
       })
     );
 

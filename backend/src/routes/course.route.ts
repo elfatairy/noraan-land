@@ -1,24 +1,20 @@
-import express, { NextFunction, Request, Response } from "express";
+import express from "express";
+import { router as sessionRouter } from "./session.route";
+import { router as courseStudentsRouter } from "./courseStudents.route";
+import { router as groupRouter } from "./group.route";
+import { router as quizRouter } from "./quiz.route";
 import * as courseController from "../controllers/course.controller";
-import { checkAdmin, checkSubscribed, verifyToken } from "../middlewares/auth.middleware";
-import * as userController from "../controllers/user.controller"
-import * as adminController from "../controllers/admin.controller"
-import * as quizController from "../controllers/quiz.controller"
-import { ROLES } from "../utils/constants.util";
+import { checkAdmin, verifyToken } from "../middlewares/auth.middleware";
 export const router = express.Router();
 
-router.post('/', verifyToken, checkAdmin, courseController.create);
-router.get('/', courseController.getAll);
-router.get('/:id', verifyToken, courseController.get);
-router.patch('/:id', verifyToken, checkAdmin, courseController.update);
-router.get('/:courseId/courseSessions', verifyToken, (req: Request, res: Response, next: NextFunction) => {
-    if(res.locals.role == ROLES.ADMIN) {
-        return adminController.getCourseSessions(req, res, next);    
-    } else if (res.locals.role == ROLES.USER){
-        return userController.getCourseSessions(req, res, next);    
-    }
-})
-router.post('/:courseId/quiz', verifyToken, checkAdmin, quizController.create);
-router.get('/:courseId/quiz', verifyToken, checkSubscribed, quizController.getAll);
+router.post("/", verifyToken, checkAdmin, courseController.create); //
+router.get("/", courseController.getAll); //
+router.get("/:courseId", verifyToken, courseController.get); //
+router.patch("/:courseId", verifyToken, checkAdmin, courseController.update); //
 
-router.delete('/:courseId/quiz/:quizId', verifyToken, checkAdmin, quizController.deleteQuiz);
+router.get("/students/new",  verifyToken, checkAdmin, courseController.newStudents); //
+
+router.use("/:courseId/groups", verifyToken, checkAdmin, groupRouter); //
+router.use("/:courseId/students", verifyToken, checkAdmin, courseStudentsRouter); //
+router.use("/:courseId/sessions", verifyToken, sessionRouter); //
+router.use("/:courseId/quizzes", verifyToken, quizRouter); //

@@ -14,7 +14,7 @@ export const getZoomAccessToken = async () => {
 }
 
 export const createMeeting = async (accessToken: string, name: string) => {
-    const res = await axios.post(`https://api.zoom.us/v2/users/me/meetings`, {
+    const res = await axios.post(`https://api.zoom.us/v2/students/me/meetings`, {
         "agenda": name,
         "topic": name,
         "default_password": false,

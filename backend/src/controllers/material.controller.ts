@@ -1,12 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { validateEmail, validateName, validatePassword, validateString } from "../utils/validation.util";
-import { authenticateUser, createUser, emailExists, getUserByEmail, nameExists, verifyGoogleToken } from "../services/user.service";
-import bcrypt, { compare } from "bcrypt";
-import axios from "axios";
-import { OAuth2Client } from "google-auth-library";
-import { generateToken } from "../utils/token.util";
-import { getCourse, createCourse, getAllCourses, getUserCourses, viewUserCourse, updateCourse } from "../services/course.service";
-import { SessionType } from "@prisma/client";
+import { validateString } from "../utils/validation.util";
 import { createFolder, deleteItem, getContent, renameItem, uploadFile } from "../services/material.service";
 import { existsSync } from "fs";
 import { join } from "path";
@@ -161,15 +154,6 @@ export const rename = async (req: Request, res: Response, next: NextFunction) =>
 
 export const remove = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { name } = req.body;
-    if (!name || !validateString(name, 255, 1)) {
-      res.status(400).json({
-        neme: "INVALID_PAYLOAD",
-        message: "Invalid payload data"
-      });
-      return;
-    }
-
     await deleteItem(res.locals.path);
 
     res.json({
