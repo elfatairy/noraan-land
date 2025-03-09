@@ -160,3 +160,17 @@ export const savePaymobSubscription = async (
       paymobSubscriptionId,
     },
   });
+
+export const makeFreeSubscription = async (studentCourseId: number) => await prisma.studentCourseSubscription.update({
+  where: {
+    studentCourseId
+  },
+  data: {
+    subscriptionStatus: SubscriptionStatus.SUBSCRIBED,
+    subscriptionMethod: SubscriptionMethod.FREE,
+    paypalSubscriptionId: null,
+    paymobSubscriptionId: null,
+    paypalPlanId: null,
+    paymobPlanId: null
+  }
+})

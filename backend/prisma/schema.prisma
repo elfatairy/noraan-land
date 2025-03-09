@@ -183,6 +183,7 @@ enum Gender {
 enum SubscriptionMethod {
   PAYPAL
   PAYMOB
+  FREE
 }
 
 enum Attendence {

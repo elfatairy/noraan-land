@@ -32,6 +32,7 @@ import {
   addStudentCourseSubscriptionStatus,
   getCourse,
   getStudentCourse,
+  makeFreeSubscription,
 } from "../services/course.service";
 import {
   getRecordings,
@@ -113,7 +114,7 @@ export const assignHoursToStudent = async (
     const courseId = Number(req.params.courseId);
     const { hours } = req.body;
 
-    if (!studentId || !courseId || !hours) {
+    if (!studentId || !courseId || hours == null) {
       res.status(400).json({
         name: "INVALID_PAYLOAD",
         message: "Invalid payload data",
@@ -140,7 +141,9 @@ export const assignHoursToStudent = async (
 
     const updatedStudentCourse = await assignHours(studentCourse.id, hours);
 
-    if (shouldRevokeSubscription) {
+    if (hours == 0) {
+      await makeFreeSubscription(studentCourse.id);
+    } else if (shouldRevokeSubscription) {
       // TODO REVOKE STUDENT SUBSCRIPTION
     }
 
@@ -357,7 +360,7 @@ export const getStudentCourses = async (
     res.json({
       message: "Student Courses Returned Successfully",
       data: {
-        courses
+        courses,
       },
     });
   } catch (err: any) {
