@@ -51,8 +51,8 @@ export const CourseCard = ({ course }) => {
                 </div>
                 <p>{course.description}</p>
                 <div className="price-info">
-                    <span>Group: ${course.groupPrice}</span>
-                    <span>Individual: ${course.individualPrice}</span>
+                    <span>Group: ${course.groupPrice} / hour</span>
+                    <span>Private: ${course.privatePrice} / hour</span>
                 </div>
             </div>
             <button
@@ -95,7 +95,7 @@ export const CourseCard = ({ course }) => {
                                             sessionType: e.target.value
                                         })}
                                     />
-                                    Individual (${selectedCourse.individualPrice})
+                                    Private (${selectedCourse.privatePrice})
                                 </label>
                             </div>
                         </div>
