@@ -1,10 +1,8 @@
 import { NextFunction, Request, Response } from "express";
-import { existsSync, mkdir, statSync } from "fs";
+import { existsSync, statSync } from "fs";
 import { join } from "path";
 import { getCourse } from "../services/course.service";
-import { URL } from "url";
 import { decoder } from "../utils/helper.util";
-import multer, { FileFilterCallback, Multer } from "multer";
 
 export const validatePath = (req: Request, res: Response, next: NextFunction) => {
     try {

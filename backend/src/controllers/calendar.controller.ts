@@ -1,24 +1,22 @@
 import { NextFunction, Request, Response } from "express";
-import { getAllCourses } from "../services/course.service";
 import { getDates, getDateSession } from "../services/calendar.service";
-import { CalendarDateStatus, CalendarDateType, Prisma, PrismaClient } from "@prisma/client";
-import { prisma } from "../configs/db.config";
-import { getGroupSession } from "../services/session.service";
+import { CalendarDateChangingStatus, CalendarDateStatus } from "@prisma/client";
+import { serialize } from "../utils/helper.util";
 
-export const getBusyDates = async (req: Request, res: Response, next: NextFunction) => {
+export const getUpcomingDates = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const dates = await getDates({
       endDate: { gt: new Date() }
     });
-    const parsedDates: { startDate: Date, endDate: Date }[] = [];
+    const parsedDates: { startDate: Date, endDate: Date, status: CalendarDateStatus, changingStatus: CalendarDateChangingStatus }[] = [];
 
     dates.forEach(date => {
-      const { startDate, endDate } = date;
-      parsedDates.push({ startDate, endDate });
+      const { startDate, endDate, status, changingStatus } = date;
+      parsedDates.push({ startDate, endDate, status, changingStatus });
     })
 
     res.json({
-      message: "Busy dates retrieved successfully",
+      message: "Upcoming dates retrieved successfully",
       data: {
         dates: parsedDates
       }
@@ -40,17 +38,15 @@ export const getNextWeekDates = async (req: Request, res: Response, next: NextFu
     const nextWeekDate = new Date(now.getTime() + 604800000);
     const dates = await getDates({
       status: CalendarDateStatus.AVAILABLE,
-      endDate: {
-        lt: nextWeekDate
-      },
       startDate: {
-        gt: now
+        gt: now,
+        lt: nextWeekDate
       }
     });
     const parsedDates: any[] = [];
 
-    await Promise.all(dates.map(async date => {
-      const session = JSON.parse(JSON.stringify(await getDateSession(date.id), (_, v) => typeof v === 'bigint' ? v.toString() : v)) 
+    await Promise.allSettled(dates.map(async date => {
+      const session = serialize(await getDateSession(date.id))
       parsedDates.push({ ...date, session })
     }))
 

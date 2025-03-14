@@ -1,8 +1,8 @@
 import { NextFunction, Request, Response } from "express";
 import * as jwt from 'jsonwebtoken';
 import { ROLES } from "../utils/constants.util";
-import { getUserByEmail, getUserById, getUserCourseSubscriptionStatus } from "../services/user.service";
-import { getUserCourse } from "../services/course.service";
+import { getStudentById, getStudentCourseSubscriptionStatus } from "../services/student.service";
+import { getStudentCourse } from "../services/course.service";
 
 export const verifyToken = (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -10,7 +10,7 @@ export const verifyToken = (req: Request, res: Response, next: NextFunction) => 
         if (!token) {
             res.status(400).json({
                 name: "UNAUTHENTICATED",
-                message: "User is unauthenticated and this request requires authentication"
+                message: "Student is unauthenticated and this request requires authentication"
             });
             return;
         }
@@ -24,7 +24,6 @@ export const verifyToken = (req: Request, res: Response, next: NextFunction) => 
             });
             return;
         }
-
 
         const { iat, exp, ...tokenData } = decodedToken;
         res.locals = { ...res.locals, ...tokenData };
@@ -52,7 +51,7 @@ export const checkAdmin = (req: Request, res: Response, next: NextFunction) => {
         if (role == null || role != ROLES.ADMIN) {
             res.status(400).json({
                 name: "UNAUTHORIZED",
-                message: "This request needs permessions the user doesn't have"
+                message: "This request needs permessions the student doesn't have"
             });
             return;
         }
@@ -67,26 +66,26 @@ export const checkAdmin = (req: Request, res: Response, next: NextFunction) => {
     }
 }
 
-export const checkUser = async (req: Request, res: Response, next: NextFunction) => {
+export const checkStudent = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { id, role } = res.locals;
         if (role == null || id == null || role != ROLES.USER) {
             res.status(400).json({
                 name: "UNAUTHORIZED",
-                message: "This request needs permessions the user doesn't have"
+                message: "This request needs permessions the student doesn't have"
             });
             return;
         }
-        const userExists = await getUserById(res.locals.id);
-        if (!userExists) {
+        const studentExists = await getStudentById(res.locals.id);
+        if (!studentExists) {
             res.status(400).json({
                 name: "UNAUTHORIZED",
-                message: "This request needs permessions the user doesn't have"
+                message: "This request needs permessions the student doesn't have"
             });
             return;
         }
-        const { password, ...user } = userExists;
-        res.locals.user = user;
+        const { password, ...student } = studentExists;
+        res.locals.student = student;
 
         next();
     } catch (err) {
@@ -111,7 +110,7 @@ export const checkSubscribed = async (req: Request, res: Response, next: NextFun
         if (role == null || id == null) {
             res.status(400).json({
                 name: "UNAUTHORIZED",
-                message: "This request needs permessions the user doesn't have"
+                message: "This request needs permessions the student doesn't have"
             });
             return;
         }
@@ -124,26 +123,26 @@ export const checkSubscribed = async (req: Request, res: Response, next: NextFun
             return;
         }
 
-        const userExists = await getUserById(id);
-        if (!userExists) {
+        const studentExists = await getStudentById(id);
+        if (!studentExists) {
             res.status(400).json({
                 name: "UNAUTHORIZED",
-                message: "This request needs permessions the user doesn't have"
+                message: "This request needs permessions the student doesn't have"
             });
             return;
         }
 
-        const userCourse = await getUserCourse(id, courseId);
-        if(!userCourse || await getUserCourseSubscriptionStatus(userCourse.id) == 'UNSUBSCRIBED') {
+        const studentCourse = await getStudentCourse({studentId: id, courseId});
+        if(!studentCourse || await getStudentCourseSubscriptionStatus(studentCourse.id) == 'UNSUBSCRIBED') {
             res.status(400).json({
                 name: "UNSUBSCRIBED",
-                message: "User is unsubscribed for this course and so can't view this"
+                message: "Student is unsubscribed for this course and so can't view this"
             });
             return;
         }
         
-        const { password, ...user } = userExists;
-        res.locals.user = user;
+        const { password, ...student } = studentExists;
+        res.locals.student = student;
 
         next();
     } catch (err) {

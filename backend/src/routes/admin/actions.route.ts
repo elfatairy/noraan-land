@@ -1,13 +1,8 @@
-import express, { Request, Response } from "express";
-import * as courseController from "../../controllers/course.controller";
+import express from "express";
 import * as sessionController from "../../controllers/session.controller";
 export const router = express.Router();
 
-router.get('/newCourseUsers/:courseId', courseController.newUsers);
-router.get('/courseGroupUsers/:courseId', courseController.groupUsers);
-router.get('/courseIndividualUsers/:courseId', courseController.individualUsers);
+router.post('/startMeeting/:sessionId', sessionController.startSession) //
+router.post('/endSession/:sessionId', sessionController.endSession) //
 
-router.post('/startMeeting/:sessionType/:sessionId', sessionController.startSession)
-router.post('/endSession/:sessionType/:sessionId', sessionController.endSession)
-
-router.post('/uploadRecords/:sessionType/:sessionId', sessionController.uploadRecords)
+router.post('/uploadRecords/:sessionId', sessionController.uploadRecords) //

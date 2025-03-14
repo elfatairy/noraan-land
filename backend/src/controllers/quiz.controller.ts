@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { validateString } from "../utils/validation.util";
-import { getCourse, createCourse } from "../services/course.service";
+import { getCourse } from "../services/course.service";
 import { createQuiz, deleteQuizService, getCourseQuizes, getQuiz } from "../services/quiz.service";
 
 export const create = async (req: Request, res: Response, next: NextFunction) => {

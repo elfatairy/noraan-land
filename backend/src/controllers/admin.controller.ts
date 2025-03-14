@@ -1,22 +1,23 @@
 import { NextFunction, Request, Response } from "express";
-import { validateEmail, validateName, validatePassword } from "../utils/validation.util";
-import { authenticateUser, createUser, emailExists, getUserByEmail, getUserSession, nameExists, verifyGoogleToken } from "../services/user.service";
 import bcrypt, { compare } from "bcrypt";
-import axios from "axios";
-import { OAuth2Client } from "google-auth-library";
 import { generateToken } from "../utils/token.util";
 import { ROLES } from "../utils/constants.util";
-import { getCourse, getUserCourse } from "../services/course.service";
+import { getCourse } from "../services/course.service";
 import { getRecordings, getSessions } from "../services/session.service";
-import { IndividualSession, SessionType } from "@prisma/client";
+import { serialize } from "../utils/helper.util";
+import { StringValue } from "../../types";
 
-export const login = async (req: Request, res: Response, next: NextFunction) => {
+export const login = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { username, password } = req.body;
     if (!username || !password) {
       res.status(400).json({
         name: "INVALID_PAYLOAD",
-        message: "Invalid payload data"
+        message: "Invalid payload data",
       });
       return;
     }
@@ -25,42 +26,49 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD!, salt);
 
     const correctPass = await compare(password, hashedPassword);
-    const correctUserName = username == process.env.ADMIN_USERNAME;
-    if (!correctPass || !correctUserName) {
-      console.log("ERROR: ", correctPass, correctUserName);
+    const correctStudentName = username == process.env.ADMIN_USERNAME;
+    if (!correctPass || !correctStudentName) {
+      console.log("ERROR: ", correctPass, correctStudentName);
       res.status(404).json({
         name: "USERNAME_PASSWORD_INCORRECT",
-        message: `either the username or password is incorrect ${correctPass}, ${correctUserName}`
+        message: `either the username or password is incorrect`,
       });
       return;
     }
-    const token = generateToken({ username, role: ROLES.ADMIN }, process.env.JWT_EXPIRY ?? '7d');
+    const expireIn: StringValue = process.env.JWT_EXPIRY as StringValue ?? "7d";
+    const token = generateToken(
+      { username, role: ROLES.ADMIN },
+      expireIn
+    );
 
     res.json({
       message: "Admin Logged In Successfully",
       data: {
-        token
-      }
-    })
-
+        token,
+      },
+    });
   } catch (err: any) {
     console.log("ERROR: ", err);
     res.status(500).json({
       name: "INTERNAL_SERVER_ERROR",
-      message: "Internal Server Error"
+      message: "Internal Server Error",
     });
     next(err);
   }
-}
+};
 
-export const getCourseSessions = async (req: Request, res: Response, next: NextFunction) => {
+export const getCourseSessions = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const courseId = Number(req.params.courseId);
 
     if (!courseId) {
       res.status(400).json({
         name: "INVALID_PAYLOAD",
-        message: "Invalid payload data"
+        message: "Invalid payload data",
       });
       return;
     }
@@ -69,39 +77,51 @@ export const getCourseSessions = async (req: Request, res: Response, next: NextF
     if (!course) {
       res.status(409).json({
         name: "COURSE_DOESNT_EXIST",
-        message: "No course with this id"
+        message: "No course with this id",
       });
       return;
     }
     const sessions = await Promise.all(
-      (await getSessions({
-        courseId
-      }, SessionType.GROUP)).map(async session => {
-        const { id, description, isFree, status, title, startedAt } = session;
+      (
+        await getSessions({
+          courseId,
+        })
+      ).map(async (session) => {
+        const { id, description, isFree, status, sessionType, groupId, privateStudentId, title, startedAt } = session;
 
-        const recordings = await getRecordings(session.id, SessionType.GROUP) ?? [];
+        const recordings = (await getRecordings(session.id)) ?? [];
         const recordingsGuids: string[] = [];
-        recordings.forEach(recording => {
-          recordingsGuids.push(recording.bunnyGuid)
+        recordings.forEach((recording) => {
+          recordingsGuids.push(recording.bunnyGuid);
         });
 
-        return { id, description, isFree, status, title, startedAt, recordings: recordingsGuids };
+        return {
+          id,
+          description,
+          isFree,
+          status,
+          sessionType, 
+          groupId, 
+          privateStudentId,
+          title,
+          startedAt,
+          recordings: recordingsGuids,
+        };
       })
     );
 
     res.json({
       message: "Course Sessions returned Successfully",
       data: {
-        sessions: JSON.parse(JSON.stringify(sessions, (_, v) => typeof v === 'bigint' ? v.toString() : v))
-      }
-    })
-
+        sessions: serialize(sessions)
+      },
+    });
   } catch (err: any) {
     console.log("ERROR: ", err);
     res.status(500).json({
       name: "INTERNAL_SERVER_ERROR",
-      message: "Internal Server Error"
+      message: "Internal Server Error",
     });
     next(err);
   }
-}
+};

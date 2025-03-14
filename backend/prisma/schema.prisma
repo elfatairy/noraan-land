@@ -8,142 +8,136 @@ datasource db {
 }
 
 model Course {
-  id                 Int                 @id @default(autoincrement())
-  name               String              @db.VarChar(255)
-  groupPrice         Float?
-  individualPrice    Float?
-  description        String?             @db.VarChar(1024)
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
-  groupSessions      GroupSession[]
-  individualSessions IndividualSession[]
-  userCourses        UserCourse[]
-  quizes             Quiz[]
-  paymentDetails     PaymentDetails?
+  id             Int             @id @default(autoincrement())
+  name           String          @db.VarChar(255)
+  privatePrice   Float
+  groupPrice     Float
+  description    String?         @db.VarChar(1024)
+  zoomLink       String          @db.VarChar(255)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  sessions       Session[]
+  studentCourses StudentCourse[]
+  quizes         Quiz[]
 }
 
-model PaymentDetails {
-  id                     Int     @id @default(autoincrement())
-  course                 Course? @relation(fields: [courseId], references: [id])
-  courseId               Int?    @unique
-  paypalGroupPlanId      String?
-  paypalIndividualPlanId String?
-  paymobGroupPlanId      Int?
-  paymobIndividualPlanId Int?
-}
-
-model GroupSession {
-  id            Int           @id @default(autoincrement())
-  courseId      Int
-  status        SessionStatus @default(UPCOMING)
-  title         String        @db.VarChar(255)
-  description   String?       @db.VarChar(1024)
-  isFree        Boolean       @default(false)
-  meetingId     BigInt?
-  startedAt     DateTime?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  course        Course        @relation(fields: [courseId], references: [id])
-  userSessions  UserSession[]
-  calendarDateId Int          @unique
-  calendarDate   CalendarDate @relation(fields: [calendarDateId], references: [id])
-  Recording      Recording[]
-}
-
-model IndividualSession {
+model Session {
   id             Int           @id @default(autoincrement())
   courseId       Int
-  userId         Int
   status         SessionStatus @default(UPCOMING)
   title          String        @db.VarChar(255)
   description    String?       @db.VarChar(1024)
   isFree         Boolean       @default(false)
-  notes          String?       @db.VarChar(255)
-  meetingId      BigInt?
-  startedAt      DateTime?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  course         Course        @relation(fields: [courseId], references: [id])
-  user           User          @relation(fields: [userId], references: [id])
-  calendarDateId Int          @unique
-  calendarDate   CalendarDate @relation(fields: [calendarDateId], references: [id])
-  Recordings     Recording[]
+  calendarDateId Int           @unique
+
+  sessionType      SessionType
+  groupId          Int?
+  privateStudentId Int?
+
+  startedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  course       Course       @relation(fields: [courseId], references: [id])
+  calendarDate CalendarDate @relation(fields: [calendarDateId], references: [id])
+  Recording    Recording[]
+
+  StudentSession StudentSession[]
 }
 
 model Recording {
-  id                  Int               @id @default(autoincrement())
-  sessionType         SessionType
-  bunnyGuid          String
-  createdAt          DateTime          @default(now())
-  updatedAt          DateTime          @updatedAt
-  IndividualSession  IndividualSession? @relation(fields: [IndividualSessionid], references: [id])
-  IndividualSessionid Int?
-  GroupSession       GroupSession?     @relation(fields: [groupSessionId], references: [id])
-  groupSessionId     Int?
+  id        Int      @id @default(autoincrement())
+  bunnyGuid String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Session   Session  @relation(fields: [sessionId], references: [id])
+  sessionId Int
 }
 
-model User {
-  id                    Int                 @id @default(autoincrement())
-  name                  String              @db.VarChar(255)
-  email                 String              @unique @db.VarChar(255)
-  password              String?
-  age                   Int?
-  location              String?
-  gender                Gender?
-  createdAt             DateTime            @default(now())
-  updatedAt             DateTime            @updatedAt
-  userCourses           UserCourse[]
-  userSessions          UserSession[]
-  userIndividualSessions IndividualSession[]
+model Student {
+  id              Int              @id @default(autoincrement())
+  name            String           @db.VarChar(255)
+  phone           String?          @db.VarChar(255)
+  email           String           @unique @db.VarChar(255)
+  password        String?
+  age             Int?
+  location        String?
+  gender          Gender?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  studentCourses  StudentCourse[]
+  studentSessions StudentSession[]
 }
 
-model UserCourse {
-  id                    Int                    @id @default(autoincrement())
-  userId                Int
-  courseId              Int
-  availableTime         String                 @db.VarChar(255)
-  userNotes             String?                @db.VarChar(255)
-  viewedByAdmin         Boolean                @default(false)
-  sessionType           SessionType
-  createdAt             DateTime               @default(now())
-  updatedAt             DateTime               @updatedAt
-  user                  User                   @relation(fields: [userId], references: [id])
-  course                Course                 @relation(fields: [courseId], references: [id])
-  UserCourseSubscription UserCourseSubscription?
+model Group {
+  id        Int      @id @default(autoincrement())
+  courseId  Int
+  name      String   @db.VarChar(255)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  studentCourses StudentCourse[]
 }
 
-model UserCourseSubscription {
-  id                   Int                @id @default(autoincrement())
-  userCourseId         Int                @unique
-  userCourse           UserCourse?        @relation(fields: [userCourseId], references: [id])
-  subscriptionStatus   SubscriptionStatus @default(UNSUBSCRIBED)
+model StudentCourse {
+  id        Int  @id @default(autoincrement())
+  studentId Int
+  courseId  Int
+  groupId   Int?
+
+  preferredSessionType SessionType
+  availableTime        String      @db.VarChar(255)
+  studentNotes         String?     @db.VarChar(255)
+
+  hours Float?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  group                     Group?                     @relation(fields: [groupId], references: [id])
+  student                   Student                    @relation(fields: [studentId], references: [id])
+  course                    Course                     @relation(fields: [courseId], references: [id])
+  StudentCourseSubscription StudentCourseSubscription?
+}
+
+model StudentCourseSubscription {
+  id                   Int                 @id @default(autoincrement())
+  studentCourseId      Int                 @unique
+  studentCourse        StudentCourse?      @relation(fields: [studentCourseId], references: [id])
+  subscriptionStatus   SubscriptionStatus  @default(UNSUBSCRIBED)
   subscriptionMethod   SubscriptionMethod?
   paypalSubscriptionId String?
   paymobSubscriptionId String?
+  paypalPlanId         String?
+  paymobPlanId         Int?
 }
 
-model UserSession {
-  id        Int          @id @default(autoincrement())
-  userId    Int
+model StudentSession {
+  id        Int @id @default(autoincrement())
+  studentId Int
   sessionId Int
-  notes     String?      @db.VarChar(255)
-  createdAt DateTime     @default(now())
-  updatedAt DateTime     @updatedAt
-  user      User         @relation(fields: [userId], references: [id])
-  session   GroupSession @relation(fields: [sessionId], references: [id])
+
+  notes      String?    @db.VarChar(255)
+  homeWork   String?    @db.VarChar(255)
+  tardy      Int?
+  attendence Attendence @default(ABSENT)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  student   Student  @relation(fields: [studentId], references: [id])
+  session   Session  @relation(fields: [sessionId], references: [id])
 }
 
 model CalendarDate {
-  id                Int                @id @default(autoincrement())
-  startDate         DateTime
-  endDate           DateTime
-  duration          Int                @default(60)
-  type              CalendarDateType
-  status            CalendarDateStatus @default(AVAILABLE)
-  groupSession      GroupSession?
-  individualSession IndividualSession?
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
+  id             Int                        @id @default(autoincrement())
+  startDate      DateTime
+  endDate        DateTime
+  duration       Int                        @default(60)
+  status         CalendarDateStatus         @default(AVAILABLE)
+  changingStatus CalendarDateChangingStatus @default(UNCHANGED)
+  session        Session?
+  createdAt      DateTime                   @default(now())
+  updatedAt      DateTime                   @updatedAt
 }
 
 model Quiz {
@@ -154,14 +148,9 @@ model Quiz {
   course    Course   @relation(fields: [courseId], references: [id])
 }
 
-enum CalendarDateType {
-  GROUP_SESSION
-  INDIVIDUAL_SESSION
-}
-
 enum CalendarDateStatus {
   AVAILABLE
-  PASSED
+  DONE
 }
 
 enum SessionStatus {
@@ -170,14 +159,20 @@ enum SessionStatus {
   ENDED
 }
 
-enum SessionType {
-  INDIVIDUAL
-  GROUP
+enum CalendarDateChangingStatus {
+  UNCHANGED
+  CHANGED
+  CANCELED
 }
 
 enum SubscriptionStatus {
   SUBSCRIBED
   UNSUBSCRIBED
+}
+
+enum SessionType {
+  PRIVATE
+  GROUP
 }
 
 enum Gender {
@@ -187,4 +182,11 @@ enum Gender {
 
 enum SubscriptionMethod {
   PAYPAL
+  PAYMOB
+  FREE
+}
+
+enum Attendence {
+  ABSENT
+  PRESENT
 }

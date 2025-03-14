@@ -38,7 +38,6 @@ export const createPaypalProduct = async (name: string, description: string, acc
     return res.data.id;
 }
 
-
 export const createPaypalPlan = async (name: string, productId: string, accessToken: string, price: number, sessionType: SessionType) => {
     const res = await axios.post(`${process.env.PAYPAL_BASE_URL}/billing/plans`, {
         "product_id": productId,
