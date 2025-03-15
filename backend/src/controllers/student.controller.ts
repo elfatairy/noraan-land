@@ -30,9 +30,13 @@ import { compare } from "bcrypt";
 import {
   addStudentCourse,
   addStudentCourseSubscriptionStatus,
+  approvePaypalSubscription,
   getCourse,
   getStudentCourse,
+  getStudentSubscriptionDetails,
+  initiatePaypalSubscription,
   makeFreeSubscription,
+  savePaymobSubscription,
 } from "../services/course.service";
 import {
   getRecordings,
@@ -44,6 +48,17 @@ import { getDate } from "../services/calendar.service";
 import { JOIN_LINK_SHOW } from "../utils/constants.util";
 import { serialize } from "../utils/helper.util";
 import { getGroup } from "../services/group.service";
+import {
+  createPaymobPlan,
+  createPaymobSubscription,
+  getPaymobAcceessToken,
+} from "../services/paymob.service";
+import {
+  createPaypalPlan,
+  createPaypalProduct,
+  getPaypalAccessToken,
+  getPaypalSubscription,
+} from "../services/paypal.service";
 
 export const getAll = async (
   req: Request,
@@ -919,82 +934,168 @@ export const joinSession = async (
   }
 };
 
+export const paypalIntention = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const courseId = Number(req.params.courseId);
+    const { id: studentId, ...student } = res.locals.student;
+
+    if (!courseId) {
+      res.status(400).json({
+        name: "INVALID_PAYLOAD",
+        message: "Invalid payload data",
+      });
+      return;
+    }
+    const course = await getCourse({ id: courseId });
+    if (!course) {
+      res.status(409).json({
+        name: "COURSE_DOESNT_EXIST",
+        message: "No course with this id",
+      });
+      return;
+    }
+    const studentCourse = await getStudentCourse({ studentId, courseId });
+    if (!studentCourse) {
+      res.status(409).json({
+        name: "USER_COURSE_DOESNT_EXIST",
+        message: "This student has not applied for this course",
+      });
+      return;
+    }
+    const subscriptionStatus = await getStudentCourseSubscriptionStatus(
+      studentCourse.id
+    );
+    if (subscriptionStatus == SubscriptionStatus.SUBSCRIBED) {
+      res.status(409).json({
+        name: "ALREADY_SUBSCRIBED",
+        message: "Student already subscribed to this course",
+      });
+      return;
+    }
+
+    const paypalAccessToken = await getPaypalAccessToken();
+    if (!paypalAccessToken) throw Error("Error getting access token");
+
+    if (!course.paypalProductId) throw "This course doesn't have product id";
+
+    if (studentCourse.hours == null) {
+      res.status(409).json({
+        name: "HOURS_NOT_SPECIFIED",
+        message: "The admin should specify the hours for the student first",
+      });
+      return;
+    }
+
+    const price = studentCourse.groupId
+      ? studentCourse.hours * course.groupPrice
+      : studentCourse.hours * course.privatePrice;
+
+    const paypalPlanId = await createPaypalPlan(
+      `${student.name} - ${course.name}`,
+      course.paypalProductId,
+      paypalAccessToken,
+      price
+    );
+    if (!paypalPlanId) throw Error("Error creating paypal plans");
+
+    await initiatePaypalSubscription(studentCourse.id, paypalPlanId);
+
+    res.json({
+      message: "Paypal Subscription Intention Made Successfully",
+      data: {
+        paypalPlanId,
+      },
+    });
+  } catch (err: any) {
+    console.log("ERROR: ", err);
+    res.status(500).json({
+      name: "INTERNAL_SERVER_ERROR",
+      message: "Internal Server Error",
+    });
+    next(err);
+  }
+};
+
 export const approvePaypal = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  // try {
-  //   const courseId = Number(req.params.courseId);
-  //   const { id: studentId } = res.locals.student;
-  //   const { subscriptionId } = req.body;
-  //   if (!courseId || !subscriptionId) {
-  //     res.status(400).json({
-  //       name: "INVALID_PAYLOAD",
-  //       message: "Invalid payload data",
-  //     });
-  //     return;
-  //   }
-  //   const course = await getCourse({ id: courseId });
-  //   if (!course) {
-  //     res.status(409).json({
-  //       name: "COURSE_DOESNT_EXIST",
-  //       message: "No course with this id",
-  //     });
-  //     return;
-  //   }
-  //   console.log(studentId);
-  //   const studentCourse = await getStudentCourse(studentId, courseId);
-  //   if (!studentCourse) {
-  //     res.status(409).json({
-  //       name: "USER_COURSE_DOESNT_EXIST",
-  //       message: "This student has not applied for this course",
-  //     });
-  //     return;
-  //   }
-  //   const subscriptionStatus = await getStudentCourseSubscriptionStatus(
-  //     studentCourse.id
-  //   );
-  //   if (subscriptionStatus == SubscriptionStatus.SUBSCRIBED) {
-  //     res.status(409).json({
-  //       name: "ALREADY_SUBSCRIBED",
-  //       message: "Student already subscribed to this course",
-  //     });
-  //     return;
-  //   }
-  //   const accessToken = await getPaypalAccessToken();
-  //   const subscription = await getPaypalSubscription(
-  //     subscriptionId,
-  //     accessToken
-  //   );
-  //   if (subscription.status != "ACTIVE") {
-  //     res.status(409).json({
-  //       name: "SUBSCRIBTION_NOT_VALID",
-  //       message: "This subscription is not valid",
-  //     });
-  //   }
-  //   const alreadyUsed = await getStudentSubscriptionDetails({
-  //     paypalSubscriptionId: subscriptionId,
-  //   });
-  //   if (alreadyUsed) {
-  //     res.status(409).json({
-  //       name: "SUBSCRIBTION_NOT_VALID",
-  //       message: "This subscription is not valid",
-  //     });
-  //   }
-  //   await approvePaypalSubscription(studentCourse.id, subscriptionId);
-  //   res.json({
-  //     message: "Subscription Completed Successfully",
-  //     data: {},
-  //   });
-  // } catch (err: any) {
-  //   console.log("ERROR: ", err);
-  //   res.status(500).json({
-  //     name: "INTERNAL_SERVER_ERROR",
-  //     message: "Internal Server Error",
-  //   });
-  //   next(err);
-  // }
+  try {
+    const courseId = Number(req.params.courseId);
+    const { id: studentId } = res.locals.student;
+    const { subscriptionId } = req.body;
+    
+    if (!courseId || !subscriptionId) {
+      res.status(400).json({
+        name: "INVALID_PAYLOAD",
+        message: "Invalid payload data",
+      });
+      return;
+    }
+    const course = await getCourse({ id: courseId });
+    if (!course) {
+      res.status(409).json({
+        name: "COURSE_DOESNT_EXIST",
+        message: "No course with this id",
+      });
+      return;
+    }
+    const studentCourse = await getStudentCourse({ studentId, courseId });
+    if (!studentCourse) {
+      res.status(409).json({
+        name: "USER_COURSE_DOESNT_EXIST",
+        message: "This student has not applied for this course",
+      });
+      return;
+    }
+    const subscriptionStatus = await getStudentCourseSubscriptionStatus(
+      studentCourse.id
+    );
+    if (subscriptionStatus == SubscriptionStatus.SUBSCRIBED) {
+      res.status(409).json({
+        name: "ALREADY_SUBSCRIBED",
+        message: "Student already subscribed to this course",
+      });
+      return;
+    }
+    const accessToken = await getPaypalAccessToken();
+    const subscription = await getPaypalSubscription(
+      subscriptionId,
+      accessToken
+    );
+    if (subscription.status != "ACTIVE") {
+      res.status(409).json({
+        name: "SUBSCRIBTION_NOT_VALID",
+        message: "This subscription is not valid",
+      });
+    }
+    const alreadyUsed = await getStudentSubscriptionDetails({
+      paypalSubscriptionId: subscriptionId,
+    });
+    if (alreadyUsed) {
+      res.status(409).json({
+        name: "SUBSCRIBTION_NOT_VALID",
+        message: "This subscription is not valid",
+      });
+    }
+    await approvePaypalSubscription(studentCourse.id, subscriptionId);
+    res.json({
+      message: "Subscription Completed Successfully",
+      data: {},
+    });
+  } catch (err: any) {
+    console.log("ERROR: ", err);
+    res.status(500).json({
+      name: "INTERNAL_SERVER_ERROR",
+      message: "Internal Server Error",
+    });
+    next(err);
+  }
 };
 
 export const approvePaypalSandbox = async (
@@ -1050,73 +1151,93 @@ export const paymobIntention = async (
   res: Response,
   next: NextFunction
 ) => {
-  // try {
-  //   const courseId = Number(req.params.courseId);
-  //   const { id: studentId, ...student } = res.locals.student;
-  //   if (!courseId) {
-  //     res.status(400).json({
-  //       name: "INVALID_PAYLOAD",
-  //       message: "Invalid payload data",
-  //     });
-  //     return;
-  //   }
-  //   const course = await getCourse({ id: courseId });
-  //   if (!course) {
-  //     res.status(409).json({
-  //       name: "COURSE_DOESNT_EXIST",
-  //       message: "No course with this id",
-  //     });
-  //     return;
-  //   }
-  //   const studentCourse = await getStudentCourse(studentId, courseId);
-  //   if (!studentCourse) {
-  //     res.status(409).json({
-  //       name: "USER_COURSE_DOESNT_EXIST",
-  //       message: "This student has not applied for this course",
-  //     });
-  //     return;
-  //   }
-  //   const subscriptionStatus = await getStudentCourseSubscriptionStatus(
-  //     studentCourse.id
-  //   );
-  //   if (subscriptionStatus == SubscriptionStatus.SUBSCRIBED) {
-  //     res.status(409).json({
-  //       name: "ALREADY_SUBSCRIBED",
-  //       message: "Student already subscribed to this course",
-  //     });
-  //     return;
-  //   }
-  //   const paymentDetails = await getPaymentDetails(course.id);
-  //   const planId =
-  //     studentCourse.sessionType == SessionType.GROUP
-  //       ? paymentDetails.paymobGroupPlanId
-  //       : paymentDetails.paymobIndividualPlanId;
-  //   if (!planId) throw Error("Plan id not found");
-  //   const subscription = await createPaymobSubscription(
-  //     student.name,
-  //     student.email,
-  //     studentCourse.sessionType == SessionType.GROUP
-  //       ? course.groupPrice!
-  //       : course.individualPrice!,
-  //     planId
-  //   );
-  //   if (!subscription) throw Error("Error while creating subscription intent");
-  //   await savePaymobSubscription(studentCourse.id, subscription.id);
-  //   res.json({
-  //     message: "Subscription Intention Completed Successfully",
-  //     data: {
-  //       clientSecret: subscription.client_secret,
-  //     },
-  //   });
-  // } catch (err: any) {
-  //   console.log("ERROR: ", err);
-  //   console.log(err.response.data);
-  //   res.status(500).json({
-  //     name: "INTERNAL_SERVER_ERROR",
-  //     message: "Internal Server Error",
-  //   });
-  //   next(err);
-  // }
+  try {
+    const courseId = Number(req.params.courseId);
+    const { id: studentId, ...student } = res.locals.student;
+    if (!courseId) {
+      res.status(400).json({
+        name: "INVALID_PAYLOAD",
+        message: "Invalid payload data",
+      });
+      return;
+    }
+    const course = await getCourse({ id: courseId });
+    if (!course) {
+      res.status(409).json({
+        name: "COURSE_DOESNT_EXIST",
+        message: "No course with this id",
+      });
+      return;
+    }
+    const studentCourse = await getStudentCourse({ studentId, courseId });
+    if (!studentCourse) {
+      res.status(409).json({
+        name: "USER_COURSE_DOESNT_EXIST",
+        message: "This student has not applied for this course",
+      });
+      return;
+    }
+    const subscriptionStatus = await getStudentCourseSubscriptionStatus(
+      studentCourse.id
+    );
+    if (subscriptionStatus == SubscriptionStatus.SUBSCRIBED) {
+      res.status(409).json({
+        name: "ALREADY_SUBSCRIBED",
+        message: "Student already subscribed to this course",
+      });
+      return;
+    }
+
+    if (studentCourse.hours == null) {
+      res.status(409).json({
+        name: "HOURS_NOT_SPECIFIED",
+        message: "The admin should specify the hours for the student first",
+      });
+      return;
+    }
+
+    const paymobAccessToken = await getPaymobAcceessToken();
+    if (!paymobAccessToken) throw Error("Error getting access token");
+
+    const price = studentCourse.groupId
+      ? studentCourse.hours * course.groupPrice
+      : studentCourse.hours * course.privatePrice;
+    const paymobPlanId = await createPaymobPlan(
+      student.name,
+      paymobAccessToken,
+      price
+    );
+    if (!paymobPlanId) throw Error("Error creating paymob plan");
+    console.log(paymobPlanId);
+
+    const subscription = await createPaymobSubscription(
+      student.name,
+      student.email,
+      price,
+      paymobPlanId
+    );
+    if (!subscription) throw Error("Error while creating subscription intent");
+
+    await savePaymobSubscription(
+      studentCourse.id,
+      paymobPlanId,
+      subscription.id
+    );
+    res.json({
+      message: "Subscription Intention Completed Successfully",
+      data: {
+        clientSecret: subscription.client_secret,
+      },
+    });
+  } catch (err: any) {
+    console.log("ERROR: ", err);
+    console.log(err.response.data);
+    res.status(500).json({
+      name: "INTERNAL_SERVER_ERROR",
+      message: "Internal Server Error",
+    });
+    next(err);
+  }
 };
 
 export const paymobResponse = async (

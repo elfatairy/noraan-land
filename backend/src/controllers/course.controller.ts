@@ -1,8 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import {
-  validateString,
-  validateZoomLink,
-} from "../utils/validation.util";
+import { validateString, validateZoomLink } from "../utils/validation.util";
 import {
   getCourse,
   createCourse,
@@ -19,6 +16,10 @@ import {
   getGroup,
 } from "../services/group.service";
 import { Group } from "@prisma/client";
+import {
+  createPaypalProduct,
+  getPaypalAccessToken,
+} from "../services/paypal.service";
 
 export const create = async (
   req: Request,
@@ -32,8 +33,7 @@ export const create = async (
       !privatePrice ||
       !groupPrice ||
       !zoomLink ||
-      (description &&
-        !validateString(description, 255, 0))
+      (description && !validateString(description, 255, 0))
     ) {
       res.status(400).json({
         name: "INVALID_PAYLOAD",
@@ -59,21 +59,26 @@ export const create = async (
       return;
     }
 
+    const paypalAccessToken = await getPaypalAccessToken();
+    if (!paypalAccessToken) throw Error("Error getting access token");
+
+    const paypalProductId = await createPaypalProduct(
+      name,
+      description,
+      paypalAccessToken
+    );
+    if (!paypalProductId) throw Error("Error creating paypal product");
+
     const createdCourse = await createCourse(
       name,
       privatePrice,
       groupPrice,
       description,
-      zoomLink
+      zoomLink,
+      paypalProductId
     );
-
     /*
     // PAYPAL
-    const paypalAccessToken = await getPaypalAccessToken();
-    if(!paypalAccessToken) throw Error("Error getting access token");
-
-    const paypalProductId = await createPaypalProduct(name, description, paypalAccessToken);
-    if(!paypalProductId) throw Error("Error creating paypal product");
     
     const paypalGroupPlanId = await createPaypalPlan(name, paypalProductId, paypalAccessToken, groupPrice, SessionType.GROUP);
     const paypalIndividualPlanId = await createPaypalPlan(name, paypalProductId, paypalAccessToken, individualPrice, SessionType.INDIVIDUAL);

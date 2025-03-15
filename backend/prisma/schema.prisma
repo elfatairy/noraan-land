@@ -8,17 +8,18 @@ datasource db {
 }
 
 model Course {
-  id             Int             @id @default(autoincrement())
-  name           String          @db.VarChar(255)
-  privatePrice   Float
-  groupPrice     Float
-  description    String?         @db.VarChar(1024)
-  zoomLink       String          @db.VarChar(255)
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  sessions       Session[]
-  studentCourses StudentCourse[]
-  quizes         Quiz[]
+  id              Int             @id @default(autoincrement())
+  name            String          @db.VarChar(255)
+  privatePrice    Float
+  groupPrice      Float
+  description     String?         @db.VarChar(1024)
+  zoomLink        String          @db.VarChar(255)
+  paypalProductId String?          @db.VarChar(255)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  sessions        Session[]
+  studentCourses  StudentCourse[]
+  quizes          Quiz[]
 }
 
 model Session {

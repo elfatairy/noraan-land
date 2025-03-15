@@ -190,6 +190,7 @@ export const getStudentEnrolledCourses = async (studentId: number) =>
         course: {
           omit: {
             zoomLink: true,
+            paypalProductId: true
           },
         },
       },
