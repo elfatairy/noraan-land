@@ -7,6 +7,9 @@ import {
   getStudentCourses,
   updateCourse,
   getUnasignedStudentCourse,
+  revokeCoursePrivateSubscriptions,
+  revokeCourseGroupSubscriptions,
+  cancelStudentCourseSubscription,
 } from "../services/course.service";
 import { ROLES } from "../utils/constants.util";
 import {
@@ -15,11 +18,12 @@ import {
   getCourseGroups,
   getGroup,
 } from "../services/group.service";
-import { Group } from "@prisma/client";
+import { Group, SubscriptionMethod } from "@prisma/client";
 import {
+  cancelPaypalSubscription,
   createPaypalProduct,
-  getPaypalAccessToken,
 } from "../services/paypal.service";
+import { cancelPaymobSubscription } from "../services/paymob.service";
 
 export const create = async (
   req: Request,
@@ -59,14 +63,7 @@ export const create = async (
       return;
     }
 
-    const paypalAccessToken = await getPaypalAccessToken();
-    if (!paypalAccessToken) throw Error("Error getting access token");
-
-    const paypalProductId = await createPaypalProduct(
-      name,
-      description,
-      paypalAccessToken
-    );
+    const paypalProductId = await createPaypalProduct(name, description);
     if (!paypalProductId) throw Error("Error creating paypal product");
 
     const createdCourse = await createCourse(
@@ -157,12 +154,36 @@ export const update = async (
     if (description) options.description = description;
 
     if (privatePrice) {
-      // TODO DISABLE ALL SUBSCRIPTIONS
+      const studentCourses =
+        (await getStudentCourses(courseId, {
+          groupId: null,
+        })) ?? [];
+
+      await Promise.allSettled(
+        studentCourses.map(async (studentCourse) => {
+          await cancelStudentCourseSubscription(studentCourse.id);
+        })
+      );
+
+      await revokeCoursePrivateSubscriptions(courseId);
       options.privatePrice = privatePrice;
     }
 
     if (groupPrice) {
-      // TODO DISABLE ALL SUBSCRIPTIONS
+      const studentCourses =
+        (await getStudentCourses(courseId, {
+          groupId: {
+            not: null,
+          },
+        })) ?? [];
+
+      await Promise.allSettled(
+        studentCourses.map(async (studentCourse) => {
+          await cancelStudentCourseSubscription(studentCourse.id);
+        })
+      );
+
+      await revokeCourseGroupSubscriptions(courseId);
       options.groupPrice = groupPrice;
     }
 

@@ -5,6 +5,8 @@ import {
   SubscriptionMethod,
   SubscriptionStatus,
 } from "@prisma/client";
+import { cancelPaymobSubscription } from "./paymob.service";
+import { cancelPaypalSubscription } from "./paypal.service";
 
 export const createCourse = async (
   name: string,
@@ -47,7 +49,7 @@ export const updateCourse = async (courseId: number, options: any) => {
 
 export const getCourse = async (conditions: Prisma.CourseWhereInput) =>
   await prisma.course.findFirst({
-    where: conditions
+    where: conditions,
   });
 
 export const getAllCourses = async () =>
@@ -78,7 +80,7 @@ export const getStudentCourses = async (
             name: true,
           },
         },
-        StudentCourseSubscription: {},
+        StudentCourseSubscription: true,
       },
     });
 
@@ -103,11 +105,7 @@ export const getStudentCourse = async (
   await prisma.studentCourse.findFirst({
     where: conditions,
     include: {
-      StudentCourseSubscription: {
-        select: {
-          subscriptionStatus: true,
-        },
-      },
+      StudentCourseSubscription: true,
     },
   });
 
@@ -154,6 +152,7 @@ export const initiatePaypalSubscription = async (
     },
     data: {
       paypalPlanId,
+      subscriptionMethod: SubscriptionMethod.PAYPAL,
     },
   });
 
@@ -198,8 +197,17 @@ export const savePaymobSubscription = async (
     data: {
       paymobSubscriptionId,
       paymobPlanId,
-      subscriptionStatus: SubscriptionStatus.SUBSCRIBED,
       subscriptionMethod: SubscriptionMethod.PAYMOB,
+    },
+  });
+
+export const approvePaymobSubscription = async (subscriptionId: string) =>
+  await prisma.studentCourseSubscription.updateMany({
+    where: {
+      paymobSubscriptionId: subscriptionId,
+    },
+    data: {
+      subscriptionStatus: SubscriptionStatus.SUBSCRIBED,
     },
   });
 
@@ -217,3 +225,109 @@ export const makeFreeSubscription = async (studentCourseId: number) =>
       paymobPlanId: null,
     },
   });
+
+export const revokeSubscription = async (studentCourseId: number) =>
+  await prisma.studentCourseSubscription.update({
+    where: {
+      studentCourseId,
+    },
+    data: {
+      subscriptionStatus: SubscriptionStatus.UNSUBSCRIBED,
+      subscriptionMethod: null,
+      paymobPlanId: null,
+      paymobSubscriptionId: null,
+      paypalPlanId: null,
+      paypalSubscriptionId: null,
+    },
+  });
+
+export const revokeCoursePrivateSubscriptions = async (courseId: number) => {
+  const studentCourses = await prisma.studentCourse.findMany({
+    where: {
+      courseId,
+      groupId: null,
+    },
+    include: {
+      StudentCourseSubscription: true,
+    },
+  });
+
+  await prisma.studentCourseSubscription.updateMany({
+    where: {
+      studentCourseId: {
+        in: studentCourses.map((sc) => sc.id),
+      },
+    },
+    data: {
+      subscriptionStatus: SubscriptionStatus.UNSUBSCRIBED,
+      subscriptionMethod: null,
+      paymobPlanId: null,
+      paymobSubscriptionId: null,
+      paypalPlanId: null,
+      paypalSubscriptionId: null,
+    },
+  });
+};
+
+export const revokeCourseGroupSubscriptions = async (courseId: number) => {
+  const studentCourses = await prisma.studentCourse.findMany({
+    where: {
+      courseId,
+      groupId: {
+        not: null,
+      },
+    },
+    include: {
+      StudentCourseSubscription: true,
+    },
+  });
+
+  await prisma.studentCourseSubscription.updateMany({
+    where: {
+      studentCourseId: {
+        in: studentCourses.map((sc) => sc.id),
+      },
+    },
+    data: {
+      subscriptionStatus: SubscriptionStatus.UNSUBSCRIBED,
+      subscriptionMethod: null,
+      paymobPlanId: null,
+      paymobSubscriptionId: null,
+      paypalPlanId: null,
+      paypalSubscriptionId: null,
+    },
+  });
+};
+
+export const cancelStudentCourseSubscription = async (studentCourseId: number) => {
+  const studentCourse = await getStudentCourse({
+    id: studentCourseId
+  });
+
+  if(!studentCourse) throw "studentCourse is null";
+
+  if (!studentCourse.StudentCourseSubscription)
+    throw "studentCourse.StudentCourseSubscription is undefined";
+
+  if (
+    studentCourse.StudentCourseSubscription.subscriptionMethod ==
+      SubscriptionMethod.PAYMOB &&
+    studentCourse.StudentCourseSubscription.paymobSubscriptionId &&
+    studentCourse.StudentCourseSubscription.paymobPlanId
+  ) {
+    await cancelPaymobSubscription(
+      studentCourse.StudentCourseSubscription.paymobSubscriptionId,
+      studentCourse.StudentCourseSubscription.paymobPlanId
+    );
+  } else if (
+    studentCourse.StudentCourseSubscription.subscriptionMethod ==
+      SubscriptionMethod.PAYPAL &&
+    studentCourse.StudentCourseSubscription.paypalSubscriptionId &&
+    studentCourse.StudentCourseSubscription.paypalPlanId
+  ) {
+    await cancelPaypalSubscription(
+      studentCourse.StudentCourseSubscription.paypalSubscriptionId,
+      studentCourse.StudentCourseSubscription.paypalPlanId
+    );
+  }
+};

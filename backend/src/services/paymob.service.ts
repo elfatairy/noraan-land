@@ -1,4 +1,3 @@
-import { SessionType } from "@prisma/client";
 import axios from "axios";
 import { convertUSDtoEGP } from "../utils/helper.util";
 
@@ -29,11 +28,9 @@ export const getPaymobAcceessToken = async () => {
   return res.data.token;
 };
 
-export const createPaymobPlan = async (
-  name: string,
-  accessToken: string,
-  price: number
-) => {
+export const createPaymobPlan = async (name: string, price: number) => {
+  const accessToken = await getPaymobAcceessToken();
+
   const amountEgp = await convertUSDtoEGP(price);
   if (!amountEgp) return false;
 
@@ -91,6 +88,8 @@ export const createPaymobSubscription = async (
         email: email,
         phone_number: process.env.PAYMOB_PLACEHOLDER_PHONENUMBER,
       },
+      notification_url: process.env.PAYMOB_NOTIFICATION_URL,
+      redirection_url: process.env.PAYMOB_REDIRECTION_URL,
     },
     {
       headers: {
@@ -101,6 +100,46 @@ export const createPaymobSubscription = async (
 
   if (!res || res.status != 201) return false;
 
-  const { id, client_secret } = res.data;
+  const {
+    id,
+    client_secret,
+  } = res.data;
   return { id, client_secret };
+};
+
+export const cancelPaymobSubscription = async (
+  subscriptionId: string,
+  planId: number
+) => {
+  const accessToken = await getPaymobAcceessToken();
+
+  console.log("step 1");
+  let res = await axios.post(
+    `${process.env.PAYMOB_BASE_URL}/api/acceptance/subscriptions/${subscriptionId}/cancel`,
+    {},
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+  console.log("done step 1");
+
+  if (!res || res.status != 200) return false;
+
+  console.log("step 2");
+  res = await axios.post(
+    `${process.env.PAYMOB_BASE_URL}/api/acceptance/subscription-plans/${planId}/suspend`,
+    {},
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+  console.log("done step 2");
+
+  if (!res || res.status != 200) return false;
+
+  return true;
 };

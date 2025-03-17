@@ -7,7 +7,6 @@ router.post('/joinSession/:courseId/:sessionId', studentController.joinSession) 
 
 router.post('/intentPaypal/:courseId', studentController.paypalIntention)
 router.post('/approvePaypal/:courseId', studentController.approvePaypal)
-// router.post('/approvePaypalSandbox/:courseId', studentController.approvePaypalSandbox)
 router.post('/intentPaymob/:courseId', studentController.paymobIntention)
 
 router.get('/nextWeekSessions', studentController.nextWeekSessions) //

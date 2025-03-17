@@ -30,12 +30,15 @@ import { compare } from "bcrypt";
 import {
   addStudentCourse,
   addStudentCourseSubscriptionStatus,
+  approvePaymobSubscription,
   approvePaypalSubscription,
+  cancelStudentCourseSubscription,
   getCourse,
   getStudentCourse,
   getStudentSubscriptionDetails,
   initiatePaypalSubscription,
   makeFreeSubscription,
+  revokeSubscription,
   savePaymobSubscription,
 } from "../services/course.service";
 import {
@@ -43,20 +46,19 @@ import {
   getSession,
   getSessions,
 } from "../services/session.service";
-import { SubscriptionStatus } from "@prisma/client";
+import { SubscriptionMethod, SubscriptionStatus } from "@prisma/client";
 import { getDate } from "../services/calendar.service";
 import { JOIN_LINK_SHOW } from "../utils/constants.util";
 import { serialize } from "../utils/helper.util";
 import { getGroup } from "../services/group.service";
 import {
+  cancelPaymobSubscription,
   createPaymobPlan,
   createPaymobSubscription,
-  getPaymobAcceessToken,
 } from "../services/paymob.service";
 import {
+  cancelPaypalSubscription,
   createPaypalPlan,
-  createPaypalProduct,
-  getPaypalAccessToken,
   getPaypalSubscription,
 } from "../services/paypal.service";
 
@@ -149,6 +151,9 @@ export const assignHoursToStudent = async (
       return;
     }
 
+    if (!studentCourse.StudentCourseSubscription)
+      throw "studentCourse.StudentCourseSubscription is undefined";
+
     const shouldRevokeSubscription =
       studentCourse.hours != null &&
       studentCourse.StudentCourseSubscription?.subscriptionStatus ==
@@ -159,7 +164,8 @@ export const assignHoursToStudent = async (
     if (hours == 0) {
       await makeFreeSubscription(studentCourse.id);
     } else if (shouldRevokeSubscription) {
-      // TODO REVOKE STUDENT SUBSCRIPTION
+      await cancelStudentCourseSubscription(studentCourse.id);
+      await revokeSubscription(studentCourse.id);
     }
 
     res.json({
@@ -264,15 +270,19 @@ export const assignGroupToStudent = async (
       return;
     }
 
+    if (!studentCourse.StudentCourseSubscription)
+      throw "studentCourse.StudentCourseSubscription is undefined";
+
     const shouldRevokeSubscription =
       studentCourse.groupId == null &&
-      studentCourse.StudentCourseSubscription?.subscriptionStatus ==
+      studentCourse.StudentCourseSubscription.subscriptionStatus ==
         SubscriptionStatus.SUBSCRIBED;
 
     const updatedStudentCourse = await assignGroup(studentCourse.id, groupId);
 
     if (shouldRevokeSubscription) {
-      // TODO REVOKE STUDENT SUBSCRIBTION
+      await cancelStudentCourseSubscription(studentCourse.id);
+      await revokeSubscription(studentCourse.id);
     }
 
     res.json({
@@ -328,14 +338,18 @@ export const convertStudentToPrivate = async (
       return;
     }
 
+    if (!studentCourse.StudentCourseSubscription)
+      throw "studentCourse.StudentCourseSubscription is undefined";
+
     const shouldRevokeSubscription =
-      studentCourse.StudentCourseSubscription?.subscriptionStatus ==
+      studentCourse.StudentCourseSubscription.subscriptionStatus ==
       SubscriptionStatus.SUBSCRIBED;
 
     const updatedStudentCourse = await assignGroup(studentCourse.id, null);
 
     if (shouldRevokeSubscription) {
-      // TODO REVOKE STUDENT SUBSCRIBTION
+      await cancelStudentCourseSubscription(studentCourse.id);
+      await revokeSubscription(studentCourse.id);
     }
 
     res.json({
@@ -977,9 +991,7 @@ export const paypalIntention = async (
       return;
     }
 
-    const paypalAccessToken = await getPaypalAccessToken();
-    if (!paypalAccessToken) throw Error("Error getting access token");
-
+    console.log(course);
     if (!course.paypalProductId) throw "This course doesn't have product id";
 
     if (studentCourse.hours == null) {
@@ -997,7 +1009,6 @@ export const paypalIntention = async (
     const paypalPlanId = await createPaypalPlan(
       `${student.name} - ${course.name}`,
       course.paypalProductId,
-      paypalAccessToken,
       price
     );
     if (!paypalPlanId) throw Error("Error creating paypal plans");
@@ -1029,7 +1040,7 @@ export const approvePaypal = async (
     const courseId = Number(req.params.courseId);
     const { id: studentId } = res.locals.student;
     const { subscriptionId } = req.body;
-    
+
     if (!courseId || !subscriptionId) {
       res.status(400).json({
         name: "INVALID_PAYLOAD",
@@ -1063,11 +1074,7 @@ export const approvePaypal = async (
       });
       return;
     }
-    const accessToken = await getPaypalAccessToken();
-    const subscription = await getPaypalSubscription(
-      subscriptionId,
-      accessToken
-    );
+    const subscription = await getPaypalSubscription(subscriptionId);
     if (subscription.status != "ACTIVE") {
       res.status(409).json({
         name: "SUBSCRIBTION_NOT_VALID",
@@ -1196,17 +1203,10 @@ export const paymobIntention = async (
       return;
     }
 
-    const paymobAccessToken = await getPaymobAcceessToken();
-    if (!paymobAccessToken) throw Error("Error getting access token");
-
     const price = studentCourse.groupId
       ? studentCourse.hours * course.groupPrice
       : studentCourse.hours * course.privatePrice;
-    const paymobPlanId = await createPaymobPlan(
-      student.name,
-      paymobAccessToken,
-      price
-    );
+    const paymobPlanId = await createPaymobPlan(student.name, price);
     if (!paymobPlanId) throw Error("Error creating paymob plan");
     console.log(paymobPlanId);
 
@@ -1246,17 +1246,17 @@ export const paymobResponse = async (
   next: NextFunction
 ) => {
   try {
-    console.log("PAYMOB Response params:");
-    console.log(req.query);
+    const obj = req.body.obj;
 
-    res.status(200).end();
+    if (!obj.success) {
+      console.log("FAILED PAYMOB PAYMENT");
+      console.log(req.body.obj);
+    }
+
+    console.log(obj.order.id);
+    approvePaymobSubscription(obj.payment_key_claims.next_payment_intention);
   } catch (err: any) {
     console.log("ERROR: ", err);
-    res.status(500).json({
-      name: "INTERNAL_SERVER_ERROR",
-      message: "Internal Server Error",
-    });
-    next(err);
   }
 };
 
