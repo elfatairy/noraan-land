@@ -49,6 +49,7 @@ export const createPaymobPlan = async (name: string, price: number) => {
       is_active: true,
       integration: process.env.PAYMOB_INTEGERATION_ID,
       fee: null,
+      webhook_url: process.env.PAYMOB_SUBSCRIPTION_WEBHOOK_URL,
     },
     {
       headers: {
@@ -108,7 +109,7 @@ export const createPaymobSubscription = async (
 };
 
 export const cancelPaymobSubscription = async (
-  subscriptionId: string,
+  subscriptionId: number,
   planId: number
 ) => {
   const accessToken = await getPaymobAcceessToken();

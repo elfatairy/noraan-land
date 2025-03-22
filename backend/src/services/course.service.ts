@@ -171,43 +171,54 @@ export const approvePaypalSubscription = async (
     },
   });
 
-export const approvePaypalSubscriptionSandBox = async (
-  studentCourseId: number
-) =>
-  await prisma.studentCourseSubscription.update({
-    where: {
-      studentCourseId,
-    },
-    data: {
-      subscriptionStatus: SubscriptionStatus.SUBSCRIBED,
-      subscriptionMethod: SubscriptionMethod.PAYPAL,
-      paymobSubscriptionId: "SANDBOX",
-    },
-  });
+// export const approvePaypalSubscriptionSandBox = async (
+//   studentCourseId: number
+// ) =>
+//   await prisma.studentCourseSubscription.update({
+//     where: {
+//       studentCourseId,
+//     },
+//     data: {
+//       subscriptionStatus: SubscriptionStatus.SUBSCRIBED,
+//       subscriptionMethod: SubscriptionMethod.PAYPAL,
+//       paymobSubscriptionId: "SANDBOX",
+//     },
+//   });
 
 export const savePaymobSubscription = async (
   studentCourseId: number,
   paymobPlanId: number,
-  paymobSubscriptionId: string
+  paymobIntentionId: string
 ) =>
   await prisma.studentCourseSubscription.update({
     where: {
       studentCourseId,
     },
     data: {
-      paymobSubscriptionId,
       paymobPlanId,
       subscriptionMethod: SubscriptionMethod.PAYMOB,
+      paymobIntentionId
     },
   });
 
-export const approvePaymobSubscription = async (subscriptionId: string) =>
+export const savePaymobTransactionId = async (intentionId: string, transactionId: number) =>
   await prisma.studentCourseSubscription.updateMany({
     where: {
-      paymobSubscriptionId: subscriptionId,
+      paymobIntentionId: intentionId,
+    },
+    data: {
+      paymobTransactionId: transactionId
+    },
+  });
+
+export const approvePaymobSubscription = async (transactionId: number, subscriptionId: number) =>
+  await prisma.studentCourseSubscription.updateMany({
+    where: {
+      paymobTransactionId: transactionId,
     },
     data: {
       subscriptionStatus: SubscriptionStatus.SUBSCRIBED,
+      paymobSubscriptionId: subscriptionId
     },
   });
 

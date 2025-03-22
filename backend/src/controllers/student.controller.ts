@@ -40,6 +40,7 @@ import {
   makeFreeSubscription,
   revokeSubscription,
   savePaymobSubscription,
+  savePaymobTransactionId,
 } from "../services/course.service";
 import {
   getRecordings,
@@ -1253,8 +1254,25 @@ export const paymobResponse = async (
       console.log(req.body.obj);
     }
 
-    console.log(obj.order.id);
-    approvePaymobSubscription(obj.payment_key_claims.next_payment_intention);
+    savePaymobTransactionId(obj.payment_key_claims.next_payment_intention, req.body.obj.id);
+  } catch (err: any) {
+    console.log("ERROR: ", err);
+  }
+};
+
+export const subscriptionWebhook = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    console.log(req.body);
+    const {subscription_data} = req.body;
+
+    if(subscription_data.state == "active") {
+      approvePaymobSubscription(req.body.transaction_id, subscription_data.id);
+    }
+    
   } catch (err: any) {
     console.log("ERROR: ", err);
   }
@@ -1268,12 +1286,24 @@ export const getMyCourses = async (
   try {
     const { id: studentId } = res.locals.student;
 
-    const enrolledCourses = await getStudentEnrolledCourses(studentId);
+    let enrolledCourses = await getStudentEnrolledCourses(studentId);
+    let enrolledCoursesWithStatus: ((typeof enrolledCourses)[number] & {
+      subscriptionStatus: SubscriptionStatus;
+    })[] = [];
+
+    await Promise.allSettled(enrolledCourses.map(async (studentCourse) => {
+      enrolledCoursesWithStatus.push({
+        ...studentCourse,
+        subscriptionStatus: await getStudentCourseSubscriptionStatus(
+          studentCourse.id
+        ),
+      });
+    }));
 
     res.json({
       message: "Enrolled Courses Retreived Successfully",
       data: {
-        courses: enrolledCourses,
+        courses: enrolledCoursesWithStatus,
       },
     });
   } catch (err: any) {
