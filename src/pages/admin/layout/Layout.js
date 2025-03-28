@@ -32,6 +32,12 @@ const AdminLayout = () => {
                 <span>Courses</span>
               </Link>
             </li>
+            <li className={location.pathname === "/admin/students" ? "active" : ""}>
+              <Link to="/admin/students">
+                <i className="fas fa-user-graduate"></i>
+                <span>Students</span>
+              </Link>
+            </li>
           </ul>
         </aside>
         )}

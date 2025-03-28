@@ -5,24 +5,24 @@ import axios from 'axios';
 export const useGoogleLogin = () => {
   const { isLoading, error, data, setError, _execute } = useApiFetch();
 
-  const execute = useCallback(async (accessToken) => {
+  const execute = useCallback(async (accessToken, phone = "") => {
     try {
-      const googleUserInfo = await axios.get(
-        'https://www.googleapis.com/oauth2/v3/userinfo',
+      // Get the ID token from Google
+      const tokenInfo = await axios.get(
+        'https://www.googleapis.com/oauth2/v3/tokeninfo',
         {
-          headers: { 
-            'Authorization': `Bearer ${accessToken}`,
-            'Accept': 'application/json'
+          params: { 
+            access_token: accessToken
           }
         }
       );
 
       const requestData = {
-        email: googleUserInfo.data.email,
-        password: googleUserInfo.data.sub, // Using Google's unique ID as password
+        idToken: tokenInfo.data.sub,
+        phone: phone
       };
 
-      return await _execute('users/auth/login', 'POST', requestData);
+      return await _execute('students/auth/google-login', 'POST', requestData);
     } catch (error) {
       setError(error);
       throw error;

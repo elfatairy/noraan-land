@@ -55,10 +55,10 @@ const Hero = () => {
             </a>
           </div>
           <div className="img">
-            <img src="./images/quran.webp" />
+            <img src="./images/quran.webp" alt=""/>
           </div>
         </div>
-        <img src="./images/masjed_bg_overlay.png" className="overlay-image" />
+        <img src="./images/masjed_bg_overlay.png" className="overlay-image" alt="" />
       </div>
       <div className="hero-bottom" />
     </div>
@@ -91,7 +91,7 @@ const Us = () => {
           </div>
           <ul className="right">
             <li>
-              <img src="./images/icon1.png" />
+              <img src="./images/icon1.png" alt=""/>
               <div>
                 <h4>Our Vision</h4>
                 <p>
@@ -102,7 +102,7 @@ const Us = () => {
               </div>
             </li>
             <li>
-              <img src="./images/icon2.png" />
+              <img src="./images/icon2.png" alt=""/>
               <div>
                 <h4>Our Mission</h4>
                 <p>

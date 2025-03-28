@@ -137,7 +137,7 @@ export const authenticateStudent = async (id: number, email: string) => {
   });
 
   return { student, token };
-};
+}; 
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 export const verifyGoogleToken = async (idToken: string) => {
@@ -182,21 +182,92 @@ export const getStudentCourseSubscriptionStatus = async (
     })
   )?.subscriptionStatus;
 
-export const getStudentEnrolledCourses = async (studentId: number) =>
-  (
-    await prisma.studentCourse.findMany({
+// original
+// export const getStudentEnrolledCourses = async (studentId: number) =>
+//   (
+//     await prisma.studentCourse.findMany({
+//       where: { studentId },
+//       include: {
+//         course: {
+//           omit: {
+//             zoomLink: true,
+//           },
+//         },
+//       },
+//     })
+//   ).map((item) => {
+//     // Need to properly type the item and access course properties
+//     return { 
+//       ...item.course,
+//       hours: item.hours 
+//     };
+//   });
+
+// "omit"  fix
+  // export const getStudentEnrolledCourses = async (studentId: number) => {
+  //   const studentCourses = await prisma.studentCourse.findMany({
+  //     where: { studentId },
+  //     include: {
+  //       course: {
+  //         select: {
+  //           id: true,
+  //           name: true,
+  //           description: true,
+  //           privatePrice: true,
+  //           groupPrice: true,
+  //           createdAt: true,
+  //           updatedAt: true,
+  //           // Not including zoomLink as it was being omitted in the original code
+  //         },
+  //       },
+  //     },
+  //   });
+  
+  //   return studentCourses.map((item) => {
+  //     return { 
+  //       ...item.course,
+  //       hours: item.hours 
+  //     };
+  //   });
+  // };
+
+  
+// want student status in each course 
+  export const getStudentEnrolledCourses = async (studentId: number) => {
+    const studentCourses = await prisma.studentCourse.findMany({
       where: { studentId },
       include: {
         course: {
-          omit: {
-            zoomLink: true,
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            privatePrice: true,
+            groupPrice: true,
+            createdAt: true,
+            updatedAt: true,
           },
         },
+        group: {
+          select: {
+            id: true,
+            name: true,
+          }
+        },
       },
-    })
-  ).map((item) => {
-    return { ...item.course, hours: item.hours };
-  });
+    });
+  
+    return studentCourses.map((item) => {
+      return {
+        ...item.course,
+        hours: item.hours,
+        sessionType: item.preferredSessionType, // Whether GROUP or PRIVATE
+        group: item.group || null, // Group information or null if not assigned
+      };
+    });
+  };
+
+
 
 export const getStudentNextWeekSessions = async (studentId: number) => {
   const now = new Date();
@@ -287,6 +358,7 @@ export const getStudentsService = async () => {
       location: true,
       gender: true,
     },
+
   });
   return students;
 };

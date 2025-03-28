@@ -6,7 +6,7 @@ export const useApplyForCourse = () => {
 
   const execute = useCallback(async (payload) => {
     try {
-      return await _execute('users/actions/applyForCourse', 'POST', payload);
+      return await _execute('students/actions/applyForCourse', 'POST', payload);
     } catch (error) {
       setError(error);
       throw error;

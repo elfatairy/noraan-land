@@ -10,7 +10,7 @@ export const useLogin = () => {
             email,
             password
          };
-         const response = await _execute('users/auth/login', 'POST', requestData, options);
+         const response = await _execute('students/auth/login', 'POST', requestData, options);
          return response;
       } catch (error) {
          setError(error);

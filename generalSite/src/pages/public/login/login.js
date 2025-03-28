@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../contexts/auth';
 import { useGoogleLogin } from '@react-oauth/google';
@@ -12,35 +12,70 @@ const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({});
+  const [phone, setPhone] = useState('+201149957585'); // Add phone state
   const { login, isLoading } = useAuth();
   const navigate = useNavigate();
 
   const googleLogin = useGoogleLogin({
-    onSuccess: async (codeResponse) => {
+    onSuccess: async (response) => {
       try {
-        const result = await login('google', codeResponse.access_token);
+        console.log('Google Login Response:', response);
+        
+        // Get user info using access token
+        const userInfo = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+          headers: { Authorization: `Bearer ${response.access_token}` },
+        });
+        const profile = await userInfo.json();
+        
+        console.log('Google User Profile:', {
+          id: profile.sub,
+          email: profile.email,
+          name: profile.name,
+          picture: profile.picture,
+          given_name: profile.given_name,
+          family_name: profile.family_name,
+          locale: profile.locale
+        });
+
+        // Send to backend with phone number
+        const result = await login('google', {
+          accessToken: response.access_token,
+          phone: phone // Add phone to payload
+        });
+        
         if (result?.success) {
+          toast.success('Successfully logged in with Google!');
           navigate('/');
         }
       } catch (error) {
+        console.error('Google login error:', error);
         toast.error('Google login failed');
       }
     },
-    onError: () => toast.error('Google login failed'),
+    onError: (error) => {
+      console.error('Google login error:', error);
+      toast.error('Google login failed');
+    },
+    scope: 'email profile',
     flow: 'implicit',
-    popup: true,
+    
+    // Add your client ID here
+    client_id: "484926163697-gqhd1kh1hnedcmfkl49lv15g3cvee0mk.apps.googleusercontent.com",
+    
     cookiePolicy: 'single_host_origin',
-    popupType: 'window',  // Explicitly specify popup type
-    ux_mode: 'popup',     // Ensure popup mode is used
-    state_cookie_domain: window.location.hostname, // Set cookie domain
   });
   
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) {
-      const result = await login('credentials', email, password);
+      const result = await login('credentials', {
+        email: email,
+        password: password
+      });
+      
       if (result?.success) {
-        navigate('/');
+        toast.success('Logged in successfully!');
+        navigate('/', { replace: true });
       }
     }
   };
@@ -128,6 +163,7 @@ const Login = () => {
           type="button" 
           onClick={() => googleLogin()}
           className="google-auth-btn"
+          data-testid="google-login-button"
         >
           <FcGoogle size={20} />
           Continue with Google

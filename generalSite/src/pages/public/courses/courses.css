@@ -31,6 +31,7 @@
     display: flex;
     justify-content: center;
     margin-bottom: 2rem;
+    flex-direction: column;
   }
   
   .search-input {
@@ -57,8 +58,9 @@
   
   .courses-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(400px, 2.5fr));
-    gap: 2rem;
+    grid-template-columns: repeat(3, minmax(300px, 1fr));
+    gap: 1.5rem;
+    padding: 0 1rem;
   }
 .card-header {
   display: flex;
@@ -174,4 +176,425 @@
 .modal {
   max-width: 500px;
   width: 100%;
+}
+
+.courses-page {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.header {
+  margin-bottom: 2rem;
+}
+
+.header h1 {
+  color: #95345C;
+  font-size: 2.5rem;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.search-container {
+  padding-left: 1rem;
+  margin-bottom: 2rem;
+  text-align: left;
+}
+
+.search-input {
+  width: 250px;
+  height: 35px;
+  padding: 0 1rem;
+  border: 1px solid #F9AC9E;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #95345C;
+}
+
+.course-card {
+  background: white;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  transition: box-shadow 0.2s ease;
+  height: 100%;
+}
+
+.course-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.card-content {
+  padding: 1.25rem;
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  height: 100%;
+}
+
+.course-title {
+  color: #95345C;
+  font-size: 1.2rem;
+  margin: 0 0 0.5rem 0;
+}
+
+.course-description {
+  color: #666;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  margin: 0 0 1rem 0;
+}
+
+.course-details {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+flex-direction: column;
+}
+.price-section {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.price-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.price-label {
+  color: #666;
+  font-size: 0.8rem;
+}
+
+.price-value {
+  color: #95345C;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.enroll-button {
+  background: #95345C;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.enroll-button:hover {
+  background: #7a2b4c;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 450px;
+}
+
+.modal h2 {
+  color: #95345C;
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.session-type {
+  margin-bottom: 1rem;
+}
+
+.radio-group {
+  display: flex;
+  gap: 2rem;
+  margin-top: 0.5rem;
+}
+
+.radio-group label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.modal textarea {
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  min-height: 80px;
+  font-size: 0.9rem;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.submit-button, .cancel-button {
+  flex: 1;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.submit-button {
+  background: #95345C;
+  color: white;
+}
+
+.submit-button:hover:not(:disabled) {
+  background: #7a2b4c;
+}
+
+.submit-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.cancel-button {
+  background: #f0f0f0;
+  color: #666;
+}
+
+.cancel-button:hover {
+  background: #e0e0e0;
+}
+
+@media (max-width: 768px) {
+  .courses-page {
+    padding: 1rem;
+  }
+
+  .header h1 {
+    font-size: 2rem;
+  }
+
+  .courses-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .radio-group {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .modal-buttons {
+    flex-direction: column;
+  }
+}
+
+.course-card {
+  background-color: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s, box-shadow 0.3s;
+  border: 2px solid #F9C7C5;
+  display: flex;
+  flex-direction: column;
+}
+
+.course-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+}
+
+.course-card h3 {
+  color: #95345C;
+  margin-bottom: 1rem;
+}
+
+
+.enroll-button {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: linear-gradient(135deg, #95345C, #B3666D);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 1.5rem;
+}
+
+.enroll-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.price-info {
+  display: flex;
+  justify-content: space-between;
+  margin: 1rem 0;
+  color: #B3666D;
+}
+
+.course-card .top {
+  flex: 1;
+}
+
+
+.radio-group {
+  display: flex;
+  gap: 2rem;
+  margin-top: 0.5rem;
+}
+
+.radio-group label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #666;
+  cursor: pointer;
+}
+
+.radio-group input[type="radio"] {
+  accent-color: #95345C;
+}
+
+
+.date-info {
+  font-size: 0.9rem;
+  color: #FA91C8;
+  margin-bottom: 1rem;
+}
+
+.edit-button {
+  background-color: #FF8691;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  width: 100%;
+}
+
+.edit-button:hover {
+  background-color: #FA91C8;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  z-index: 100000;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+}
+
+.modal h2 {
+  color: #95345C;
+  margin-bottom: 1.5rem;
+}
+
+.modal form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.modal input,
+.modal textarea {
+  padding: 0.5rem;
+  border: 2px solid #F9C7C5;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.modal-buttons button {
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.modal-buttons button[type="submit"] {
+  background-color: #95345C;
+  color: white;
+  border: none;
+}
+
+.modal-buttons button[type="button"] {
+  background-color: #F9AC9E;
+  color: white;
+  border: none;
+}
+
+.modal-buttons button:hover {
+  opacity: 0.9;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .courses-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .courses-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .header h1 {
+    font-size: 2rem;
+  }
+  
+  .search-container {
+    padding-left: 0;
+    display: flex;
+    justify-content: flex-start;
+  }
 }

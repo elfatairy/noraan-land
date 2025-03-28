@@ -9,12 +9,15 @@ const AdminLayout = lazy(() => import('../pages/admin/layout/Layout'));
 const AdminLogin = lazy(() => import('../pages/admin/login/login'));
 const AdminCalendar = lazy(() => import('../pages/admin/calender/calender'));
 const CoursesManagement = lazy(() => import('../pages/admin/coursesManagment/coursesManagment'));
-const Students = lazy(() => import('../pages/admin/students/students'));
+const Students = lazy(() => import('../pages/admin/courseStudents/student/student'));
 const Sessions = lazy(() => import('../pages/admin/sessions/sessions'));
 const Materials = lazy(() => import('../pages/admin/materials/materials'));
 const Quizez = lazy(() => import('../pages/admin/quizez/quizez'));
 const Files = lazy(() => import('../pages/admin/files/files'));
 const UpcomingSessions = lazy(() => import('../pages/admin/upcomingSessions/upcomingSessions'));
+const StudentsManagement = lazy(() => import('../pages/admin/students/studentsManagment/studentsManagment'));
+const Student = lazy(() => import('../pages/admin/students/student/student'));
+const StudentCourse = lazy(() => import('../pages/admin/students/studentCourse/studentCourse'));
 
 export const routes = [
   {
@@ -25,8 +28,21 @@ export const routes = [
       </ProtectedRoute>
     ),
     children: [
-      { path: 'login', element: <AdminLogin /> },
+      { path: 'login', element: <AdminLogin /> }, 
       { path: 'calendar', element: <AdminCalendar /> },
+      { 
+        path: 'students', 
+        children: [
+          { path: '', element: <StudentsManagement /> },
+          { 
+            path: ':studentId', 
+            children: [
+              { path: '', element: <Student /> },
+              { path: 'courses/:courseId', element: <StudentCourse /> }
+            ]
+          }
+        ]
+      },
       { 
         path: 'courses',
         children: [

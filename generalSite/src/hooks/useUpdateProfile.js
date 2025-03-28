@@ -12,10 +12,10 @@ export const useUpdateProfile = () => {
             gender,
             location
          };
-         const response = await _execute('users/auth/update-profile', 'PATCH', requestData, options);
+         const response = await _execute('students/auth/update-profile', 'PATCH', requestData, options);
          return response;
       } catch (error) {
-         setError(error);
+         setError(error); 
          throw error;
       }
    }, [_execute, setError]);

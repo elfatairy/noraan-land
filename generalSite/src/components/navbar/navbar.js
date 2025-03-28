@@ -168,7 +168,6 @@ const Navbar = () => {
                 </button>
                 {isDropdownOpen && (
                   <div className="dropdown-menu">
-                    <Link to="/dashboard" onClick={() => setIsDropdownOpen(false)}>Dashboard</Link>
                     <Link to="/profile" onClick={() => setIsDropdownOpen(false)}>Profile</Link>
                     <button onClick={handleLogout}>Logout</button>
                   </div>

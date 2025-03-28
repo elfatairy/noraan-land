@@ -475,6 +475,7 @@ export const googleLogin = async (
         name: "ERROR_VERIFING_GOOGLE",
         message: verificationResponse.error,
       });
+      console.log(verificationResponse.error);
       return;
     }
 

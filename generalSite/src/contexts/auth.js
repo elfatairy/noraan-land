@@ -5,7 +5,6 @@ import useRegister from '../hooks/registerhook';
 import { setStorageData , getStorageData } from "../utils/data";
 import useAdminLogin from '../hooks/adminloginhook';
 import { useGoogleLogin as useGoogleLoginHook } from '../hooks/googleloginhook';
-import { useGoogleRegister as useGoogleRegisterHook } from '../hooks/googleregisterhook';
 import { useGetMe } from '../hooks/getMe';
 import { useUpdateProfile } from '../hooks/useUpdateProfile';
 
@@ -38,7 +37,6 @@ export const AuthProvider = ({ children }) => {
   const { isLoading: isLoadingRegister, execute: executeRegister } = useRegister();
   const { isLoading: isLoadingUpdateProfile, execute: executeUpdateProfile } = useUpdateProfile();
   const { execute: executeGoogleLogin } = useGoogleLoginHook();
-  const { execute: executeGoogleRegister } = useGoogleRegisterHook();
   const { isLoading: isLoadingGetMe, execute: executeGetMe } = useGetMe();
 
   const handleAuthSuccess = (response) => {
@@ -51,18 +49,57 @@ export const AuthProvider = ({ children }) => {
     return { success: true };
   };
 
-  const login = async (type, email, password) => {
+  const handleGoogleLoginSuccess = async (response) => {
+    try {
+      // Store token and user data
+      setStorageData('token', response.data.token);
+      setStorageData('id', response.data.student.id);
+      setStorageData('name', response.data.student.name);
+      setStorageData('email', response.data.student.email);
+      
+      // Update context
+      setUser(response.data.student);
+      setIsLoggedIn(true);
+
+      return { 
+        success: true,
+        message: response.message || 'Logged in with Google successfully!'
+      };
+    } catch (error) {
+      console.error('Error handling Google login success:', error);
+      return { success: false };
+    }
+  };
+
+  const login = async (type, payload) => {
     try {
       let response;
+      
       if (type === 'google') {
-        response = await executeGoogleLogin(email); // email is accessToken here
+        console.log('Google login payload:', payload);
+        response = await executeGoogleLogin(payload.accessToken, payload.phone);
+        return handleGoogleLoginSuccess(response);
       } else {
-        response = await executeLogin(email, password);
-      }
+        // Regular email/password login
+        response = await executeLogin(payload.email, payload.password);
+        
+        if (response?.data?.student) {
+          // Store user data including phone
+          setStorageData('token', response.data.token);
+          setStorageData('id', response.data.student.id);
+          setStorageData('name', response.data.student.name);
+          setStorageData('email', response.data.student.email);
+          setStorageData('phone', response.data.student.phone); // Add this line
+          
+          // Update context
+          setUser(response.data.student);
+          setIsLoggedIn(true);
 
-      if (response?.data?.user) {
-        toast.success(response.message);
-        return handleAuthSuccess(response);
+          return { 
+            success: true,
+            message: response.message || 'Logged in successfully!'
+          };
+        }
       }
       return { success: false };
     } catch (error) {
@@ -75,18 +112,29 @@ export const AuthProvider = ({ children }) => {
     try {
       let response;
       if (type === 'google') {
-        response = await executeGoogleRegister(payload); // payload is accessToken
+        response = await executeGoogleLogin(payload.accessToken, payload.phone);
       } else {
-        const { name, email, password } = payload;
+        const { name, email, password, phone } = payload;
         if (!validateRegistrationData(name, email, password)) {
           return { success: false };
         }
-        response = await executeRegister(name, email, password);
+        response = await executeRegister(name, email, password, phone);
       }
 
-      if (response?.data?.user) {
+      if (response?.success && response?.data?.student) {
+        // Store user data including phone
+        setStorageData('token', response.data.token);
+        setStorageData('id', response.data.student.id);
+        setStorageData('name', response.data.student.name);
+        setStorageData('email', response.data.student.email);
+        setStorageData('phone', response.data.student.phone); // Add this line
+        
+        // Update context
+        setUser(response.data.student);
+        setIsLoggedIn(true);
+        
         toast.success(response.message || 'Registration successful!');
-        return handleAuthSuccess(response);
+        return { success: true };
       }
       return { success: false };
     } catch (error) {
@@ -171,7 +219,7 @@ export const AuthProvider = ({ children }) => {
       const response = await executeGetMe();
       
       if (response?.data) {
-        return { success: true, data: response?.data?.user};
+        return { success: true, data: response?.data?.student};
       }
       return { success: false, error: 'Error getting the profile' };
     } catch (error) {
@@ -187,6 +235,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('id');
     localStorage.removeItem('name');
     localStorage.removeItem('email');
+    localStorage.removeItem('phone');
     localStorage.removeItem('isAdmin');
   };
 

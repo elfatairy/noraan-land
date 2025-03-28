@@ -18,8 +18,9 @@ const CoursesManagement = () => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    groupPrice: 0,
-    individualPrice: 0
+    groupPrice: '',
+    privatePrice: '',
+    zoomLink: ''
   });
 
   const { execute: getCourses, isLoading: isLoadingGet, error: getError } = useGetCourses();
@@ -75,17 +76,34 @@ const CoursesManagement = () => {
     }
   };
 
+  const validatePrices = (price) => {
+    const numberValue = parseFloat(price);
+    return !isNaN(numberValue) && numberValue >= 0;
+  };
+
   const handleCreateCourse = async (e) => {
     e.preventDefault();
+    
+    // Validate prices
+    if (!validatePrices(formData.groupPrice)) {
+      toast.error('Group price must be a positive number');
+      return;
+    }
+    if (!validatePrices(formData.privatePrice)) {
+      toast.error('Private price must be a positive number');
+      return;
+    }
+  
     try {
       const payload = {
         ...formData,
-        groupPrice: Number(formData.groupPrice),
-        individualPrice: Number(formData.individualPrice)
+        groupPrice: parseFloat(formData.groupPrice),
+        privatePrice: parseFloat(formData.privatePrice)
       };
+      
       await createCourse(payload);
       toast.success('Course created successfully');
-      setIsCreateModalOpen(false);
+      handleCloseModal();
       fetchCourses();
     } catch (error) {
       handleError(error);
@@ -94,30 +112,43 @@ const CoursesManagement = () => {
 
   const handleUpdateCourse = async (e) => {
     e.preventDefault();
+  
+    // Validate prices
+    if (!validatePrices(formData.groupPrice)) {
+      toast.error('Group price must be a positive number');
+      return;
+    }
+    if (!validatePrices(formData.privatePrice)) {
+      toast.error('Private price must be a positive number');
+      return;
+    }
+  
     try {
       const payload = {
         name: formData.name,
         description: formData.description,
-        groupPrice: Number(formData.groupPrice),
-        individualPrice: Number(formData.individualPrice)
+        groupPrice: parseFloat(formData.groupPrice),
+        privatePrice: parseFloat(formData.privatePrice),
+        zoomLink: formData.zoomLink
       };
       await updateCourse(selectedCourse.id, payload);
       toast.success('Course updated successfully');
-      setIsEditModalOpen(false);
+      handleCloseModal();
       fetchCourses();
     } catch (error) {
       handleError(error);
     }
   };
-
+  
   const handleCloseModal = () => {
     setIsCreateModalOpen(false);
     setIsEditModalOpen(false);
     setFormData({
       name: '',
       description: '',
-      groupPrice: 0,
-      individualPrice: 0
+      groupPrice: '',
+      privatePrice: '',
+      zoomLink: ''
     });
   };
 
@@ -162,10 +193,10 @@ const CoursesManagement = () => {
               />
             </div>
             <p>{course.description}</p>
-            <div className="price-info">
-              <span>Group: ${course.groupPrice}</span>
-              <span>Individual: ${course.individualPrice}</span>
-            </div>
+                <div className="price-info">
+                  <span>Group: ${course.groupPrice}</span>
+                  <span>Private: ${course.privatePrice}</span>
+                </div>
             <div className="date-info">
               <span>Created: {moment(course.createdAt).format('DD/MM/YYYY hh:mm A')}</span>
             </div>
@@ -201,32 +232,52 @@ const CoursesManagement = () => {
             <form onSubmit={handleCreateCourse}>
               <input
                 type="text"
-                placeholder="Name"
+                placeholder="Course Name"
                 value={formData.name}
                 onChange={(e) => setFormData({...formData, name: e.target.value})}
+                required
               />
               <textarea
-                placeholder="Description"
+                placeholder="Course Description"
                 value={formData.description}
                 onChange={(e) => setFormData({...formData, description: e.target.value})}
+                required
               />
               <input
-                type="number"
-                min="0"
-                placeholder="Group Price"
+                type="text"
+                placeholder="Group Price (e.g. 5.00)"
                 value={formData.groupPrice}
                 onChange={(e) => setFormData({...formData, groupPrice: e.target.value})}
+                required
               />
               <input
-                type="number"
-                min="0"
-                placeholder="Individual Price"
-                value={formData.individualPrice}
-                onChange={(e) => setFormData({...formData, individualPrice: e.target.value})}
+                type="text"
+                placeholder="Private Price (e.g. 2.50)"
+                value={formData.privatePrice}
+                onChange={(e) => setFormData({...formData, privatePrice: e.target.value})}
+                required
+              />
+              <input
+                type="url"
+                placeholder="Zoom Link"
+                value={formData.zoomLink}
+                onChange={(e) => setFormData({...formData, zoomLink: e.target.value})}
+                required
               />
               <div className="modal-buttons">
-                <button type="submit">Create</button>
-                <button type="button" onClick={handleCloseModal}>Cancel</button>
+                <button 
+                  type="submit" 
+                  disabled={isLoadingCreate}
+                >
+                  {isLoadingCreate ? 'Creating...' : 'Create'}
+                </button>
+                <button 
+                  type="button" 
+                  onClick={handleCloseModal}
+                  disabled={isLoadingCreate}
+                >
+                  Cancel
+                </button>
               </div>
             </form>
           </div>
@@ -241,32 +292,52 @@ const CoursesManagement = () => {
             <form onSubmit={handleUpdateCourse}>
               <input
                 type="text"
-                placeholder="Name"
+                placeholder="Course Name"
                 value={formData.name}
                 onChange={(e) => setFormData({...formData, name: e.target.value})}
+                required
               />
               <textarea
-                placeholder="Description"
+                placeholder="Course Description"
                 value={formData.description}
                 onChange={(e) => setFormData({...formData, description: e.target.value})}
+                required
               />
               <input
-                type="number"
-                min="0"
-                placeholder="Group Price"
+                type="text"
+                placeholder="Group Price (e.g. 5.00)"
                 value={formData.groupPrice}
                 onChange={(e) => setFormData({...formData, groupPrice: e.target.value})}
+                required
               />
               <input
-                type="number"
-                min="0"
-                placeholder="Individual Price"
-                value={formData.individualPrice}
-                onChange={(e) => setFormData({...formData, individualPrice: e.target.value})}
+                type="text"
+                placeholder="Private Price (e.g. 2.50)"
+                value={formData.privatePrice}
+                onChange={(e) => setFormData({...formData, privatePrice: e.target.value})}
+                required
+              />
+              <input
+                type="url"
+                placeholder="Zoom Link"
+                value={formData.zoomLink}
+                onChange={(e) => setFormData({...formData, zoomLink: e.target.value})}
+                required
               />
               <div className="modal-buttons">
-                <button type="submit">Update</button>
-                <button type="button" onClick={handleCloseModal}>Cancel</button>
+                <button 
+                  type="submit" 
+                  disabled={isLoadingUpdate}
+                >
+                  {isLoadingUpdate ? 'Updating...' : 'Update'}
+                </button>
+                <button 
+                  type="button" 
+                  onClick={handleCloseModal}
+                  disabled={isLoadingUpdate}
+                >
+                  Cancel
+                </button>
               </div>
             </form>
           </div>

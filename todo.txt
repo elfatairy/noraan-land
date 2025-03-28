@@ -1,0 +1,135 @@
+-register  country code  phone number  ✅
+test login  ✅
+nav bar responsive   ✅ 
+
+
+
+- teacher (new students in all courses)  talk in whatsapp
+- create a free session for him (private) (choose this student)  
+-button to create session (shortcut)
+ -search for the student -> assign 
+hours 0 if free 
+if group assign group 
+
+- for student 
+if hours is null (message : contact teacher)
+if hours not 0 
+group id if null not group view total price 
+
+report 
+key student id :  object 
+
+attendence  
+hw
+notes  255 char
+tardy  minutes
+
+ 
+bug in home css (video)
+
+
+
+
+
+في داشبورد الادمن :
+upcoming sessions -> weekly / daily 
+قسم جديد (الطلاب)   الطلاب المشتركين جديد /  هيكون فيه كل الطلاب ومعلومات عنهم و تقدري تخشي علي الطالب وتشوف التفاصيل 
+الكورسات - ساعات الكورس (لو اتغيرت الطالب لازم يشترك تاني (لازم نقولها تعمل كدا فاول الشهر )) - السيشنز - في كل سيشن الريبورت - (الريبورت الشهري)
+الطلاب جديد : بتحدد مواعيد ليهم والسعر بيتحدد (ممكن  طالب ببلاش)
+
+calender:
+make session by clicking on a vacancy / change date by dragging and dropping 
+change session date : confirm popup (one time / for all future sessions)
+sessions id for 1 year and after a year will need to confirm making them recurring again
+
+courses : course ->  groups :  group : 
+view students ->  add  edit(move to another group)  remove  
+view dates 
+materials / quizez as usual 
+
+
+
+student : 
+upcoming sessions (weekly -> filter to daily )
+courses : 
+        course -> banner (not subscribed) ( show hours  hour price   total money )  PAYMENT HERE
+sessions : recordings (as usual) / reports
+
+
+
+
+
+all students by default
+search filters
+    new / enrolled  ( view create session button )
+    course
+    private / group 
+    group ? select group 
+
+
+
+✅
+
+admin dash : 
+
+
+students tab -> 
+    -> view all students   filtering(new students , private , group )  student card ( all details number (whatsapp/phone) etc)
+        ->student section -> view courses (details : price , hours ) 
+            -> view sessions/reports filtering(monthly report)
+            -> assign hours / PRICE (price can be 0) if group assign group    if new ? make 1 free session : can change it 
+            -> convert to private / group  
+            ->button to create session (shortcut)
+
+
+
+
+
+
+
+courses -> 
+
+students 
+default private 
+groups (select element  select group )
+new students (buttons -> make free session , assgin hours (redirect to his page in student managment))
+    view some students 
+    sessions component : 
+            in group will have a button to view sessions
+            in private need to click a student to view his sessions
+---------------------------------------------------------------------------------------------
+    -> view groups (groups then students ) / private (students) / new students ----  student card ( all details number etc) ---- (new student make free session button shortcut)
+        -> add  edit(move to another group)  remove
+    -> view dates (sessions for this group)  / private 
+        -> start / create  session 
+        -> end session make reports for students 
+        -> view sessions/reports filtering(monthly report)
+    -> materials / quizez as usual 
+
+
+student dash :
+    upcoming sessions (weekly -> filter to daily )  (enter button viewed before 10 min)
+    courses view all courses
+        -> banner (not subscribed) ( show hours  hour price   total money )  PAYMENT HERE (just buttons for now)
+        -> materials / quizez
+        -> sessions : recordings (as usual) / reports(filtered)  (enter button viewed before 10 min)
+
+upcoming sessions ->
+    -> weekly / daily  filtering
+    -> start session 
+    -> end session make reports for students 
+
+calender tab ->
+    -> make session by clicking on a vacancy / change date by dragging and dropping 
+        ->change session date : confirm popup (one time / for all future sessions)
+    ->after a year will need to confirm making them recurring again  ✅
+
+
+
+
+
+to be discussed : 
+
+zoom link err
+google auth????????? phonenumber from where  (additional modal ?)
+apply to course form   is it ok ?

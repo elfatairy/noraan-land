@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { useGetCourseUsers } from '../../../hooks/getcourseusers';
-import Loading from '../../../components/loading/loading';
+import { useGetCourseUsers } from '../../../../hooks/getcourseusers';
+import Loading from '../../../../components/loading/loading';
 import { toast } from 'react-toastify';
-import './students.css';
+import './student.css';
 
 const Students = () => {
   const { id: courseId } = useParams();

@@ -63,7 +63,7 @@ const Navbar = () => {
           <li><Link to="/admin/upcoming-sessions">Upcoming Sessions</Link></li>
           <li><Link to="/admin/calendar">Calendar</Link></li>
           <li><Link to="/admin/courses-management">Courses</Link></li>
-          <li><Link to="/">Back to Home</Link></li>
+          <li><Link to="https://nooranland.com">nooranland.com</Link></li>
         </ul>
       );
     } else {
@@ -117,6 +117,8 @@ const Navbar = () => {
                 </button>
                 {isDropdownOpen && (
                   <div className="dropdown-menu">
+
+                    <Link to="/admin/upcoming-sessions">Dashboard</Link>
                     <button onClick={handleLogout}>Logout</button>
                   </div>
                 )}
@@ -155,8 +157,6 @@ const Navbar = () => {
                 </button>
                 {isDropdownOpen && (
                   <div className="dropdown-menu">
-                    <Link to="/admin/dashboard" onClick={() => setIsDropdownOpen(false)}>Dashboard</Link>
-                    <Link to="/admin/profile" onClick={() => setIsDropdownOpen(false)}>Profile</Link>
                     <button onClick={handleLogout}>Logout</button>
                   </div>
                 )}

@@ -4,18 +4,26 @@ import { useApiFetch } from '../utils/useApi';
 export const useRegister = () => {
    const { isLoading, error, data, setError, _execute } = useApiFetch();
 
-   const execute = useCallback(async (name, email, password, options = {}) => {
+   const execute = useCallback(async (name, email, password, phone, options = {}) => {
       try {
          const requestData = {
             name,
             email,
-            password
+            password,
+            phone
          };
-         const response = await _execute('users/auth/register', 'POST', requestData, options);
-         return response;
+         const response = await _execute('students/auth/register', 'POST', requestData, options);
+         return {
+            success: true,
+            data: response.data,
+            message: response.message
+         };
       } catch (error) {
          setError(error);
-         throw error;
+         return {
+            success: false,
+            error: error?.response?.data?.message || 'Registration failed'
+         };
       }
    }, [_execute, setError]);
 

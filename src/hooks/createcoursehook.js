@@ -6,7 +6,13 @@ export const useCreateCourse = () => {
 
   const execute = useCallback(async (courseData) => {
     try {
-      const response = await _execute('courses', 'POST', courseData);
+      const response = await _execute('courses', 'POST', {
+        name: courseData.name,
+        description: courseData.description,
+        groupPrice: courseData.groupPrice,
+        privatePrice: courseData.privatePrice,
+        zoomLink: courseData.zoomLink
+      });
       return response;
     } catch (error) {
       setError(error);

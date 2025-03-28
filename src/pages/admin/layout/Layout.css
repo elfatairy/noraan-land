@@ -29,7 +29,7 @@
 
 
 .content-wrapper {
-    padding-top: 84px; /* Add padding for navbar */
+    padding-top: 15px; /* Add padding for navbar */
     position: relative;
     overflow-x: hidden; /* Prevent horizontal scroll */
 }
