@@ -1,5 +1,7 @@
 ﻿.students-container {
   padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 .students-header {
@@ -11,6 +13,38 @@
   margin-bottom: 1.5rem;
 }
 
+.header-section {
+  margin-bottom: 2rem;
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.header-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+}
+
+.bottom-row {
+  display: flex;
+  gap: 1rem;
+}
+
+.tabs-container {
+  display: flex;
+  gap: 1rem;
+  flex: 1;
+}
+
 .tabs {
   display: flex;
   gap: 1rem;
@@ -18,25 +52,118 @@
   padding-bottom: 0.5rem;
 }
 
+.tabs-actions-container {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  flex: 1;
+}
+
 .tab {
-  padding: 0.7rem 1.5rem;
+  width: 200px; /* Fixed width */
+  flex: none; /* Remove flex growth */
+  padding: 0.8rem 1rem;
   border: none;
-  border-radius: 8px 8px 0 0;
-  background: none;
-  color: #B3666D;
-  cursor: pointer;
+  border-radius: 8px;
+  background: #F9C7C5;
+  color: #95345C;
   font-weight: 500;
+  cursor: pointer;
   transition: all 0.3s ease;
+  white-space: nowrap;
+  min-width: 180px;
+  text-align: center;
 }
 
 .tab.active {
   background: #95345C;
   color: white;
+  transform: translateY(-2px);
 }
 
 .tab:hover:not(.active) {
   background: #F9AC9E;
   color: #95345C;
+}
+
+.search-input {
+  width: 250px; /* Updated width */
+  flex: none;
+  padding: 0.8rem;
+  border: 2px solid #F9C7C5;
+  border-radius: 8px;
+  min-width: 250px;
+  font-size: 0.9rem;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  padding-top: 0; /* Remove top padding */
+  border-top: none; /* Remove border */
+}
+
+.action-btn {
+  width: 36px; /* Updated width */
+  height: 36px; /* Updated height */
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: none; /* Added border none */
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Added box-shadow */
+  white-space: nowrap;
+}
+
+.action-btn svg {
+  font-size: 1rem; /* Updated font size */
+}
+
+.action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15); /* Updated box-shadow */
+}
+
+.session-btn {
+  background: linear-gradient(135deg, #95345C, #B3666D);
+  color: white;
+}
+
+.view-sessions-btn {
+  background: linear-gradient(135deg, #F9AC9E, #FF8691);
+  color: white;
+}
+
+.group-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.group-select {
+  width: 250px; /* Updated width */
+  flex: none;
+  padding: 0.8rem;
+  border: 2px solid #F9C7C5;
+  border-radius: 8px;
+  color: #95345C;
+  min-width: 200px;
+  font-size: 0.9rem;
+}
+
+.create-group-btn {
+  background: linear-gradient(135deg, #FA91C8, #F9C7C5);
+  color: white;
+}
+
+.delete-group-btn {
+  background: #ff6b6b;
+  color: white;
 }
 
 .students-list {
@@ -46,17 +173,26 @@
   margin-top: 2rem;
 }
 
+.students-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
 .student-card {
   background: white;
-  border-radius: 8px;
+  border-radius: 12px;
   padding: 1.5rem;
-  border-left: 4px solid #95345C;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  transition: transform 0.2s;
+  transition: transform 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 }
 
 .student-card:hover {
-  transform: translateY(-3px);
+  transform: translateY(-4px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
 }
 
 .student-header {
@@ -72,19 +208,31 @@
 }
 
 .status-badge {
-  padding: 0.3rem 0.8rem;
+  padding: 0.4rem 0.8rem;
   border-radius: 20px;
   font-size: 0.8rem;
   font-weight: 500;
 }
 
 .status-badge.SUBSCRIBED {
-  background: #95345C;
+  background: #40c057;
+  color: white;
+}
+
+.status-badge.UNSUBSCRIBED {
+  background: #ff6b6b;
   color: white;
 }
 
 .student-details {
   color: #666;
+  flex: 1;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.student-details.expanded {
+  max-height: none;
 }
 
 .student-details p {
@@ -93,4 +241,253 @@
 
 .student-details strong {
   color: #B3666D;
+}
+
+.card-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: auto;
+  padding-top: 1rem;
+}
+
+.expand-btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid #F9C7C5;
+  border-radius: 6px;
+  background: transparent;
+  color: #95345C;
+  cursor: pointer;
+}
+
+.manage-btn {
+  flex: 1;
+  padding: 0.8rem;
+  border: none;
+  border-radius: 8px;
+  background: #95345C;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.manage-btn:hover {
+  background: #B3666D;
+}
+
+.change-data-btn {
+  width: 100%;
+  padding: 0.8rem;
+  margin-top: 1rem;
+  border: none;
+  border-radius: 8px;
+  background: #95345C;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.change-data-btn:hover {
+  background: #B3666D;
+}
+
+/* Add tooltip styles */
+[title] {
+  position: relative;
+}
+
+[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.5rem;
+  background: rgba(0,0,0,0.8);
+  color: white;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+/* Update modal styles to match courses modal */
+.session-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.modal-content h2 {
+  color: #95345C;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  font-size: 1.5rem;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #95345C;
+  font-weight: 500;
+}
+
+.modal-content input,
+.modal-content textarea {
+  width: 100%;
+  padding: 0.8rem;
+  border: 2px solid #F9C7C5;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: border-color 0.3s ease;
+}
+
+.modal-content input:focus,
+.modal-content textarea:focus {
+  outline: none;
+  border-color: #95345C;
+}
+
+.modal-content textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+/* Radio and Checkbox styles */
+.radio-group {
+  display: flex;
+  gap: 2rem;
+  padding: 0.5rem 0;
+}
+
+.radio-label, 
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  color: #95345C;
+  font-size: 0.95rem;
+}
+
+.radio-label input[type="radio"],
+.checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #95345C;
+  cursor: pointer;
+}
+
+/* Modal buttons */
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.modal-buttons button {
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 120px;
+}
+
+.modal-buttons button[type="submit"] {
+  background-color: #95345C;
+  color: white;
+}
+
+.modal-buttons button[type="submit"]:hover {
+  background-color: #B3666D;
+}
+
+.modal-buttons button[type="button"] {
+  background-color: #F9C7C5;
+  color: #95345C;
+}
+
+.modal-buttons button[type="button"]:hover {
+  background-color: #F9AC9E;
+}
+
+.modal-buttons button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Input validation */
+.modal-content input:invalid {
+  border-color: #ff6b6b;
+}
+
+/* Disabled states */
+input:disabled, 
+input[type="radio"]:disabled + span,
+input[type="checkbox"]:disabled + span {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Add modal select styles */
+.modal-select {
+  width: 100%;
+  padding: 0.8rem;
+  border: 2px solid #F9C7C5;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: #95345C;
+  background-color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.modal-select:focus {
+  outline: none;
+  border-color: #95345C;
+}
+
+.modal-select option {
+  padding: 0.8rem;
+  font-size: 0.95rem;
+  color: #95345C;
+}
+
+/* Add disabled state for select */
+.modal-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #f5f5f5;
 }

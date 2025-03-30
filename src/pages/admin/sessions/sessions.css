@@ -134,7 +134,7 @@
   margin-top: 1rem;
 }
 
-.action-button {
+.action-button-session {
   padding: 0.5rem 1rem;
   border: none;
   border-radius: 6px;
@@ -143,24 +143,46 @@
   font-weight: 500;
 }
 
-.action-button.start {
+.action-button-session.start {
   background: #F9AC9E;
   color: #95345C;
 }
 
-.action-button.end {
+.action-button-session.end {
   background: #95345C;
   color: white;
 }
 
-.action-button.upload {
+.action-button-session.upload {
   background: #FA91C8;
   color: white;
 }
 
-.action-button:hover {
+.action-button-session.details {
+  background: #f8f9fa;
+  color: #333;
+  border: 1px solid #ddd;
+}
+
+.action-button-session.view-records {
+  background: #95345C;
+  color: white;
+}
+
+.action-button-session:hover {
   transform: translateY(-2px);
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.action-button-session:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.action-button-session.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 .modal.confirmation {
@@ -178,4 +200,356 @@
   border: 2px solid #F9C7C5;
   border-radius: 8px;
   resize: vertical;
+}
+
+.card-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.edit-icon,
+.delete-icon {
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: all 0.3s ease;
+}
+
+.edit-icon {
+  color: #95345C;
+}
+
+.delete-icon {
+  color: #ff6b6b;
+}
+
+.edit-icon.disabled,
+.delete-icon.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.edit-icon:hover:not(.disabled),
+.delete-icon:hover:not(.disabled) {
+  opacity: 0.7;
+  cursor: not-allowed;
+
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+}
+
+/* Add these styles to your sessions.css */
+
+.session-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 800px; /* Larger for video content */
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #333;
+  font-weight: 500;
+}
+
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group textarea,
+.form-group select,
+.react-datepicker__input-container input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #F9C7C5;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.radio-group {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 0.5rem;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.radio-label input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.submit-btn,
+.cancel-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.submit-btn {
+  background: #95345C;
+  color: white;
+}
+
+.cancel-btn {
+  background: #F9C7C5;
+  color: #95345C;
+}
+
+.submit-btn:hover,
+.cancel-btn:hover {
+  transform: translateY(-2px);
+}
+
+.modal-select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #F9C7C5;
+  border-radius: 8px;
+  font-size: 1rem;
+  background-color: white;
+}
+
+/* Add these styles for the modals */
+
+.end-session-modal,
+.upload-modal {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.students-reports {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.student-report {
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border-left: 4px solid #95345C;
+}
+
+.form-select,
+.form-input,
+.form-textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #F9C7C5;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: white;
+}
+
+.form-textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.file-input-label {
+  display: block;
+  padding: 1rem;
+  background: #f8f9fa;
+  border: 2px dashed #F9C7C5;
+  border-radius: 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.file-input-label:hover {
+  border-color: #95345C;
+  background: #fef6f6;
+}
+
+.file-input {
+  display: none;
+}
+
+.selected-files {
+  margin-top: 1rem;
+}
+
+.file-name {
+  background: #f8f9fa;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.submit-btn,
+.cancel-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.submit-btn {
+  background: #95345C;
+  color: white;
+}
+
+.cancel-btn {
+  background: #F9C7C5;
+  color: #95345C;
+}
+
+.submit-btn:hover,
+.cancel-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Fix datepicker width */
+.react-datepicker-wrapper,
+.react-datepicker__input-container {
+  width: 100%;
+}
+
+.react-datepicker__input-container input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #F9C7C5;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+/* Add loading spinner container */
+.loading-container {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  min-height: 20px;
+}
+
+/* Adjust the iframe container */
+.recording-container {
+  margin: 1rem 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f8f9fa;
+  padding: 1rem;
+}
+
+.recording-container h4 {
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+/* Add these new styles */
+.detail-item {
+  margin-bottom: 1rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+.detail-item:last-child {
+  border-bottom: none;
+}
+
+.detail-item strong {
+  display: block;
+  color: #666;
+  margin-bottom: 0.25rem;
+}
+
+.detail-item p {
+  margin: 0;
+  color: #333;
+  font-size: 1rem;
+}
+
+.close-icon {
+  cursor: pointer;
+  font-size: 1.2rem;
+  color: #666;
+  transition: color 0.2s ease;
+}
+
+.close-icon:hover {
+  color: #95345C;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.modal-body {
+  max-height: calc(80vh - 200px);
+  overflow-y: auto;
+  padding-right: 1rem;
 }

@@ -22,7 +22,7 @@ const StudentLayout = () => {
               </li>
               <li className={location.pathname === "/student/enrolled-courses" ? "active" : ""}>
                 <Link to="/student/enrolled-courses">
-                  <i className="fas fa-calendar-alt"></i>
+                <i className="fas fa-graduation-cap"></i>
                   <span>Enrolled Courses</span>
                 </Link>
               </li>

@@ -102,7 +102,7 @@ export const validateCourse = async (req: Request, res: Response, next: NextFunc
             });
             return;
         }
-        console.log("passed");
+        
         next();
     } catch (err: any) {
         console.log("ERROR: ", err);

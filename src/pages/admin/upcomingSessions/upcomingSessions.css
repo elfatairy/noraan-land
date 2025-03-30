@@ -74,7 +74,7 @@
     margin-top: 1rem;
   }
   
-  .action-button {
+  .action-button-upcoming {
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -86,22 +86,22 @@
     transition: all 0.3s ease;
   }
   
-  .action-button.zoom {
+  .action-button-upcoming.zoom {
     background: #F9AC9E;
     color: #95345C;
   }
   
-  .action-button.bunny {
+  .action-button-upcoming.bunny {
     background: #FA91C8;
     color: white;
   }
   
-  .action-button.end {
+  .action-button-upcoming.end {
     background: #FF8691;
     color: white;
   }
   
-  .action-button:hover {
+  .action-button-upcoming:hover {
     transform: translateY(-2px);
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   }
@@ -190,4 +190,121 @@
   
   .modal-buttons button:hover {
     transform: translateY(-2px);
+  }
+
+  .title-section {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  .free-badge {
+    background: #95345C;
+    color: white;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+  }
+  
+  .change-badge {
+    background: #FA91C8;
+    color: white;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+  
+  .badges {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .action-button-upcoming {
+    padding: 0.7rem 1rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+  
+  .action-button-upcoming:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .action-button-upcoming.start {
+    background: #F9AC9E;
+    color: #95345C;
+  }
+  
+  .action-button-upcoming.end {
+    background: #FF8691;
+    color: white;
+  }
+  
+  .action-button-upcoming.upload {
+    background: #FA91C8;
+    color: white;
+  }
+  
+  .action-button-upcoming.edit {
+    background: #95345C;
+    color: white;
+  }
+  
+  .action-button-upcoming.cancel {
+    background: #666;
+    color: white;
+  }
+  
+  .action-button-upcoming:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+  }
+  
+  .toggle-container {
+    display: flex;
+    background: #f0f0f0;
+    padding: 4px;
+    border-radius: 30px;
+    gap: 4px;
+  }
+  
+  .toggle-button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 25px;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    color: #666;
+  }
+  
+  .toggle-button.active {
+    background: #95345C;
+    color: white;
+  }
+  
+  .action-button-upcoming.view {
+    background: #95345C;
+    color: white;
+    text-decoration: none;
+    text-align: center;
+  }
+  
+  /* Update type badge styles */
+  .type-badge.PRIVATE {
+    background: #FA91C8;
+    color: #95345C;
   }

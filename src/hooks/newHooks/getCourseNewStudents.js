@@ -6,7 +6,7 @@ export const useGetCourseNewStudents = () => {
 
   const execute = useCallback(async (courseId) => {
     try {
-      const response = await _execute(`courses/${courseId}/new`, 'GET');
+      const response = await _execute(`courses/${courseId}/students/new`, 'GET');
       return response;
     } catch (error) {
       setError(error);

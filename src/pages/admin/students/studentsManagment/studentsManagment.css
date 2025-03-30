@@ -6,7 +6,7 @@
   margin-bottom: 2rem;
 }
 
-.search-bar {
+.search-barr {
   display: flex;
   align-items: center;
   background: #fff;
@@ -177,4 +177,20 @@ select {
 
 .action-button.courses:hover {
   background-color: #7a2b4c;
+}
+
+.error-message {
+  color: #dc3545;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.no-results {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+  grid-column: 1 / -1;
 }

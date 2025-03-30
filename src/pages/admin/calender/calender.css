@@ -49,3 +49,40 @@
   .fc .fc-button-primary:not(:disabled).fc-button-active {
     background-color: #95345C;
   }
+
+  .fc-timegrid-slot:hover::before {
+    content: '+';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 20px;
+    color: #95345C;
+    opacity: 0.5;
+  }
+  
+  .calendar-event {
+    padding: 2px 4px;
+    font-size: 0.9em;
+  }
+  
+  .event-title {
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .event-time {
+    font-size: 0.8em;
+    opacity: 0.8;
+  }
+  
+  .fc-event {
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  
+  .fc-event:hover {
+    transform: scale(1.02);
+  }

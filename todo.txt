@@ -82,30 +82,69 @@ students tab ->
             ->button to create session (shortcut)
 
 
-
-
-
-
-
 courses -> 
 
 students 
 default private 
 groups (select element  select group )
-new students (buttons -> make free session , assgin hours (redirect to his page in student managment))
+new students (buttons -> make free session  //// assgin hours (redirect to his page in student managment))
     view some students 
-    sessions component : 
+    view actions and sessions: 
             in group will have a button to view sessions
             in private need to click a student to view his sessions
 ---------------------------------------------------------------------------------------------
     -> view groups (groups then students ) / private (students) / new students ----  student card ( all details number etc) ---- (new student make free session button shortcut)
         -> add  edit(move to another group)  remove
+
     -> view dates (sessions for this group)  / private 
         -> start / create  session 
         -> end session make reports for students 
         -> view sessions/reports filtering(monthly report)
+
     -> materials / quizez as usual 
 
+
+private actions :  make session button(free/paid) choose student ,view sessions button (different url params(student id )) , chnage data -> redirect
+group student actions : make session button (free/paid) choose group ,view sessions button (different url params)(group id), delete group / make group  --- in the students card will have a button to redirect also 
+new students  actions : make session button (free/paid) choose student , change data -> redirect
+
+
+
+sessions component
+
+
+
+
+
+redirect from course students  params
+
+students managment 
+    0 hourse = free
+    adjust css 
+    make sure i can change group 
+    view sessions and view reports within
+
+    filtering students outside
+
+
+
+manage redirect 
+sessions handle params
+test change data
+
+
+
+upcoming sessions ->
+    -> weekly / daily  filtering
+    -> start session 
+    -> end session make reports for students 
+
+✅✅
+
+calender tab ->
+    -> make session by clicking on a vacancy / change date by dragging and dropping 
+        ->change session date : confirm popup (one time / for all future sessions)
+    ->after a year will need to confirm making them recurring again  ✅
 
 student dash :
     upcoming sessions (weekly -> filter to daily )  (enter button viewed before 10 min)
@@ -114,22 +153,20 @@ student dash :
         -> materials / quizez
         -> sessions : recordings (as usual) / reports(filtered)  (enter button viewed before 10 min)
 
-upcoming sessions ->
-    -> weekly / daily  filtering
-    -> start session 
-    -> end session make reports for students 
-
-calender tab ->
-    -> make session by clicking on a vacancy / change date by dragging and dropping 
-        ->change session date : confirm popup (one time / for all future sessions)
-    ->after a year will need to confirm making them recurring again  ✅
-
-
 
 
 
 to be discussed : 
 
-zoom link err
-google auth????????? phonenumber from where  (additional modal ?)
+i adjusted the export const getStudentCourses  func  it views some paypal data  commented the omit (cant have select and omit at the same time)
+
+zoom link err empty    permissions err  role 
+google auth? phonenumber from where  (additional modal ?)
 apply to course form   is it ok ?
+notes null in student 
+i want any get course students to return the price also   private  group  newcourse   newstudentsall
+assigntogroup  change preffered session type to  group 
+
+get sessions   get nextweekDates   return the zoom url 
+
+/api/calendar/upcomingDates   return some data   at least (course id , session id)  student name / group name

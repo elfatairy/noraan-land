@@ -6,7 +6,7 @@ export const useDeleteQuiz = () => {
 
   const execute = useCallback(async (courseId, quizId) => {
     try {
-      const response = await _execute(`courses/${courseId}/quiz/${quizId}`, 'DELETE');
+      const response = await _execute(`courses/${courseId}/quizzes/${quizId}`, 'DELETE');
       return response;
     } catch (error) {
       setError(error);

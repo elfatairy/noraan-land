@@ -7,6 +7,30 @@
   margin-left: 8px;
 }
 
+.toggle-container {
+  display: flex;
+  background: #f0f0f0;
+  padding: 4px;
+  border-radius: 30px;
+  gap: 4px;
+}
+
+.toggle-button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 25px;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  color: #666;
+}
+
+.toggle-button.active {
+  background: #95345C;
+  color: white;
+}
+
 .status-badge {
   padding: 4px 8px;
   border-radius: 4px;
@@ -222,4 +246,3 @@
     transform: translateY(-2px);
   }
 
-  

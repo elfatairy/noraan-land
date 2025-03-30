@@ -209,7 +209,7 @@
   margin-top: 1.5rem;
 }
 
-.action-button {
+.action-button-courseM {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -225,28 +225,28 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.action-button:hover {
+.action-button-courseM:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
-.action-button.students {
+.action-button-courseM.students {
   background: linear-gradient(135deg, #F9AC9E, #FF8691);
 }
 
-.action-button.sessions {
+.action-button-courseM.sessions {
   background: linear-gradient(135deg, #B3666D, #95345C);
 }
 
-.action-button.materials {
+.action-button-courseM.materials {
   background: linear-gradient(135deg, #FA91C8, #F9C7C5);
 }
 
-.action-button svg {
+.action-button-courseM svg {
   font-size: 1.1rem;
   transition: transform 0.3s ease;
 }
 
-.action-button:hover svg {
+.action-button-courseM:hover svg {
   transform: scale(1.2);
 }

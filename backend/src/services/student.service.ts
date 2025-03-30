@@ -182,77 +182,22 @@ export const getStudentCourseSubscriptionStatus = async (
     })
   )?.subscriptionStatus;
 
-// original
-// export const getStudentEnrolledCourses = async (studentId: number) =>
-//   (
-//     await prisma.studentCourse.findMany({
-//       where: { studentId },
-//       include: {
-//         course: {
-//           omit: {
-//             zoomLink: true,
-//           },
-//         },
-//       },
-//     })
-//   ).map((item) => {
-//     // Need to properly type the item and access course properties
-//     return { 
-//       ...item.course,
-//       hours: item.hours 
-//     };
-//   });
-
-// "omit"  fix
-  // export const getStudentEnrolledCourses = async (studentId: number) => {
-  //   const studentCourses = await prisma.studentCourse.findMany({
-  //     where: { studentId },
-  //     include: {
-  //       course: {
-  //         select: {
-  //           id: true,
-  //           name: true,
-  //           description: true,
-  //           privatePrice: true,
-  //           groupPrice: true,
-  //           createdAt: true,
-  //           updatedAt: true,
-  //           // Not including zoomLink as it was being omitted in the original code
-  //         },
-  //       },
-  //     },
-  //   });
-  
-  //   return studentCourses.map((item) => {
-  //     return { 
-  //       ...item.course,
-  //       hours: item.hours 
-  //     };
-  //   });
-  // };
-
-  
-// want student status in each course 
+  //JOE
   export const getStudentEnrolledCourses = async (studentId: number) => {
     const studentCourses = await prisma.studentCourse.findMany({
       where: { studentId },
       include: {
         course: {
-          select: {
-            id: true,
-            name: true,
-            description: true,
-            privatePrice: true,
-            groupPrice: true,
-            createdAt: true,
-            updatedAt: true,
+          omit: {
+            zoomLink: true,
+            paypalProductId: true,
           },
         },
         group: {
           select: {
             id: true,
             name: true,
-          }
+          },
         },
       },
     });
@@ -266,6 +211,7 @@ export const getStudentCourseSubscriptionStatus = async (
       };
     });
   };
+  
 
 
 

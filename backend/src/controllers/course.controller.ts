@@ -1,8 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import {
-  validateString,
-  validateZoomLink,
-} from "../utils/validation.util";
+import { validateString, validateZoomLink } from "../utils/validation.util";
 import {
   getCourse,
   createCourse,
@@ -10,6 +7,9 @@ import {
   getStudentCourses,
   updateCourse,
   getUnasignedStudentCourse,
+  revokeCoursePrivateSubscriptions,
+  revokeCourseGroupSubscriptions,
+  cancelStudentCourseSubscription,
 } from "../services/course.service";
 import { ROLES } from "../utils/constants.util";
 import {
@@ -18,7 +18,12 @@ import {
   getCourseGroups,
   getGroup,
 } from "../services/group.service";
-import { Group } from "@prisma/client";
+import { Group, SubscriptionMethod } from "@prisma/client";
+import {
+  cancelPaypalSubscription,
+  createPaypalProduct,
+} from "../services/paypal.service";
+import { cancelPaymobSubscription } from "../services/paymob.service";
 
 export const create = async (
   req: Request,
@@ -32,8 +37,7 @@ export const create = async (
       !privatePrice ||
       !groupPrice ||
       !zoomLink ||
-      (description &&
-        !validateString(description, 255, 0))
+      (description && !validateString(description, 255, 0))
     ) {
       res.status(400).json({
         name: "INVALID_PAYLOAD",
@@ -59,21 +63,19 @@ export const create = async (
       return;
     }
 
+    const paypalProductId = await createPaypalProduct(name, description);
+    if (!paypalProductId) throw Error("Error creating paypal product");
+
     const createdCourse = await createCourse(
       name,
       privatePrice,
       groupPrice,
       description,
-      zoomLink
+      zoomLink,
+      paypalProductId
     );
-
     /*
     // PAYPAL
-    const paypalAccessToken = await getPaypalAccessToken();
-    if(!paypalAccessToken) throw Error("Error getting access token");
-
-    const paypalProductId = await createPaypalProduct(name, description, paypalAccessToken);
-    if(!paypalProductId) throw Error("Error creating paypal product");
     
     const paypalGroupPlanId = await createPaypalPlan(name, paypalProductId, paypalAccessToken, groupPrice, SessionType.GROUP);
     const paypalIndividualPlanId = await createPaypalPlan(name, paypalProductId, paypalAccessToken, individualPrice, SessionType.INDIVIDUAL);
@@ -152,12 +154,36 @@ export const update = async (
     if (description) options.description = description;
 
     if (privatePrice) {
-      // TODO DISABLE ALL SUBSCRIPTIONS
+      const studentCourses =
+        (await getStudentCourses(courseId, {
+          groupId: null,
+        })) ?? [];
+
+      await Promise.allSettled(
+        studentCourses.map(async (studentCourse) => {
+          await cancelStudentCourseSubscription(studentCourse.id);
+        })
+      );
+
+      await revokeCoursePrivateSubscriptions(courseId);
       options.privatePrice = privatePrice;
     }
 
     if (groupPrice) {
-      // TODO DISABLE ALL SUBSCRIPTIONS
+      const studentCourses =
+        (await getStudentCourses(courseId, {
+          groupId: {
+            not: null,
+          },
+        })) ?? [];
+
+      await Promise.allSettled(
+        studentCourses.map(async (studentCourse) => {
+          await cancelStudentCourseSubscription(studentCourse.id);
+        })
+      );
+
+      await revokeCourseGroupSubscriptions(courseId);
       options.groupPrice = groupPrice;
     }
 
@@ -251,6 +277,9 @@ export const get = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
+
+
+//JOE i wanted the price in the response 
 export const newCourseStudents = async (
   req: Request,
   res: Response,
@@ -284,6 +313,8 @@ export const newCourseStudents = async (
       message: "New Course students retrieved successfully",
       data: {
         newStudents,
+        privatePrice: course.privatePrice,
+        groupPrice: course.groupPrice
       },
     });
   } catch (err: any) {
@@ -308,6 +339,16 @@ export const newStudents = async (
       message: "New students retrieved successfully",
       data: {
         newStudents,
+        courseDetails: await Promise.all(
+          newStudents.map(async (student) => {
+            const course = await getCourse({ id: student.courseId });
+            return {
+              courseId: student.courseId,
+              privatePrice: course?.privatePrice,
+              groupPrice: course?.groupPrice
+            };
+          })
+        )
       },
     });
   } catch (err: any) {
@@ -364,6 +405,8 @@ export const groupStudents = async (
       message: "Course students retrieved successfully",
       data: {
         students: courseStudents,
+        privatePrice: course.privatePrice,
+        groupPrice: course.groupPrice
       },
     });
   } catch (err: any) {
@@ -409,6 +452,8 @@ export const privateStudents = async (
       message: "Course students retrieved successfully",
       data: {
         students: studentCourses,
+        privatePrice: course.privatePrice,
+        groupPrice: course.groupPrice
       },
     });
   } catch (err: any) {

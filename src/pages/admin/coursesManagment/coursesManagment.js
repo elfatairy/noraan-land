@@ -203,19 +203,19 @@ const CoursesManagement = () => {
             <div className="card-actions">
               <button 
                 onClick={() => navigate(`/admin/courses/${course.id}/students`)}
-                className="action-button students"
+                className="action-button-courseM students"
               >
                 <FaUsers /> Students
               </button>
               <button 
                 onClick={() => navigate(`/admin/courses/${course.id}/sessions`)}
-                className="action-button sessions"
+                className="action-button-courseM sessions"
               >
                 <FaCalendar /> Sessions
               </button>
               <button 
                 onClick={() => navigate(`/admin/courses/${course.id}/materials`)}
-                className="action-button materials"
+                className="action-button-courseM materials"
               >
                 <FaBook /> Materials
               </button>

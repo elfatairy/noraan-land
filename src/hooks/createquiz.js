@@ -6,7 +6,7 @@ export const useCreateQuiz = () => {
 
   const execute = useCallback(async (courseId, link) => {
     try {
-      const response = await _execute(`courses/${courseId}/quiz`, 'POST', { link });
+      const response = await _execute(`courses/${courseId}/quizzes`, 'POST', { link });
       return response;
     } catch (error) {
       setError(error);

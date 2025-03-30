@@ -1,17 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import { useGetStudentUpcomingSessions } from '../../../hooks/userupcommingcourses';
+import { useJoinSession } from '../../../hooks/joinSession';
 import Loading from '../../../components/loading/loading';
 import { toast } from 'react-toastify';
 import { FaVideo } from 'react-icons/fa';
 import './upcomingSessions.css';
 
+const ToggleButton = ({ value, onChange }) => {
+  return (
+    <div className="toggle-container">
+      <button 
+        className={`toggle-button ${value === 'today' ? 'active' : ''}`}
+        onClick={() => onChange('today')}
+      >
+        Today
+      </button>
+      <button 
+        className={`toggle-button ${value === 'next-week' ? 'active' : ''}`}
+        onClick={() => onChange('next-week')}
+      >
+        Next Week
+      </button>
+    </div>
+  );
+};
+
 const UpcomingSessions = () => {
   const [sessions, setSessions] = useState([]);
+  const [timeFilter, setTimeFilter] = useState('next-week');
   const { execute: getUpcomingSessions, isLoading } = useGetStudentUpcomingSessions();
+  const { execute: joinSession } = useJoinSession();
 
   useEffect(() => {
     fetchSessions();
-  }, []);
+  }, [timeFilter]);
 
   const fetchSessions = async () => {
     try {
@@ -21,10 +43,30 @@ const UpcomingSessions = () => {
         const sortedSessions = response.data.sessions.sort((a, b) => 
           new Date(a.startedAt || a.createdAt) - new Date(b.startedAt || b.createdAt)
         );
-        setSessions(sortedSessions);
+
+        // Filter sessions based on timeFilter
+        if (timeFilter === 'today') {
+          const today = new Date().setHours(0,0,0,0);
+          const filteredSessions = sortedSessions.filter(session => {
+            const sessionDate = new Date(session.startedAt || session.createdAt).setHours(0,0,0,0);
+            return sessionDate === today;
+          });
+          setSessions(filteredSessions);
+        } else {
+          setSessions(sortedSessions);
+        }
       }
     } catch (error) {
       toast.error('Failed to fetch upcoming sessions');
+    }
+  };
+
+  const handleJoinSession = async (courseId, sessionId, zoomLink) => {
+    try {
+      await joinSession(courseId, sessionId);
+      window.open(zoomLink, '_blank');
+    } catch (error) {
+      toast.error('Failed to join session');
     }
   };
 
@@ -44,7 +86,9 @@ const UpcomingSessions = () => {
 
   return (
     <div className="upcoming-sessions-container">
-      <h2>Upcoming Sessions</h2>
+      <div className="header">
+        <h2>Upcoming Sessions</h2>
+      </div>
       <div className="sessions-list">
         {sessions.length > 0 ? (
           sessions.map((session) => (
@@ -68,15 +112,13 @@ const UpcomingSessions = () => {
                 )}
               </div>
               <div className="session-actions">
-                {session.status === 'RUNNING' && session.meetingId && (
-                  <a 
-                    href={`https://zoom.us/j/${session.meetingId}`}
-                    target="_blank" 
-                    rel="noopener noreferrer"
+                {session.showLink && session.zoomLink && (
+                  <button 
                     className="action-button zoom"
+                    onClick={() => handleJoinSession(session.courseId, session.id, session.zoomLink)}
                   >
                     <FaVideo /> Join Meeting
-                  </a>
+                  </button>
                 )}
               </div>
             </div>

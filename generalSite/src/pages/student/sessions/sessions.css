@@ -11,6 +11,7 @@
   .search-filter {
     display: flex;
     gap: 1rem;
+    align-items: center;
   }
   
   .search-filter input,
@@ -130,37 +131,67 @@
   
   .session-actions {
     display: flex;
-    gap: 1rem;
+    gap: 0.75rem;
     margin-top: 1rem;
+    justify-content: flex-start;
+    flex-wrap: wrap;
   }
   
-  .action-button {
-    padding: 0.5rem 1rem;
+  .action-button-sessionStudent {
+    padding: 0.75rem 1.25rem;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
     transition: all 0.3s ease;
     font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: auto; /* Remove fixed width */
+    justify-content: center;
+    min-width: 120px; /* Reduce minimum width */
+    max-width: fit-content; /* Let content determine width */
+    flex: 0 0 auto; /* Don't allow flex growing */
   }
   
-  .action-button.start {
+  .action-button-sessionStudent.start {
     background: #F9AC9E;
     color: #95345C;
   }
   
-  .action-button.end {
+  .action-button-sessionStudent.end {
     background: #95345C;
     color: white;
   }
   
-  .action-button.upload {
+  .action-button-sessionStudent.upload {
     background: #FA91C8;
     color: white;
   }
   
-  .action-button:hover {
+  .action-button-sessionStudent.join {
+    background: #2196F3;
+    color: white;
+    text-decoration: none;
+  }
+  
+  .action-button-sessionStudent.recordings {
+    background: #FA91C8;
+    color: white;
+  }
+  
+  .action-button-sessionStudent.report {
+    background: #95345C;
+    color: white;
+  }
+  
+  .action-button-sessionStudent:hover {
     transform: translateY(-2px);
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  .action-button-sessionStudent svg {
+    font-size: 1.1rem;
   }
   
   .modal.confirmation {
@@ -181,12 +212,159 @@
   }
 
   /* Add these new styles */
-.action-button.join {
+.action-button-sessionStudent.join {
+  background: #2196F3;
+  color: white;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.action-button-sessionStudent.join:hover {
+  background: #1976D2;
+  text-decoration: none;
+}
+
+.action-button-sessionStudent.recordings {
+  background: #FA91C8;
+  color: white;
+}
+
+/* New styles */
+.badges {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.status-badge.free {
+  background: #4CAF50;
+  color: white;
+}
+
+.status-badge.ended {
   background: #95345C;
   color: white;
 }
 
-.action-button.recordings {
-  background: #FA91C8;
+.status-badge.running {
+  background: #2196F3;
   color: white;
+}
+
+.status-badge.upcoming {
+  background: #FF9800;
+  color: white;
+}
+
+.month-filter {
+  padding: 0.5rem;
+  border: 2px solid #F9C7C5;
+  border-radius: 8px;
+  min-width: 150px;
+}
+
+.session-info {
+  display: flex;
+  justify-content: space-between;
+  margin: 1rem 0;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.status-filter {
+  padding: 0.5rem;
+  border: 2px solid #F9C7C5;
+  border-radius: 8px;
+  min-width: 150px;
+  background: white;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+/* Update modal styles */
+.report-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.report-modal-content {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  width: min(90vw, 500px);
+  max-height: 85vh;
+  position: relative;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  animation: slideUp 0.3s ease;
+  overflow: hidden;
+}
+
+.report-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #F9C7C5;
+  position: relative;
+}
+
+.report-detail-header h3 {
+  margin: 0;
+}
+
+.close-icon {
+  position: absolute;
+  right: 0;
+  top: -10px;
+  cursor: pointer;
+  color: #666;
+  font-size: 1.2rem;
+  transition: color 0.3s ease;
+}
+
+.close-icon:hover {
+  color: #95345C;
+}
+
+.report-detail-item {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.report-detail-item strong {
+  display: block;
+  color: #95345C;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.report-detail-item p {
+  color: #4a4a4a;
+  line-height: 1.6;
+  margin: 0;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }

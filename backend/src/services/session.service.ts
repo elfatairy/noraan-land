@@ -149,6 +149,12 @@ export const getSessions = async (conditions: Prisma.SessionWhereInput) => {
       title: true,
       calendarDateId: true,
       startedAt: true,
+      calendarDate: {
+        select: {
+          startDate: true,
+          endDate: true,
+        },
+      },
     },
   });
 };

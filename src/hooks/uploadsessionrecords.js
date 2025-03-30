@@ -5,10 +5,10 @@ import { useApiFetch } from '../utils/useApi';
 export const useUploadRecords = () => {
     const { isLoading, error, data, setError, _execute } = useApiFetch();
     
-    const execute = useCallback(async (sessionType, sessionId, formData) => {
+    const execute = useCallback(async ( sessionId, formData) => {
         try {
             const response = await _execute(
-                `admin/actions/uploadRecords/${sessionType}/${sessionId}`,
+                `admin/actions/uploadRecords/${sessionId}`,
                 'POST',
                 formData,
                 {

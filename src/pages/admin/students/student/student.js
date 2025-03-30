@@ -39,7 +39,7 @@ const Student = () => {
       sessionType: course.sessionType,
       price: course.sessionType === 'PRIVATE' ? course.privatePrice : course.groupPrice,
       hours: course.hours || 0,
-      ...(course.sessionType === 'GROUP' && course.group && { group: course.group })
+      ...(course.sessionType === 'GROUP' && course.group && { group: course.group.id }) // Access group.name instead of group object
     });
 
     navigate(`/admin/students/${studentId}/courses/${course.id}?${params.toString()}`);
@@ -72,9 +72,6 @@ const Student = () => {
                   <span className={`badge ${course.sessionType.toLowerCase()}`}>
                     {course.sessionType}
                   </span>
-                  {course.sessionType === 'GROUP' && course.group && (
-                    <span className="badge group">{course.group}</span>
-                  )}
                 </div>
               </div>
               <p className="description">{course.description}</p>

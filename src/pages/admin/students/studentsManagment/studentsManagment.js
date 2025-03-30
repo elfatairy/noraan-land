@@ -9,6 +9,7 @@ import { useGetCourseNewStudents } from '../../../../hooks/newHooks/getCourseNew
 import { useGetCoursePrivateStudents } from '../../../../hooks/newHooks/getCoursePrivateStudents';
 import { useGetCourseGroupStudents } from '../../../../hooks/newHooks/getCourseGroupStudents';
 import { useGetAppliedNewStudents } from '../../../../hooks/newHooks/getAppliedNewStudents';
+import Loading from "../../../../components/loading/loading";
 import './studentsManagment.css';
 
 const StudentsManagement = () => {
@@ -21,15 +22,16 @@ const StudentsManagement = () => {
   const [selectedGroup, setSelectedGroup] = useState('');
   const [courses, setCourses] = useState([]);
   const [groups, setGroups] = useState([]);
+  const [error, setError] = useState('');
 
   const { execute: getAllStudents, isLoading: isLoadingAll } = useGetAllStudents();
-  const { execute: getEnrolledStudents } = useGetEnrolledStudents();
-  const { execute: getCourses } = useGetCourses();
-  const { execute: getGroups } = useGetGroups();
-  const { execute: getCourseNewStudents } = useGetCourseNewStudents();
-  const { execute: getCoursePrivateStudents } = useGetCoursePrivateStudents();
-  const { execute: getCourseGroupStudents } = useGetCourseGroupStudents();
-  const { execute: getAppliedNewStudents } = useGetAppliedNewStudents();
+  const { execute: getEnrolledStudents, isLoading: isLoadingEnrolled } = useGetEnrolledStudents();
+  const { execute: getCourses, isLoading: isLoadingCourses } = useGetCourses();
+  const { execute: getGroups, isLoading: isLoadingGroups } = useGetGroups();
+  const { execute: getCourseNewStudents, isLoading: isLoadingNewStudents } = useGetCourseNewStudents();
+  const { execute: getCoursePrivateStudents, isLoading: isLoadingPrivate } = useGetCoursePrivateStudents();
+  const { execute: getCourseGroupStudents, isLoading: isLoadingGroupStudents } = useGetCourseGroupStudents();
+  const { execute: getAppliedNewStudents, isLoading: isLoadingApplied } = useGetAppliedNewStudents();
 
   const navigate = useNavigate();
 
@@ -65,35 +67,88 @@ const StudentsManagement = () => {
     }
   };
 
+  // Update the handleFilterChange function
   const handleFilterChange = async () => {
+    setError('');
     try {
       let response;
-      if (selectedStatus === 'new') {
-        if (selectedCourse) {
-          response = await getCourseNewStudents(selectedCourse);
-        } else {
-          response = await getAppliedNewStudents();
+
+      // Case 1: All students
+      if (selectedStatus === 'all') {
+        response = await getAllStudents();
+        if (response?.data?.students) {
+          setStudents(response.data.students);
         }
-      } else if (selectedStatus === 'enrolled') {
-        if (selectedCourse) {
-          if (selectedType === 'private') {
-            response = await getCoursePrivateStudents(selectedCourse);
-          } else if (selectedType === 'group' && selectedGroup) {
-            response = await getCourseGroupStudents(selectedCourse, selectedGroup);
-          }
-        } else {
-          response = await getEnrolledStudents();
-        }
+        return;
       }
-      
-      if (response) {
-        const studentsData = response.value.data.students || response.value.data.newStudents;
-        setStudents(studentsData);
+
+      // Case 2: New students (without course)
+      if (selectedStatus === 'new' && !selectedCourse) {
+        response = await getAppliedNewStudents();
+        if (response?.data?.newStudents) {
+          setStudents(response.data.newStudents);
+        }
+        return;
+      }
+
+      // Case 3: New students with course
+      if (selectedStatus === 'new' && selectedCourse) {
+        if (!selectedCourse) {
+          setError('Please select a course');
+          return;
+        }
+        response = await getCourseNewStudents(selectedCourse);
+        if (response?.data?.newStudents) {
+          setStudents(response.data.newStudents);
+        }
+        return;
+      }
+
+      // Case 4: Enrolled students (without course)
+      if (selectedStatus === 'enrolled' && !selectedCourse) {
+        response = await getEnrolledStudents();
+        if (response?.data?.students) {
+          setStudents(response.data.students);
+        }
+        return;
+      }
+
+      // Case 5: Enrolled students with course and type
+      if (selectedStatus === 'enrolled' && selectedCourse) {
+        if (!selectedType) {
+          setError('Please select a type (private/group)');
+          return;
+        }
+
+        if (selectedType === 'private') {
+          response = await getCoursePrivateStudents(selectedCourse);
+          if (response?.data?.students) {
+            setStudents(response.data.students);
+          }
+        } else if (selectedType === 'group') {
+          if (!selectedGroup) {
+            setError('Please select a group');
+            return;
+          }
+          response = await getCourseGroupStudents(selectedCourse, selectedGroup);
+          if (response?.data?.students) {
+            setStudents(response.data.students);
+          }
+        }
       }
     } catch (error) {
       console.error('Error applying filters:', error);
+      setError('Failed to fetch filtered results');
     }
   };
+
+  // Update the useEffect to clear filters when status changes
+  useEffect(() => {
+    setSelectedCourse('');
+    setSelectedType('');
+    setSelectedGroup('');
+    setError('');
+  }, [selectedStatus]);
 
   useEffect(() => {
     if (selectedCourse && selectedStatus === 'enrolled' && selectedType === 'group') {
@@ -101,9 +156,11 @@ const StudentsManagement = () => {
     }
   }, [selectedCourse, selectedStatus, selectedType]);
 
-  const filteredStudents = students.filter(student =>
-    student.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Update the filteredStudents logic to handle different response structures
+  const filteredStudents = students.filter(student => {
+    const studentName = student.student?.name || student.name || '';
+    return studentName.toLowerCase().includes(searchTerm.toLowerCase());
+  });
 
   const handleStudentClick = (studentId) => {
     navigate(`/admin/students/${studentId}`);
@@ -112,7 +169,7 @@ const StudentsManagement = () => {
   return (
     <div className="students-container">
       <div className="header">
-        <div className="search-bar">
+        <div className="search-barr">
           <FaSearch className="search-icon" />
           <input
             type="text"
@@ -130,6 +187,7 @@ const StudentsManagement = () => {
 
       {showFilters && (
         <div className="filters-container">
+          {error && <div className="error-message">{error}</div>}
           <div className="filter-group">
             <label>Status:</label>
             <div className="radio-group">
@@ -212,47 +270,57 @@ const StudentsManagement = () => {
       )}
 
       <div className="students-grid">
-        {isLoadingAll ? (
-          <div className="loading">Loading...</div>
+        {(isLoadingAll || isLoadingNewStudents || isLoadingPrivate || 
+          isLoadingGroupStudents || isLoadingApplied) ? (
+          <Loading />
+        ) : filteredStudents.length === 0 ? (
+          <div className="no-results">No students found</div>
         ) : (
-          filteredStudents.map(student => (
-            <div 
-              key={student.id} 
-              className="student-card"
-              onClick={() => handleStudentClick(student.id)}
-            >
-              <h3>{student.name}</h3>
-              <div className="student-info">
-                <p><strong>Email:</strong> {student.email}</p>
-                <p><strong>Phone:</strong> {student.phone}</p>
-                <div className="info-row">
-                  <p><strong>Age:</strong> {student.age}</p>
-                  <p><strong>Gender:</strong> {student.gender}</p>
+          filteredStudents.map(student => {
+            const studentData = student.student || student;
+            return (
+              <div 
+                key={student.id} 
+                className="student-card"
+                onClick={() => handleStudentClick(student.studentId || student.id)}
+              >
+                <h3>{studentData.name}</h3>
+                <div className="student-info">
+                  <p><strong>Email:</strong> {studentData.email}</p>
+                  <p><strong>Phone:</strong> {studentData.phone}</p>
+                  {student.preferredSessionType && (
+                    <p><strong>Session Type:</strong> {student.preferredSessionType}</p>
+                  )}
+                  {student.availableTime && (
+                    <p><strong>Available Time:</strong> {student.availableTime}</p>
+                  )}
+                  {student.hours && (
+                    <p><strong>Hours:</strong> {student.hours}</p>
+                  )}
                 </div>
-                <p><strong>Location:</strong> {student.location}</p>
+                <div className="card-actions">
+                  <a 
+                    href={`https://wa.me/${student.phone}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="action-button whatsapp"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <FaWhatsapp /> WhatsApp
+                  </a>
+                  <button 
+                    className="action-button courses"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/admin/students/${student.id}`);
+                    }}
+                  >
+                    <FaBook /> Courses
+                  </button>
+                </div>
               </div>
-              <div className="card-actions">
-                <a 
-                  href={`https://wa.me/${student.phone}`} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="action-button whatsapp"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <FaWhatsapp /> WhatsApp
-                </a>
-                <button 
-                  className="action-button courses"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate(`/admin/students/${student.id}`);
-                  }}
-                >
-                  <FaBook /> Courses
-                </button>
-              </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>

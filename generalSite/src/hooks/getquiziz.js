@@ -6,7 +6,7 @@ export const useGetQuizzes = () => {
 
   const execute = useCallback(async (courseId) => {
     try {
-      const response = await _execute(`courses/${courseId}/quiz`, 'GET');
+      const response = await _execute(`courses/${courseId}/quizzes`, 'GET');
       return response;
     } catch (error) {
       setError(error);

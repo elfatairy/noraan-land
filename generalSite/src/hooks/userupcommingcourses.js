@@ -6,7 +6,7 @@ export const useGetStudentUpcomingSessions = () => {
 
   const execute = useCallback(async () => {
     try {
-      const response = await _execute('users/actions/nextWeekSessions', 'GET');
+      const response = await _execute('students/actions/nextWeekSessions', 'GET');
       return response;
     } catch (error) {
       setError(error);

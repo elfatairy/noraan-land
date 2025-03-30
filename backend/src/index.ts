@@ -12,6 +12,8 @@ import { logRequest } from './middlewares/logging.middleware';
 import { swaggerDocs } from './utils/documentation.util';
 import fileUpload from 'express-fileupload';
 
+app.set('trust proxy', 1);
+
 // CORS configuration
 app.use(cors({
   origin: '*', 

@@ -6,7 +6,7 @@ export const useConvertToPrivate = () => {
 
   const execute = useCallback(async (studentId, courseId) => {
     try {
-      const response = await _execute(`students/${studentId}/courses/${courseId}/private`, 'PUT');
+      const response = await _execute(`students/${studentId}/courses/${courseId}/convertToPrivate`, 'PATCH');
       return response;
     } catch (error) {
       setError(error);

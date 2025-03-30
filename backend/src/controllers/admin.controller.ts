@@ -87,7 +87,7 @@ export const getCourseSessions = async (
           courseId,
         })
       ).map(async (session) => {
-        const { id, description, isFree, status, sessionType, groupId, privateStudentId, title, startedAt } = session;
+        const { id, description, isFree, status, sessionType, groupId, privateStudentId, title, startedAt,calendarDate } = session;
 
         const recordings = (await getRecordings(session.id)) ?? [];
         const recordingsGuids: string[] = [];
@@ -105,6 +105,7 @@ export const getCourseSessions = async (
           privateStudentId,
           title,
           startedAt,
+          calendarDate,
           recordings: recordingsGuids,
         };
       })

@@ -33,6 +33,10 @@
     "typescript": "^5.7.2"
   },
   "dependencies": {
+    "@fullcalendar/daygrid": "^6.1.15",
+    "@fullcalendar/interaction": "^6.1.15",
+    "@fullcalendar/react": "^6.1.15",
+    "@fullcalendar/timegrid": "^6.1.15",
     "@prisma/client": "^6.1.0",
     "axios": "^1.7.9",
     "bcrypt": "^5.1.1",

@@ -6,7 +6,7 @@ export const useAssignHours = () => {
 
   const execute = useCallback(async (studentId, courseId, hours) => {
     try {
-      const response = await _execute(`students/${studentId}/courses/${courseId}/hours`, 'PUT', { hours });
+      const response = await _execute(`students/${studentId}/courses/${courseId}/assignHours`, 'PATCH', { hours });
       return response;
     } catch (error) {
       setError(error);

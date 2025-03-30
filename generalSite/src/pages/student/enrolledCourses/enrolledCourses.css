@@ -1,5 +1,3 @@
-
-
 .courses-container {
     padding: 2rem;
   }
@@ -49,6 +47,8 @@
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s, box-shadow 0.3s;
     border: 2px solid #F9C7C5;
+    display: flex;
+    flex-direction: column;
   }
   
   .course-card:hover {
@@ -190,31 +190,60 @@
 }
 
 .card-actions {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.8rem;
-  margin-top: 1.5rem;
+  display: flex;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding-top: 1rem;
+  width: 100%;
 }
 
 .action-button {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.7rem;
+  padding: 0.75rem;
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  font-weight: 500;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s ease;
   color: white;
   font-size: 0.9rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
 }
 
-.action-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+.action-button:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  margin-bottom: 5px;
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.status-badge.subscribed {
+  background-color: #2ecc71;
+  color: white;
+}
+
+.status-badge.unsubscribed {
+  background-color: #e74c3c;
+  color: white;
 }
 
 .action-button.students {
@@ -229,8 +258,16 @@
   background: linear-gradient(135deg, #FA91C8, #F9C7C5);
 }
 
+.action-button.quizez {
+  background: linear-gradient(135deg, #95345C, #FA91C8);
+}
+
+.action-button.details {
+  background: linear-gradient(135deg, #F9AC9E, #FF8691);
+}
+
 .action-button svg {
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   transition: transform 0.3s ease;
 }
 
@@ -242,3 +279,170 @@
   .action-button.quizez {
     background: linear-gradient(135deg, #95345C, #FA91C8);
   }
+
+/* Modal Styles */
+.report-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.report-modal-content {
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  width: min(90vw, 500px);
+  max-height: 85vh;
+  position: relative;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  animation: slideUp 0.3s ease;
+  overflow: hidden;
+}
+
+.report-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #F9C7C5;
+}
+
+.report-detail-item {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 0.75rem 1.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.report-detail-item strong {
+  display: block;
+  color: #95345C;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.close-icon {
+  cursor: pointer;
+  color: #666;
+  font-size: 1.2rem;
+  transition: color 0.3s ease;
+}
+
+.close-icon:hover {
+  color: #95345C;
+}
+
+.payment-section {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 2px solid #F9C7C5;
+}
+
+.payment-section h4 {
+  color: #95345C;
+  margin-bottom: 1rem;
+}
+
+.payment-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.payment-button {
+  width: 100%;
+  padding: 1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.payment-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.payment-button.paypal {
+  background: #0070ba;
+}
+
+.payment-button.paymob {
+  background: #95345C;
+}
+
+.payment-button:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Add loading animation */
+@keyframes buttonLoading {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.payment-button:disabled {
+  background: linear-gradient(
+    90deg,
+    rgba(149, 52, 92, 0.8),
+    rgba(149, 52, 92, 0.6),
+    rgba(149, 52, 92, 0.8)
+  );
+  background-size: 200% 100%;
+  animation: buttonLoading 2s ease infinite;
+}
+
+.payment-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modal-body {
+  max-height: calc(85vh - 120px);
+  overflow-y: auto;
+  padding-right: 1rem;
+  margin-right: -1rem;
+  padding-bottom: 4rem;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.modal-body::-webkit-scrollbar {
+  display: none;
+}
+
+.course-description {
+  margin: 1rem 0;
+  color: #666;
+  line-height: 1.5;
+  flex: 1;
+}

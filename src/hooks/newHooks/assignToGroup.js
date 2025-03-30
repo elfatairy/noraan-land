@@ -6,7 +6,7 @@ export const useAssignToGroup = () => {
 
   const execute = useCallback(async (studentId, courseId, groupId) => {
     try {
-      const response = await _execute(`students/${studentId}/courses/${courseId}/group`, 'PUT', { groupId });
+      const response = await _execute(`students/${studentId}/courses/${courseId}/assignGroup`, 'PATCH', { groupId: parseInt(groupId) });
       return response;
     } catch (error) {
       setError(error);
