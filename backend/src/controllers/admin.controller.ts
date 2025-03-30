@@ -35,11 +35,9 @@ export const login = async (
       });
       return;
     }
-    const expireIn: StringValue = process.env.JWT_EXPIRY as StringValue ?? "7d";
-    const token = generateToken(
-      { username, role: ROLES.ADMIN },
-      expireIn
-    );
+    const expireIn: StringValue =
+      (process.env.JWT_EXPIRY as StringValue) ?? "7d";
+    const token = generateToken({ username, role: ROLES.ADMIN }, expireIn);
 
     res.json({
       message: "Admin Logged In Successfully",
@@ -87,7 +85,18 @@ export const getCourseSessions = async (
           courseId,
         })
       ).map(async (session) => {
-        const { id, description, isFree, status, sessionType, groupId, privateStudentId, title, startedAt,calendarDate } = session;
+        const {
+          id,
+          description,
+          isFree,
+          status,
+          sessionType,
+          groupId,
+          privateStudentId,
+          title,
+          startedAt,
+          calendarDate,
+        } = session;
 
         const recordings = (await getRecordings(session.id)) ?? [];
         const recordingsGuids: string[] = [];
@@ -100,8 +109,8 @@ export const getCourseSessions = async (
           description,
           isFree,
           status,
-          sessionType, 
-          groupId, 
+          sessionType,
+          groupId,
           privateStudentId,
           title,
           startedAt,
@@ -114,7 +123,8 @@ export const getCourseSessions = async (
     res.json({
       message: "Course Sessions returned Successfully",
       data: {
-        sessions: serialize(sessions)
+        sessions: serialize(sessions),
+        zoomLink: course.zoomLink,
       },
     });
   } catch (err: any) {

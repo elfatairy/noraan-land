@@ -12,9 +12,9 @@ router.patch('/:sessionId/updateDate', checkAdmin, sessionController.updateSessi
 router.delete('/:sessionId/cancel', checkAdmin, sessionController.cancelSession); //
 
 router.get('/', (req: Request, res: Response, next: NextFunction) => { //
-  if(res.locals.role == ROLES.ADMIN) {
+  if(res.locals.role === ROLES.ADMIN) {
       return adminController.getCourseSessions(req, res, next);    
-  } else if (res.locals.role == ROLES.USER){
+  } else if (res.locals.role === ROLES.USER){
       return studentController.getCourseSessions(req, res, next);    
   }
 })

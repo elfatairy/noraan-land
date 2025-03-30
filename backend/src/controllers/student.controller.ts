@@ -820,7 +820,7 @@ export const getCourseSessions = async (
 
         let zoomLink = null;
         if (
-          subscriptionStatus == SubscriptionStatus.SUBSCRIBED &&
+          subscriptionStatus === SubscriptionStatus.SUBSCRIBED &&
           sessionDate.startDate.getTime() - new Date().getTime() <=
             JOIN_LINK_SHOW
         ) {
