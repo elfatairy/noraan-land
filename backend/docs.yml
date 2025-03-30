@@ -3185,7 +3185,33 @@ paths:
                         "startDate": "2025-03-14T17:07:18.593Z",
                         "endDate": "2025-03-14T18:07:18.593Z",
                         "status": "DONE",
-                        "changingStatus": "CANCELED"
+                        "changingStatus": "CANCELED",
+                        "session": {
+                          "id": 10,
+                          "courseId": 1,
+                          "status": "UPCOMING",
+                          "title": "Session Title 2",
+                          "description": "Session Description",
+                          "isFree": true,
+                          "calendarDateId": 12,
+                          "sessionType": "GROUP",
+                          "groupId": 2,
+                          "privateStudentId": null,
+                          "startedAt": null,
+                          "createdAt": "2025-03-30T19:50:55.275Z",
+                          "updatedAt": "2025-03-30T19:50:55.275Z",
+                          "course": {
+                              "id": 1,
+                              "name": "Tajweed Basics",
+                              "privatePrice": 6,
+                              "groupPrice": 3.5,
+                              "description": "Learn Quranic recitation in 8 weeks! Covers letter articulation, characteristics, and rules like noon sakinah & madd. Interactive lessons, audio, and practice for beginners. Build confidence and appreciate the Quran’s beauty. No experience needed!",
+                              "zoomLink": "https://zoom.us/j/123456789",
+                              "paypalProductId": null,
+                              "createdAt": "2025-03-08T06:50:08.965Z",
+                              "updatedAt": "2025-03-09T12:05:41.149Z"
+                          }
+                      }
                       }
   /api/calendar/nextWeekDates:
     get:
@@ -3222,28 +3248,39 @@ paths:
                     dates:
                       [
                         {
-                          "id": 11,
-                          "startDate": "2025-03-14T17:07:18.593Z",
-                          "endDate": "2025-03-14T18:07:18.593Z",
+                          "id": 12,
+                          "startDate": "2025-04-02T17:07:18.593Z",
+                          "endDate": "2025-04-02T18:07:18.593Z",
                           "duration": 60,
                           "status": "AVAILABLE",
                           "changingStatus": "UNCHANGED",
-                          "createdAt": "2025-03-08T10:17:47.898Z",
-                          "updatedAt": "2025-03-08T10:17:47.898Z",
+                          "createdAt": "2025-03-30T19:50:55.261Z",
+                          "updatedAt": "2025-03-30T19:50:55.261Z",
                           "session": {
-                              "id": 9,
+                              "id": 10,
                               "courseId": 1,
                               "status": "UPCOMING",
                               "title": "Session Title 2",
                               "description": "Session Description",
                               "isFree": true,
-                              "calendarDateId": 11,
+                              "calendarDateId": 12,
                               "sessionType": "GROUP",
                               "groupId": 2,
                               "privateStudentId": null,
                               "startedAt": null,
-                              "createdAt": "2025-03-08T10:17:47.903Z",
-                              "updatedAt": "2025-03-08T10:17:47.903Z"
+                              "createdAt": "2025-03-30T19:50:55.275Z",
+                              "updatedAt": "2025-03-30T19:50:55.275Z",
+                              "course": {
+                                  "id": 1,
+                                  "name": "Tajweed Basics",
+                                  "privatePrice": 6,
+                                  "groupPrice": 3.5,
+                                  "description": "Learn Quranic recitation in 8 weeks! Covers letter articulation, characteristics, and rules like noon sakinah & madd. Interactive lessons, audio, and practice for beginners. Build confidence and appreciate the Quran’s beauty. No experience needed!",
+                                  "zoomLink": "https://zoom.us/j/123456789",
+                                  "paypalProductId": null,
+                                  "createdAt": "2025-03-08T06:50:08.965Z",
+                                  "updatedAt": "2025-03-09T12:05:41.149Z"
+                              }
                           }
                         }
                       ]

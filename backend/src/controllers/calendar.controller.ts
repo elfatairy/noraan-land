@@ -8,11 +8,11 @@ export const getUpcomingDates = async (req: Request, res: Response, next: NextFu
     const dates = await getDates({
       endDate: { gt: new Date() }
     });
-    const parsedDates: { startDate: Date, endDate: Date, status: CalendarDateStatus, changingStatus: CalendarDateChangingStatus }[] = [];
+    const parsedDates: { startDate: Date, endDate: Date, status: CalendarDateStatus, changingStatus: CalendarDateChangingStatus, session: any }[] = [];
 
     dates.forEach(date => {
-      const { startDate, endDate, status, changingStatus } = date;
-      parsedDates.push({ startDate, endDate, status, changingStatus });
+      const { startDate, endDate, status, changingStatus, session } = date;
+      parsedDates.push({ startDate, endDate, status, changingStatus, session });
     })
 
     res.json({
@@ -43,17 +43,11 @@ export const getNextWeekDates = async (req: Request, res: Response, next: NextFu
         lt: nextWeekDate
       }
     });
-    const parsedDates: any[] = [];
-
-    await Promise.allSettled(dates.map(async date => {
-      const session = serialize(await getDateSession(date.id))
-      parsedDates.push({ ...date, session })
-    }))
 
     res.json({
       message: "Next week dates retrieved successfully",
       data: {
-        dates: parsedDates
+        dates
       }
     })
 

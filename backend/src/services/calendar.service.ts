@@ -69,6 +69,13 @@ export const getDates = async (
 ) =>
   await prisma.calendarDate.findMany({
     where: dateCondition,
+    include: {
+      session: {
+        include: {
+          course: true,
+        },
+      },
+    },
   });
 
 export const getDate = async (
