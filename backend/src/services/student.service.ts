@@ -193,7 +193,7 @@ export const getStudentEnrolledCourses = async (studentId: number) =>
       },
     })
   ).map((item) => {
-    return { ...item.course, hours: item.hours };
+    return { ...item.course, hours: item.hours, studentCourseId: item.id };
   });
 
 export const getStudentNextWeekSessions = async (studentId: number) => {

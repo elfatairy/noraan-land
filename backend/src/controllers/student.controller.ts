@@ -1296,7 +1296,7 @@ export const getMyCourses = async (
       enrolledCoursesWithStatus.push({
         ...studentCourse,
         subscriptionStatus: await getStudentCourseSubscriptionStatus(
-          studentCourse.id
+          studentCourse.studentCourseId
         ),
       });
     }));

@@ -1,9 +1,9 @@
 import express from "express";
-export const router = express.Router();
 import {router as studentAuthRouter} from './student/auth.route';
 import {router as studentActionsRouter} from './student/actions.route';
 import { checkAdmin, checkStudent, verifyToken } from "../middlewares/auth.middleware";
 import * as studentController from '../controllers/student.controller'
+export const router = express.Router();
 
 router.use("/auth", studentAuthRouter); //
 router.use("/actions", verifyToken, checkStudent, studentActionsRouter);
