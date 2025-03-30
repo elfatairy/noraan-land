@@ -67,10 +67,7 @@ export const getStudentCourses = async (
     .findFirst({
       where: {
         id: courseId,
-      },
-      // omit: {
-      //   paypalProductId: true,
-      // },
+      }
     })
     .studentCourses({
       where: conditions,
@@ -84,7 +81,6 @@ export const getStudentCourses = async (
       },
     });
 
-    
 export const getUnasignedStudentCourse = async () =>
   await prisma.studentCourse.findMany({
     where: {
@@ -198,28 +194,34 @@ export const savePaymobSubscription = async (
     data: {
       paymobPlanId,
       subscriptionMethod: SubscriptionMethod.PAYMOB,
-      paymobIntentionId
+      paymobIntentionId,
     },
   });
 
-export const savePaymobTransactionId = async (intentionId: string, transactionId: number) =>
+export const savePaymobTransactionId = async (
+  intentionId: string,
+  transactionId: number
+) =>
   await prisma.studentCourseSubscription.updateMany({
     where: {
       paymobIntentionId: intentionId,
     },
     data: {
-      paymobTransactionId: transactionId
+      paymobTransactionId: transactionId,
     },
   });
 
-export const approvePaymobSubscription = async (transactionId: number, subscriptionId: number) =>
+export const approvePaymobSubscription = async (
+  transactionId: number,
+  subscriptionId: number
+) =>
   await prisma.studentCourseSubscription.updateMany({
     where: {
       paymobTransactionId: transactionId,
     },
     data: {
       subscriptionStatus: SubscriptionStatus.SUBSCRIBED,
-      paymobSubscriptionId: subscriptionId
+      paymobSubscriptionId: subscriptionId,
     },
   });
 
@@ -311,12 +313,14 @@ export const revokeCourseGroupSubscriptions = async (courseId: number) => {
   });
 };
 
-export const cancelStudentCourseSubscription = async (studentCourseId: number) => {
+export const cancelStudentCourseSubscription = async (
+  studentCourseId: number
+) => {
   const studentCourse = await getStudentCourse({
-    id: studentCourseId
+    id: studentCourseId,
   });
 
-  if(!studentCourse) throw "studentCourse is null";
+  if (!studentCourse) throw "studentCourse is null";
 
   if (!studentCourse.StudentCourseSubscription)
     throw "studentCourse.StudentCourseSubscription is undefined";

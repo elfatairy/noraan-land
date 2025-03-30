@@ -4,11 +4,11 @@ import { router as courseStudentsRouter } from "./courseStudents.route";
 import { router as groupRouter } from "./group.route";
 import { router as quizRouter } from "./quiz.route";
 import * as courseController from "../controllers/course.controller";
-import { checkAdmin, verifyToken } from "../middlewares/auth.middleware";
+import { checkAdmin, parseTokenIfAny, verifyToken } from "../middlewares/auth.middleware";
 export const router = express.Router();
 
 router.post("/", verifyToken, checkAdmin, courseController.create); //
-router.get("/", courseController.getAll); //
+router.get("/", parseTokenIfAny, courseController.getAll); //
 router.get("/:courseId", verifyToken, courseController.get); //
 router.patch("/:courseId", verifyToken, checkAdmin, courseController.update); //
 

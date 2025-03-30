@@ -215,7 +215,7 @@ export const getAll = async (
   try {
     const courses = await getAllCourses();
 
-    if ((res.locals.role = ROLES.USER)) {
+    if ((res.locals.role !== ROLES.ADMIN)) {
       courses.forEach((course) => {
         course.zoomLink = "";
       });
@@ -277,9 +277,6 @@ export const get = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-
-
-//JOE i wanted the price in the response 
 export const newCourseStudents = async (
   req: Request,
   res: Response,

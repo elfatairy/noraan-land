@@ -116,10 +116,7 @@ export const getStudentById = async (id: number) =>
 
 export const authenticateStudent = async (id: number, email: string) => {
   const expireIn: StringValue = (process.env.JWT_EXPIRY as StringValue) ?? "7d";
-  const token = generateToken(
-    { id, email, role: ROLES.USER },
-    expireIn
-  );
+  const token = generateToken({ id, email, role: ROLES.USER }, expireIn);
 
   const student = await prisma.student.findFirst({
     where: {
@@ -137,7 +134,7 @@ export const authenticateStudent = async (id: number, email: string) => {
   });
 
   return { student, token };
-}; 
+};
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 export const verifyGoogleToken = async (idToken: string) => {
@@ -181,10 +178,10 @@ export const getStudentCourseSubscriptionStatus = async (
       },
     })
   )?.subscriptionStatus;
-
-  //JOE
-  export const getStudentEnrolledCourses = async (studentId: number) => {
-    const studentCourses = await prisma.studentCourse.findMany({
+  
+export const getStudentEnrolledCourses = async (studentId: number) =>
+  (
+    await prisma.studentCourse.findMany({
       where: { studentId },
       include: {
         course: {
@@ -193,27 +190,11 @@ export const getStudentCourseSubscriptionStatus = async (
             paypalProductId: true,
           },
         },
-        group: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
       },
-    });
-  
-    return studentCourses.map((item) => {
-      return {
-        ...item.course,
-        hours: item.hours,
-        sessionType: item.preferredSessionType, // Whether GROUP or PRIVATE
-        group: item.group || null, // Group information or null if not assigned
-      };
-    });
-  };
-  
-
-
+    })
+  ).map((item) => {
+    return { ...item.course, hours: item.hours };
+  });
 
 export const getStudentNextWeekSessions = async (studentId: number) => {
   const now = new Date();
@@ -238,7 +219,7 @@ export const getStudentNextWeekSessions = async (studentId: number) => {
                 startDate: {
                   gt: now,
                 },
-                status: CalendarDateStatus.AVAILABLE
+                status: CalendarDateStatus.AVAILABLE,
               },
             },
             select: {
@@ -304,7 +285,6 @@ export const getStudentsService = async () => {
       location: true,
       gender: true,
     },
-
   });
   return students;
 };

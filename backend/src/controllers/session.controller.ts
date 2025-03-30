@@ -54,8 +54,6 @@ export const createSession = async (
       !validateDate(date) ||
       !duration ||
       (description && !validateString(description, 255, 0)) ||
-      // (isRecurring && (isRecurring == true || isRecurring == false)) ||
-      //JOE
       (isRecurring !== undefined && typeof isRecurring !== 'boolean') ||
       !sessionType ||
       !validateSessionType(sessionType) ||
