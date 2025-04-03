@@ -147,26 +147,32 @@ calender tab ->
     ->after a year will need to confirm making them recurring again  ✅
 
 student dash :
-    upcoming sessions (weekly -> filter to daily )  (enter button viewed before 10 min)
+    upcoming sessions   (enter button viewed before 10 min)
     courses view all courses
         -> banner (not subscribed) ( show hours  hour price   total money )  PAYMENT HERE (just buttons for now)
         -> materials / quizez
+        
         -> sessions : recordings (as usual) / reports(filtered)  (enter button viewed before 10 min)
 
 
 
 
-to be discussed : 
+fatatry:
 
-i adjusted the export const getStudentCourses  func  it views some paypal data  commented the omit (cant have select and omit at the same time)
-
-zoom link err empty    permissions err  role 
-google auth? phonenumber from where  (additional modal ?)
+ask:
 apply to course form   is it ok ?
+google auth? phonenumber from where  (additional modal ?)
+
+errors:
+i adjusted the export const getStudentCourses  func  it views some paypal data  commented the omit (cant have select and omit at the same time)
+zoom link err empty   in get courses admin   permissions err  role 
 notes null in student 
-i want any get course students to return the price also   private  group  newcourse   newstudentsall
+unsubscribed in getcourses for student even if subscribed (hours=0) and group // didnt try private
+unsubscribed in get students in course for admin even if subscribed (hours = 0) private  // group works
+
+i want:
+any get course students to return the price also   private  group  newcourse   newstudentsall
 assigntogroup  change preffered session type to  group 
-
 get sessions   get nextweekDates   return the zoom url 
-
 /api/calendar/upcomingDates   return some data   at least (course id , session id)  student name / group name
+return zoom url in the start meeting response  or in the get session response
