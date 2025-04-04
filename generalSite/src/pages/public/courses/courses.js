@@ -13,7 +13,7 @@ const Courses = () => {
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [enrollmentData, setEnrollmentData] = useState({
     availableTime: '',
-    userNotes: '',
+    studentNotes: '',
     sessionType: 'GROUP'
   });
 
@@ -62,7 +62,7 @@ const Courses = () => {
     setSelectedCourse(null);
     setEnrollmentData({
       availableTime: '',
-      userNotes: '',
+      studentNotes: '',
       sessionType: 'GROUP'
     });
   };
@@ -165,10 +165,10 @@ const Courses = () => {
               />
               <textarea
                 placeholder="Additional Notes"
-                value={enrollmentData.userNotes}
+                value={enrollmentData.studentNotes}
                 onChange={e => setEnrollmentData({
                   ...enrollmentData,
-                  userNotes: e.target.value
+                  studentNotes: e.target.value
                 })}
               />
               <div className="modal-buttons">

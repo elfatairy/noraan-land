@@ -8,6 +8,8 @@ import { useAssignToGroup } from '../../../../hooks/newHooks/assignToGroup';
 import { useConvertToPrivate } from '../../../../hooks/newHooks/convertToPrivate';
 import { useGetGroups } from '../../../../hooks/newHooks/getGroupshook';
 import styles from './studentCourse.module.css';
+import Loading from "../../../../components/loading/loading";
+import { toast } from "react-toastify";
 
 const CreateSessionModal = memo(({ isOpen, sessionData, onSubmit, onClose, onDataChange }) => {
   if (!isOpen) return null;
@@ -102,12 +104,16 @@ const ChangeDataModal = memo(({
   selectedGroup, 
   setSelectedGroup,
   groups,
-  price,
+  groupPrice,
+  privatePrice,
+  isLoading,
   handleChangeData 
 }) => {
   if (!isOpen) return null;
 
-  const totalPrice = price ? price * (newHours || 0) : 0;
+  const totalPrice = selectedSessionType === 'GROUP' 
+    ? groupPrice * (newHours || 0)
+    : privatePrice * (newHours || 0);
 
   return (
     <div className={styles.modal}>
@@ -163,8 +169,20 @@ const ChangeDataModal = memo(({
           )}
         </div>
         <div className={styles.formActions}>
-          <button className={styles.secondaryButton} onClick={onClose}>Cancel</button>
-          <button className={styles.primaryButton} onClick={handleChangeData}>Save Changes</button>
+          <button 
+            className={styles.secondaryButton} 
+            onClick={onClose}
+            disabled={isLoading}
+          >
+            Cancel
+          </button>
+          <button 
+            className={styles.primaryButton} 
+            onClick={handleChangeData}
+            disabled={isLoading || (selectedSessionType === 'GROUP' && !selectedGroup)}
+          >
+            {isLoading ? <Loading /> : 'Save Changes'}
+          </button>
         </div>
       </div>
     </div>
@@ -173,14 +191,16 @@ const ChangeDataModal = memo(({
 
 const StudentCourse = () => {
   const { studentId, courseId } = useParams();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const sessionType = searchParams.get('sessionType');
   const price = searchParams.get('price');
   const hours = searchParams.get('hours');
   const group = searchParams.get('group');
-  const groupId = searchParams.get('groupId');
+  const groupId = searchParams.get('group'); // instead of 'groupId'
   const groupName = searchParams.get('groupName');
+  const groupPrice = parseFloat(searchParams.get('groupPrice')) || 0;
+  const privatePrice = parseFloat(searchParams.get('privatePrice')) || 0;
 
   
   // States for modals
@@ -189,7 +209,7 @@ const StudentCourse = () => {
   const [showCreateSessionModal, setShowCreateSessionModal] = useState(false);
   const [reports, setReports] = useState([]);
   const [groups, setGroups] = useState([]);
-  const [selectedGroup, setSelectedGroup] = useState('');
+  const [selectedGroup, setSelectedGroup] = useState(groupId || '');
   const [newHours, setNewHours] = useState(hours || 0);
   const [sessionData, setSessionData] = useState({
     title: '',
@@ -197,14 +217,15 @@ const StudentCourse = () => {
     date: '',
     duration: 60,
     sessionType,
-    groupId: group || null,
+    groupId: searchParams.get('group') || null, // Use 'group' instead of 'groupId'
     isRecurring: false,
-    privateStudentId: sessionType === 'PRIVATE' ? studentId : null,
+    privateStudentId: sessionType === 'PRIVATE' ? parseInt(studentId) : null,
     isFree: false,
     paymentType: 'paid' // Add payment type
   });
   const [expandedReports, setExpandedReports] = useState({});
   const [selectedSessionType, setSelectedSessionType] = useState(sessionType || 'PRIVATE');
+  const [isChangingData, setIsChangingData] = useState(false);
 
   // Hooks
   const { execute: createSession } = useCreateSession();
@@ -225,6 +246,16 @@ const StudentCourse = () => {
     }
   }, [courseId]);
 
+  // Add this useEffect after the existing useEffect
+  useEffect(() => {
+    if (groupId && groups.length > 0) {
+      const foundGroup = groups.find(g => g.id === parseInt(groupId));
+      if (foundGroup) {
+        setSelectedGroup(groupId);
+      }
+    }
+  }, [groupId, groups]);
+
   const fetchReports = async () => {
     try {
       const response = await getReports(courseId, studentId);
@@ -236,33 +267,79 @@ const StudentCourse = () => {
     }
   };
 
-  const handleCreateSession = async () => {
-    try {
-      await createSession(courseId, sessionData);
-      setShowCreateSessionModal(false);
-    } catch (error) {
-      console.error('Error creating session:', error);
-    }
-  };
+  // Update the handleCreateSession function to format the payload correctly
+const handleCreateSession = async () => {
+  try {
+    const formattedPayload = {
+      courseId: parseInt(courseId),
+      title: sessionData.title,
+      description: sessionData.description,
+      date: new Date(sessionData.date).toISOString(),
+      duration: parseInt(sessionData.duration),
+      sessionType: sessionData.sessionType,
+      groupId: sessionData.sessionType === 'GROUP' ? parseInt(sessionData.groupId) : null,
+      privateStudentId: sessionData.sessionType === 'PRIVATE' ? parseInt(studentId) : null,
+      isFree: sessionData.paymentType === 'free',
+      isRecurring: sessionData.isRecurring
+    };
 
-  const handleChangeData = async () => {
-    try {
-      if (newHours !== hours) {
-        await assignHours(studentId, courseId, Number(newHours));
-      }
+    await createSession(courseId,formattedPayload);
+    setShowCreateSessionModal(false);
+    toast.success('Session created successfully');
+  } catch (error) {
+    const message = error.response?.data?.message || 'An error occurred';
+    toast.error(`Failed to create session: ${message}`);
+  }
+};
+
+  // Update the handleChangeData function URL parameter handling
+const handleChangeData = async () => {
+  setIsChangingData(true);
+  let hoursSuccess = false;
+  let typeChangeSuccess = false;
+
+  try {
+    // After hours update
+    await assignHours(studentId, courseId, Number(newHours));
+    hoursSuccess = true;
+    
+    // Update URL with new hours
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set('hours', newHours);
+    
+    if (selectedSessionType === 'PRIVATE') {
+      await convertToPrivate(studentId, courseId);
+      typeChangeSuccess = true;
       
-      if (selectedSessionType === 'PRIVATE') {
-        await convertToPrivate(studentId, courseId);
-      } else if (selectedSessionType === 'GROUP' && selectedGroup) {
-        await assignToGroup(studentId, courseId, selectedGroup);
-      }
+      // Update URL params for PRIVATE
+      newParams.set('sessionType', 'PRIVATE');
+      newParams.delete('group'); // Use 'group' instead of 'groupId'
+      setSearchParams(newParams);
       
-      setShowChangeDataModal(false);
-      // Refresh data if needed
-    } catch (error) {
-      console.error('Error updating data:', error);
+    } else if (selectedSessionType === 'GROUP' && selectedGroup) {
+      await assignToGroup(studentId, courseId, selectedGroup);
+      typeChangeSuccess = true;
+      
+      // Update URL params for GROUP
+      newParams.set('sessionType', 'GROUP');
+      newParams.set('group', selectedGroup); // Use 'group' instead of 'groupId'
+      setSearchParams(newParams);
     }
-  };
+    // ...rest of the error handling
+  } catch (error) {
+    const message = error.response?.data?.message || 'An error occurred';
+    if (error.response?.status === 403) {
+      toast.error(`Permission denied: ${message}`);
+    } else {
+      toast.error(`Failed to update hours: ${message}`);
+    }
+  } finally {
+    setIsChangingData(false);
+    if (hoursSuccess || typeChangeSuccess) {
+      setShowChangeDataModal(false);
+    }
+  }
+};
 
   const handleCreateSessionClick = () => {
     setShowCreateSessionModal(true);
@@ -370,7 +447,7 @@ const StudentCourse = () => {
               </option>
             ))}
           </select>
-        </div>
+        </div> 
   
         <div className={styles.reportsGrid}>
           {filteredAndSortedReports.map(report => (
@@ -389,7 +466,10 @@ const StudentCourse = () => {
                   {new Date(report.createdAt).toLocaleDateString('en-US', {
                     year: 'numeric',
                     month: 'long',
-                    day: 'numeric'
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: true
                   })}
                 </span>
               </div>
@@ -469,7 +549,9 @@ const StudentCourse = () => {
         selectedGroup={selectedGroup}
         setSelectedGroup={setSelectedGroup}
         groups={groups}
-        price={price}
+        groupPrice={groupPrice}
+        privatePrice={privatePrice}
+        isLoading={isChangingData}
         handleChangeData={handleChangeData}
       />
     </div>

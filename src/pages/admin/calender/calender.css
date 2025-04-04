@@ -1,88 +1,330 @@
 .calendar-container {
-    padding: 2rem;
-  }
-  
-  .search-container {
-    display: flex;
-    gap: 1rem;
-    margin-bottom: 2rem;
-    align-items: center;
-  }
-  
-  .search-container input {
-    padding: 0.5rem;
-    border: 2px solid #F9C7C5;
-    border-radius: 8px;
-  }
-  
-  .search-container button {
-    padding: 0.5rem 1rem;
-    background: #95345C;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: transform 0.2s;
-  }
-  
-  .search-container button:hover {
-    transform: translateY(-2px);
-  }
-  
-  .calendar-wrapper {
-    background: white;
-    padding: 1rem;
-    border-radius: 12px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  }
-  
-  .fc .fc-toolbar-title {
-    color: #95345C;
-  }
-  
-  .fc .fc-button-primary {
-    background-color: #B3666D;
-    border-color: #95345C;
-  }
-  
-  .fc .fc-button-primary:not(:disabled):active,
-  .fc .fc-button-primary:not(:disabled).fc-button-active {
-    background-color: #95345C;
-  }
+  padding: 2rem;
+}
 
-  .fc-timegrid-slot:hover::before {
-    content: '+';
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 20px;
-    color: #95345C;
-    opacity: 0.5;
-  }
-  
-  .calendar-event {
-    padding: 2px 4px;
-    font-size: 0.9em;
-  }
-  
-  .event-title {
-    font-weight: 500;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  
-  .event-time {
-    font-size: 0.8em;
-    opacity: 0.8;
-  }
-  
-  .fc-event {
-    cursor: pointer;
-    transition: transform 0.2s;
-  }
-  
-  .fc-event:hover {
-    transform: scale(1.02);
-  }
+.search-container {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  align-items: center;
+}
+
+.search-container input {
+  padding: 0.5rem;
+  border: 2px solid #F9C7C5;
+  border-radius: 8px;
+}
+
+.search-container button {
+  padding: 0.5rem 1rem;
+  background: #95345C;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.search-container button:hover {
+  transform: translateY(-2px);
+}
+
+.calendar-wrapper {
+  background: white;
+  padding: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.fc .fc-toolbar-title {
+  color: #95345C;
+}
+
+.fc .fc-button-primary {
+  background-color: #B3666D;
+  border-color: #95345C;
+}
+
+.fc .fc-button-primary:not(:disabled):active,
+.fc .fc-button-primary:not(:disabled).fc-button-active {
+  background-color: #95345C;
+}
+
+.fc-timegrid-slot:hover::before {
+  content: '+';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 20px;
+  color: #95345C;
+  opacity: 0.5;
+}
+
+.calendar-event {
+  padding: 2px 4px;
+  font-size: 0.9em;
+  width: 100%;
+}
+
+.event-title {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.event-time {
+  font-size: 0.8em;
+  opacity: 0.8;
+}
+
+.fc-event {
+  cursor: pointer;
+  transition: transform 0.2s;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  border-radius: 0 !important;
+}
+
+.fc-event:hover {
+  transform: scale(1.02);
+}
+
+/* Modal overlay z-index */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.modal-body {
+  max-height: calc(80vh - 200px);
+  overflow-y: auto;
+  padding-right: 1rem;
+}
+
+/* Month view styles */
+.fc-daygrid-event {
+  background-color: inherit !important;
+  border: none !important;
+  padding: 2px 4px !important;
+  margin: 1px 0 !important;
+  font-size: 0.85em !important;
+}
+
+/* Improved day cell content for month view */
+.day-cell-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 2px;
+}
+
+/* Move view button to the left side in month view */
+.day-view-button {
+  font-size: 0.8em;
+  background: #95345C;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  opacity: 0.7;
+  padding: 2px 4px;
+  order: -1; /* Position at start */
+  margin-right: 5px;
+  z-index: 5; /* Ensure button is clickable */
+}
+
+.day-view-button:hover {
+  opacity: 1;
+}
+
+/* Event status styles - Updated with better colors */
+.session-available {
+  background-color: #4CAF50 !important;
+  color: white !important;
+}
+
+.session-ended {
+  background-color: #607D8B !important;
+  color: white !important;
+  opacity: 0.7;
+  cursor: not-allowed !important;
+}
+
+.session-canceled {
+  background-color: #F44336 !important;
+  color: white !important;
+  opacity: 0.7;
+  cursor: not-allowed !important;
+}
+
+.session-running {
+  background-color: #2196F3 !important;
+  color: white !important;
+  cursor: not-allowed !important;
+}
+
+.session-done {
+  background-color: #9C27B0 !important;
+  color: white !important;
+}
+
+/* Default session style for any status not explicitly defined */
+.fc-event-main {
+  background-color: #FF8691 !important;
+  color: #333 !important;
+}
+
+/* Make timegrid events full width */
+.fc-timegrid-event {
+  margin: 0 !important;
+  padding: 2px !important;
+  border: none !important;
+  border-radius: 0 !important;
+  top: 0 !important;
+  right: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+}
+
+.fc-timegrid-event-harness {
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+}
+
+.fc .fc-timegrid-col-events {
+  margin: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: 100% !important;
+}
+
+/* Status badge styles */
+.status-badge {
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.canceled { background: #F44336; color: white; }
+.changed { background: #FF9800; color: white; }
+.completed { background: #9C27B0; color: white; }
+.upcoming { background: #4CAF50; color: white; }
+
+/* Form styling */
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.submit-btn {
+  padding: 0.5rem 1rem;
+  background: #95345C;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.cancel-btn {
+  padding: 0.5rem 1rem;
+  background: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* Detail section styling */
+.detail-section {
+  margin-bottom: 2rem;
+}
+
+.detail-item {
+  margin-bottom: 1rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #eee;
+}
+
+.detail-item:last-child {
+  border-bottom: none;
+}
+
+.detail-item strong {
+  display: block;
+  color: #666;
+  margin-bottom: 0.25rem;
+}
+
+.detail-item p {
+  margin: 0;
+  color: #333;
+  font-size: 1rem;
+}
+
+/* Remove view button from week view */
+.fc-timeGridWeek-view .day-view-button {
+  display: none;
+}
+
+/* Fix for event width in day view */
+.fc-timeGridDay-view .fc-timegrid-event {
+  width: 100% !important;
+}
+
+/* Add z-index to event to ensure it's clickable */
+.fc-event {
+  z-index: 4;
+}
+
+/* Add z-index to day cell to ensure the view button is clickable */
+.fc-daygrid-day-frame {
+  position: relative;
+  z-index: 3;
+}

@@ -437,17 +437,7 @@ const Register = () => {
             {isLoadingRegister ? "Registering..." : "Register"}
           </button>
         </form>
-        <div className="auth-divider">
-          <span>OR</span>
-        </div>
-        <button
-          type="button"
-          onClick={() => googleSignUp()}
-          className="google-auth-btn"
-        >
-          <FcGoogle size={20} />
-          Sign up with Google
-        </button>
+       
       </div>
     </div>
   );

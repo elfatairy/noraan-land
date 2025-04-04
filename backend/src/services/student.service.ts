@@ -136,18 +136,40 @@ export const authenticateStudent = async (id: number, email: string) => {
   return { student, token };
 };
 
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-export const verifyGoogleToken = async (idToken: string) => {
+const client = new OAuth2Client({
+  clientId: process.env.GOOGLE_CLIENT_ID,
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  redirectUri: 'postmessage',
+});
+ 
+export const verifyGoogleCredentialToken = async (mode: string, code:string|null , credential:string|null) => {
+  let idToken = "";
+  if (mode == "code" && code) {
+    const { tokens } = await client.getToken(code); 
+    console.log(tokens);
+    if (!tokens.id_token) throw new Error("No ID token received from Google");
+    idToken = tokens.id_token;
+
+  }else if (mode == "credential" && credential) {
+    idToken = credential;
+  
+  }
+
   try {
     const ticket = await client.verifyIdToken({
       idToken,
       audience: process.env.GOOGLE_CLIENT_ID,
     });
+console.log(ticket.getPayload());
     return { payload: ticket.getPayload() };
   } catch (error) {
     return { error: "Invalid student detected. Please try again" };
   }
+
 };
+
+
+
 
 export const createStudentSession = async (
   studentId: number,
@@ -191,9 +213,9 @@ export const getStudentEnrolledCourses = async (studentId: number) =>
           },
         },
       },
-    })
+    }) 
   ).map((item) => {
-    return { ...item.course, hours: item.hours, studentCourseId: item.id };
+    return { ...item.course, hours: item.hours, studentCourseId: item.id  , preferredSessionType: item.preferredSessionType };
   });
 
 export const getStudentNextWeekSessions = async (studentId: number) => {

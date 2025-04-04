@@ -135,7 +135,10 @@ const UpcomingSessions = () => {
                 </button>
               )}
               <a 
-                href={`/admin/courses/${date.session.courseId}/sessions?sessionId=${date.session.id}`}
+                href={`/admin/courses/${date.session.courseId}/sessions?${new URLSearchParams({
+                  sessionId: date.session.id,
+                  ...(date.session.course.zoomLink && { zoomUrl: date.session.course.zoomLink })
+                }).toString()}`}
                 className="action-button-upcoming view"
               >
                 View Session

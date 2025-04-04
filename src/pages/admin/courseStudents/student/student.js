@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useGetCoursePrivateStudents } from "../../../../hooks/newHooks/getCoursePrivateStudents";
 import { useGetCourseNewStudents } from "../../../../hooks/newHooks/getCourseNewStudents";
 import { useGetCourseGroupStudents } from "../../../../hooks/newHooks/getCourseGroupStudents";
@@ -212,6 +212,12 @@ const MemoizedSessionModal = React.memo(SessionModal);
 const Students = () => {
   const { id: courseId } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  
+  // Get prices from URL params or default to 0
+  const urlGroupPrice = parseFloat(searchParams.get('groupPrice')) || 0;
+  const urlPrivatePrice = parseFloat(searchParams.get('privatePrice')) || 0;
+
   const [activeTab, setActiveTab] = useState("private");
   const [students, setStudents] = useState([]);
   const [groups, setGroups] = useState([]);
@@ -234,8 +240,8 @@ const Students = () => {
   const [availableStudents, setAvailableStudents] = useState([]);
   const [availableGroups, setAvailableGroups] = useState([]);
   const [prices, setPrices] = useState({
-    privatePrice: 0 , // default value
-    groupPrice: 0    // default value
+    privatePrice: urlPrivatePrice,
+    groupPrice: urlGroupPrice
   });
 
   const { execute: getPrivateStudents, isLoading: isLoadingPrivate } =
@@ -259,10 +265,13 @@ const Students = () => {
         case "private":
           const privateResponse = await getPrivateStudents(courseId);
           setStudents(privateResponse.data.students || []);
-          setPrices({
-            privatePrice: privateResponse.data.privatePrice || 25,
-            groupPrice: privateResponse.data.groupPrice || 10
-          });
+          // Only update prices from API if URL params are not present
+          if (!searchParams.has('privatePrice') && !searchParams.has('groupPrice')) {
+            setPrices({
+              privatePrice: privateResponse.data.privatePrice || 0,
+              groupPrice: privateResponse.data.groupPrice || 0
+            });
+          }
           break;
         case "group":
           const groupsResponse = await getGroups(courseId);
@@ -460,9 +469,9 @@ const Students = () => {
     // Set session type
     params.set('sessionType', student.preferredSessionType || 'GROUP');
     
-    // Set price based on session type
-    const price = student.preferredSessionType === 'PRIVATE' ? privatePrice : groupPrice;
-    params.set('price', price || 0);
+    // Set both prices
+    params.set('privatePrice', privatePrice || 0);
+    params.set('groupPrice', groupPrice || 0);
     
     // Set hours (use 0 if null)
     params.set('hours', student.hours || 0);
