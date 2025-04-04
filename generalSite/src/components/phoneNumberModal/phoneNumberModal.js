@@ -36,7 +36,7 @@ const PhoneNumberModal = ({ isOpen, onClose, onSubmit, mode, googleData }) => {
               type="tel"
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
-              placeholder="+201012345678"
+              placeholder="+201011111111"
               className={error ? styles.error : ''}
             />
             {error && <span className={styles.errorMessage}>{error}</span>}

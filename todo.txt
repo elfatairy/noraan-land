@@ -180,27 +180,3 @@ return zoom url in the start meeting response  or in the get session response
 
 
 
-convert to private   make  prefferred session type  -> private 
-
-todo : 
-
-zoomurl from course to sessions   from upcomming to sessions
-pass price from courses to students 
-change data modal to always send both requests and add toastr and close the modal 
-calender finish
-payment ngrok
-sessions buttsons hide if there is a param 
-manag student course parse group id to select 
-google auth 
-
-
-
-
-
-gasser file structure and endpoints and database setting
-
-finish ahmed
-osama
-
-responsive
-gasser
