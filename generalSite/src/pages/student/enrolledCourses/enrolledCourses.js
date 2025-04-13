@@ -3,8 +3,8 @@ import { useGetEnrolledCourses } from '../../../hooks/userenrolledcourses';
 import Loading from '../../../components/loading/loading';
 import moment from 'moment';
 import { toast } from 'react-toastify';
-import { useNavigate } from 'react-router-dom';
-import { FaCalendar, FaBook, FaQuestionCircle, FaInfo, FaTimes } from 'react-icons/fa';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { FaCalendar, FaBook, FaQuestionCircle, FaInfo, FaTimes, FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 import './enrolledCourses.css';
 import { usePaymobIntention } from '../../../hooks/paymentHooks/paymobIntention';
 
@@ -13,7 +13,7 @@ const CourseDetailsModal = ({ course, isOpen, onClose }) => {
   
   if (!isOpen) return null;
 
-  const totalPrice = course.hours * (course.sessionType === 'GROUP' ? course.groupPrice : course.privatePrice);
+  const totalPrice = course.hours * (course.preferredSessionType === 'GROUP' ? course.groupPrice : course.privatePrice);
 
   const handlePaymobPayment = async () => {
     try {
@@ -45,7 +45,7 @@ const CourseDetailsModal = ({ course, isOpen, onClose }) => {
           </div>
           <div className="report-detail-item">
             <strong>Session Type:</strong>
-            <p>{course.sessionType}</p>
+            <p>{course.preferredSessionType}</p>
           </div>
           {course.sessionType === 'GROUP' && course.group && (
             <div className="report-detail-item">
@@ -63,7 +63,7 @@ const CourseDetailsModal = ({ course, isOpen, onClose }) => {
           </div>
           <div className="report-detail-item">
             <strong>Price per Hour:</strong>
-            <p>${course.sessionType === 'GROUP' ? course.groupPrice : course.privatePrice}</p>
+            <p>${course.preferredSessionType === 'GROUP' ? course.groupPrice : course.privatePrice}</p>
           </div>
           <div className="report-detail-item">
             <strong>Total Price:</strong>
@@ -90,16 +90,54 @@ const CourseDetailsModal = ({ course, isOpen, onClose }) => {
   );
 };
 
+const TransactionModal = ({ status, onClose }) => {
+  const isSuccess = status === 'SUCCESS';
+  
+  return (
+    <div className="report-modal">
+      <div className="report-modal-content transaction-status">
+        <div className="transaction-icon">
+          {isSuccess ? (
+            <FaCheckCircle className="success-icon" />
+          ) : (
+            <FaTimesCircle className="error-icon" />
+          )}
+        </div>
+        <h3>{isSuccess ? 
+          "The course has been purchased" : 
+          "The course has not been purchased, an error occurred"}
+        </h3>
+        <button 
+          className="close-transaction-button"
+          onClick={onClose}
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  );
+};
+
 const EnrolledCourses = () => {
   const [courses, setCourses] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const { execute: getEnrolledCourses, isLoading } = useGetEnrolledCourses();
   const navigate = useNavigate();
+  const location = useLocation();
   const [selectedCourse, setSelectedCourse] = useState(null);
+  const [transactionStatus, setTransactionStatus] = useState(null);
 
   useEffect(() => {
     fetchCourses();
   }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const status = params.get('transaction_status');
+    if (status) {
+      setTransactionStatus(status);
+    }
+  }, [location]);
 
   const fetchCourses = async () => {
     try {
@@ -110,6 +148,11 @@ const EnrolledCourses = () => {
     } catch (error) {
       toast.error('Failed to fetch enrolled courses');
     }
+  };
+
+  const handleCloseTransactionModal = () => {
+    setTransactionStatus(null);
+    navigate('/student/enrolled-courses', { replace: true });
   };
 
   const filteredCourses = courses.filter(course => 
@@ -186,6 +229,13 @@ const EnrolledCourses = () => {
           course={selectedCourse}
           isOpen={!!selectedCourse}
           onClose={() => setSelectedCourse(null)}
+        />
+      )}
+
+      {transactionStatus && (
+        <TransactionModal 
+          status={transactionStatus}
+          onClose={handleCloseTransactionModal}
         />
       )}
     </div>

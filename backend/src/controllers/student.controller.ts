@@ -18,7 +18,7 @@ import {
   getStudentCourseSubscriptionStatus,
   nameExists,
   updateStudent,
-  verifyGoogleToken,
+  verifyGoogleCredentialToken,
   getStudentEnrolledCourses,
   getStudentNextWeekSessions,
   getStudentsService,
@@ -489,9 +489,9 @@ export const googleLogin = async (
   next: NextFunction
 ) => {
   try {
-    const { idToken, phone } = req.body;
+    const { mode, phoneNumber , code , credential } = req.body;
 
-    if (!phone || !validatePhone(phone)) {
+    if (!phoneNumber || !validatePhone(phoneNumber)) {
       res.status(400).json({
         name: "INVALID_PAYLOAD",
         message: "Invalid payload data",
@@ -499,7 +499,7 @@ export const googleLogin = async (
       return;
     }
 
-    const verificationResponse = await verifyGoogleToken(idToken);
+    const verificationResponse = await verifyGoogleCredentialToken(mode, code , credential);
     if (verificationResponse.error || !verificationResponse.payload) {
       res.status(400).json({
         name: "ERROR_VERIFING_GOOGLE",
@@ -520,7 +520,7 @@ export const googleLogin = async (
 
     let data;
     if (!(await emailExists(email))) {
-      const { id: studentId } = await createStudent(name, email, phone);
+      const { id: studentId } = await createStudent(name, email, phoneNumber);
       data = await authenticateStudent(studentId, email);
     } else {
       const student = await getStudentByEmail(email);
@@ -1285,7 +1285,7 @@ export const getMyCourses = async (
   next: NextFunction
 ) => {
   try {
-    const { id: studentId } = res.locals.student;
+    const { id: studentId , preferredSessionType:preferredSessionType } = res.locals.student;
 
     let enrolledCourses = await getStudentEnrolledCourses(studentId);
     let enrolledCoursesWithStatus: ((typeof enrolledCourses)[number] & {
@@ -1300,10 +1300,11 @@ export const getMyCourses = async (
         ),
       });
     }));
-
+    
     res.json({
       message: "Enrolled Courses Retreived Successfully",
       data: {
+        preferredSessionType,
         courses: enrolledCoursesWithStatus,
       },
     });

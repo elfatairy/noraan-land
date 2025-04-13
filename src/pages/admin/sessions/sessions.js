@@ -548,6 +548,7 @@ const Sessions = () => {
   const groupIdFromUrl = queryParams.get("groupId");
   const [searchParams] = useSearchParams();
   const sessionIdFromUrl = searchParams.get("sessionId");
+  const zoomUrlFromParams = searchParams.get("zoomUrl");
 
   useEffect(() => {
     fetchSessions();
@@ -588,8 +589,14 @@ const Sessions = () => {
 
   const handleStartMeeting = async (sessionId) => {
     try {
-      const response = await startMeeting(sessionId);
-      window.open(response.data.startUrl, "_blank");
+      // If we have a zoomUrl parameter, use that instead of getting a new URL
+      if (zoomUrlFromParams) {
+        await startMeeting(sessionId); // Still notify backend that session started
+        window.open(zoomUrlFromParams, "_blank");
+      } else {
+      toast.error("Failed to start meeting");
+
+      }
     } catch (error) {
       toast.error("Failed to start meeting");
     }
@@ -803,12 +810,17 @@ const handleCreateSession = async (e) => {
   }, []); // Empty dependency array since we only need the setters
 
   const filteredSessions = sessions.filter((session) => {
-    // First check if we have a sessionId filter
+    // If we have a sessionId filter, only show that session
     if (sessionIdFromUrl) {
       return session.id === parseInt(sessionIdFromUrl);
     }
-  
-    // If no sessionId filter, apply regular filters
+    
+    // If we have a zoomUrl, only show UPCOMING sessions
+    if (zoomUrlFromParams) {
+      return session.status === "UPCOMING";
+    }
+
+    // Regular filters - these will only apply when no URL params are present
     const matchesSearch = session.title
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
@@ -882,36 +894,32 @@ const renderUpdateSessionModal = () => {
     );
   };
 
-  const showFilters = !sessionIdFromUrl;
+  const showFilters = !sessionIdFromUrl && !zoomUrlFromParams;
 
   return (
     <div className="sessions-container">
       <div className="sessions-header">
-        {showFilters && (
-          <>
-            <div className="search-filter">
-              <input
-                type="text"
-                placeholder="Search sessions..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              <select
-                value={filterType}
-                onChange={(e) => setFilterType(e.target.value)}
-              >
-                <option value="All">All Sessions</option>
-                <option value="GROUP">Group Sessions</option>
-                <option value="PRIVATE">Private Sessions</option>
-              </select>
-            </div>
-            <div className="create-buttons">
-              <button onClick={() => setIsCreateModalOpen(true)}>
-                Create Session
-              </button>
-            </div>
-          </>
-        )}
+        <div className="search-filter">
+          <input
+            type="text"
+            placeholder="Search sessions..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <select
+            value={filterType}
+            onChange={(e) => setFilterType(e.target.value)}
+          >
+            <option value="All">All Sessions</option>
+            <option value="GROUP">Group Sessions</option>
+            <option value="PRIVATE">Private Sessions</option>
+          </select>
+        </div>
+        <div className="create-buttons">
+          <button onClick={() => setIsCreateModalOpen(true)}>
+            Create Session
+          </button>
+        </div>
       </div>
 
       <div className="sessions-list">

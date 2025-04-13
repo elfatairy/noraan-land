@@ -39,15 +39,6 @@ export const AuthProvider = ({ children }) => {
   const { execute: executeGoogleLogin } = useGoogleLoginHook();
   const { isLoading: isLoadingGetMe, execute: executeGetMe } = useGetMe();
 
-  const handleAuthSuccess = (response) => {
-    setStorageData('token', response.data.token);
-    setStorageData('id', response.data.user.id);
-    setStorageData('name', response.data.user.name);
-    setStorageData('email', response.data.user.email);
-    setUser(response.data.user);
-    setIsLoggedIn(true);
-    return { success: true };
-  };
 
   const handleGoogleLoginSuccess = async (response) => {
     try {
@@ -56,6 +47,7 @@ export const AuthProvider = ({ children }) => {
       setStorageData('id', response.data.student.id);
       setStorageData('name', response.data.student.name);
       setStorageData('email', response.data.student.email);
+      setStorageData('phone', response.data.student.phone); 
       
       // Update context
       setUser(response.data.student);
@@ -74,12 +66,6 @@ export const AuthProvider = ({ children }) => {
   const login = async (type, payload) => {
     try {
       let response;
-      
-      if (type === 'google') {
-        console.log('Google login payload:', payload);
-        response = await executeGoogleLogin(payload.accessToken, payload.phone);
-        return handleGoogleLoginSuccess(response);
-      } else {
         // Regular email/password login
         response = await executeLogin(payload.email, payload.password);
         
@@ -100,7 +86,7 @@ export const AuthProvider = ({ children }) => {
             message: response.message || 'Logged in successfully!'
           };
         }
-      }
+      
       return { success: false };
     } catch (error) {
       handleLoginError(error);
@@ -108,18 +94,16 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const register = async (type, payload) => {
+  const register = async ( payload) => {
     try {
       let response;
-      if (type === 'google') {
-        response = await executeGoogleLogin(payload.accessToken, payload.phone);
-      } else {
+ 
         const { name, email, password, phone } = payload;
-        if (!validateRegistrationData(name, email, password)) {
+        if (!validateRegistrationData(name, email, password, phone)) {
           return { success: false };
         }
         response = await executeRegister(name, email, password, phone);
-      }
+      
 
       if (response?.success && response?.data?.student) {
         // Store user data including phone
@@ -143,9 +127,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const validateRegistrationData = (name, email, password) => {
-    console.log("reg data :", name, email, password)
+  const validateRegistrationData = (name, email, password, phone) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+
     if (!emailRegex.test(email)) {
       toast.error("Please enter a valid email address");
       return false;
@@ -158,9 +143,43 @@ export const AuthProvider = ({ children }) => {
       toast.error("Name must be at least 4 characters long");
       return false;
     }
+    if (!phoneRegex.test(phone)) {
+      toast.error("Please enter a valid phone number");
+      return false;
+    }
     return true;
   };
 
+  const handleGoogleLogin = async (mode, payload) => {
+    try {
+      const response = await executeGoogleLogin({
+        mode,
+        phoneNumber: payload.phoneNumber,
+        code: payload.code || null,
+        credential: payload.credential || null
+      });
+
+      if (response?.data?.student) {
+        setStorageData('token', response.data.token);
+        setStorageData('id', response.data.student.id);
+        setStorageData('name', response.data.student.name);
+        setStorageData('email', response.data.student.email);
+        setStorageData('phone', response.data.student.phone);
+
+        setUser(response.data.student);
+        setIsLoggedIn(true);
+
+        return { 
+          success: true,
+          message: 'Logged in with Google successfully!'
+        };
+      }
+      return { success: false };
+    } catch (error) {
+      handleLoginError(error);
+      return { success: false };
+    }
+  };
 
   // Modify adminLogin to also store isAdmin flag
   const adminLogin = async (username, password) => {
@@ -254,6 +273,7 @@ export const AuthProvider = ({ children }) => {
     isLoadingAdminLogin,
     updateProfile: executeUpdateProfile,
     isLoadingUpdateProfile,
+    handleGoogleLogin
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

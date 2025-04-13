@@ -446,3 +446,42 @@
   line-height: 1.5;
   flex: 1;
 }
+
+.transaction-status {
+  text-align: center;
+  padding: 2rem;
+}
+
+.transaction-icon {
+  font-size: 4rem;
+  margin-bottom: 1.5rem;
+}
+
+.success-icon {
+  color: #2ecc71;
+}
+
+.error-icon {
+  color: #e74c3c;
+}
+
+.close-transaction-button {
+  margin-top: 2rem;
+  padding: 0.75rem 2rem;
+  background-color: #95345C;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s;
+}
+
+.close-transaction-button:hover {
+  background-color: #7a2b4c;
+}
+
+.transaction-status h3 {
+  color: #333;
+  margin-bottom: 1.5rem;
+}

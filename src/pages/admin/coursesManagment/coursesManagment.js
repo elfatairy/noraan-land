@@ -202,13 +202,24 @@ const CoursesManagement = () => {
             </div>
             <div className="card-actions">
               <button 
-                onClick={() => navigate(`/admin/courses/${course.id}/students`)}
+                onClick={() => {
+                  const params = new URLSearchParams();
+                  params.append('groupPrice', course.groupPrice);
+                  params.append('privatePrice', course.privatePrice);
+                  navigate(`/admin/courses/${course.id}/students?${params.toString()}`);
+                }}
                 className="action-button-courseM students"
               >
                 <FaUsers /> Students
               </button>
               <button 
-                onClick={() => navigate(`/admin/courses/${course.id}/sessions`)}
+                onClick={() => {
+                  const params = new URLSearchParams();
+                  if (course.zoomLink) {
+                    params.append('zoomUrl', course.zoomLink);
+                  }
+                  navigate(`/admin/courses/${course.id}/sessions?${params.toString()}`);
+                }}
                 className="action-button-courseM sessions"
               >
                 <FaCalendar /> Sessions
