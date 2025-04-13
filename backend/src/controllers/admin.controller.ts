@@ -99,9 +99,9 @@ export const getCourseSessions = async (
         } = session;
 
         const recordings = (await getRecordings(session.id)) ?? [];
-        const recordingsGuids: string[] = [];
+        const recordingsUuids: string[] = [];
         recordings.forEach((recording) => {
-          recordingsGuids.push(recording.bunnyGuid);
+          recordingsUuids.push(recording.videoUuid);
         });
 
         return {
@@ -115,7 +115,7 @@ export const getCourseSessions = async (
           title,
           startedAt,
           calendarDate,
-          recordings: recordingsGuids,
+          recordings: recordingsUuids,
         };
       })
     );

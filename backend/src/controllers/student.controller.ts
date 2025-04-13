@@ -828,12 +828,12 @@ export const getCourseSessions = async (
         }
 
         const recordings = (await getRecordings(session.id)) ?? [];
-        const recordingsGuids: string[] = [];
+        const recordingsUuids: string[] = [];
         await Promise.allSettled(
           recordings.map(async (recording) => {
-            recordingsGuids.push(
+            recordingsUuids.push(
               subscriptionStatus == SubscriptionStatus.SUBSCRIBED
-                ? recording.bunnyGuid
+                ? recording.videoUuid
                 : ""
             );
           })
@@ -851,7 +851,7 @@ export const getCourseSessions = async (
           report,
           zoomLink,
           startedAt,
-          recordings: recordingsGuids,
+          recordings: recordingsUuids,
         };
       })
     );

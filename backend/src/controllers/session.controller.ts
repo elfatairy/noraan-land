@@ -471,15 +471,15 @@ export const uploadRecords = async (
     // Process file uploads
     await Promise.all(
       fileArray.map(async (file) => {
-        const videoGuid = await uploadRecording(file, session.id);
-        if (!videoGuid) {
+        const videoUuid = await uploadRecording(file, session.id);
+        if (!videoUuid) {
           res.status(500).json({
             name: "ERROR_UPLOADING",
             message: "There was an error while uploading the recordings",
           });
           return;
         }
-        await createRecording(session.id, videoGuid);
+        await createRecording(session.id, videoUuid);
       })
     );
 

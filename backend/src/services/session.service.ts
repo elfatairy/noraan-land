@@ -12,6 +12,8 @@ import axios from "axios";
 import * as fs from "fs";
 import path from "path";
 import { Report } from "../../types";
+import { randomUUID } from "node:crypto";
+import { mkdir, mkdirSync } from "node:fs";
 
 export const createSessionService = async (
   courseId: number,
@@ -34,7 +36,8 @@ export const createSessionService = async (
       isFree,
       sessionType,
       groupId: sessionType == SessionType.GROUP ? groupId : null,
-      privateStudentId: sessionType == SessionType.PRIVATE ? privateStudentId : null,
+      privateStudentId:
+        sessionType == SessionType.PRIVATE ? privateStudentId : null,
     },
   });
 
@@ -80,7 +83,7 @@ export const cancelSessionService = async (
     },
     data: {
       changingStatus: CalendarDateChangingStatus.CANCELED,
-      status: CalendarDateStatus.DONE
+      status: CalendarDateStatus.DONE,
     },
   });
 
@@ -262,35 +265,50 @@ export const uploadRecording = async (
       },
     });
 
-    const videoGuid = await createBunnyVideo(title);
+    const videoUuid = randomUUID();
 
-    const uploadPath = path.join(__dirname, "uploads", file.name);
-    file.mv(uploadPath, async (err) => {
-      if (err) {
-        throw Error(err);
-      }
+    await new Promise((resolve, reject) =>
+      mkdir(
+        path.join(__dirname, `../../uploads/videos/${videoUuid}`),
+        { recursive: true },
+        async (err) => {
+          if (err) {
+            console.log(err);
+            throw Error(err.message);
+          }
 
-      try {
-        await uploadVideoToBunny(videoGuid, uploadPath);
+          const uploadPath = path.join(
+            __dirname,
+            `../../uploads/videos/${videoUuid}`,
+            videoUuid + "." + file.name.split(".").pop()
+          );
+          await new Promise((resolve) =>
+            file.mv(uploadPath, async (err) => {
+              if (err) {
+                console.log(err);
+                throw Error(err);
+              }
+              resolve(true);
+            })
+          );
 
-        fs.unlinkSync(uploadPath);
-      } catch (error) {
-        throw Error("Error uploading to Bunny CDN: " + error);
-      }
-    });
+          resolve(true);
+        }
+      )
+    );
 
-    return videoGuid;
+    return videoUuid;
   } catch (error) {
     console.log(error);
     return false;
   }
 };
 
-export const createRecording = async (sessionId: number, videoGuid: string) => {
+export const createRecording = async (sessionId: number, videoUuid: string) => {
   await prisma.recording.create({
     data: {
       sessionId: sessionId,
-      bunnyGuid: videoGuid,
+      videoUuid: videoUuid,
     },
   });
 };
