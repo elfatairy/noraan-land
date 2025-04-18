@@ -470,7 +470,10 @@ const RecordingsModal = memo(({ recordings, isOpen, onClose }) => {
             <div key={recordingId} className={styles.reportDetailItem}>
               <h4>Recording {index + 1}</h4>
               <iframe
-                src={`https://iframe.mediadelivery.net/embed/366620/${recordingId}`}
+               // src={`https://iframe.mediadelivery.net/embed/366620/${recordingId}`}
+                //src={`http://localhost:3000/videos/${recordingId}`}
+                src={`https://nooranland.com/videos/${recordingId}`}
+
                 loading="lazy"
                 style={{ border: 'none', width: '100%', aspectRatio: '16/9' }}
                 allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
@@ -489,6 +492,7 @@ const Sessions = () => {
   const [sessions, setSessions] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("All");
+  const [statusFilter, setStatusFilter] = useState("All");
   const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
   const [isIndividualModalOpen, setIsIndividualModalOpen] = useState(false);
   const [isStartModalOpen, setIsStartModalOpen] = useState(false);
@@ -815,12 +819,7 @@ const handleCreateSession = async (e) => {
       return session.id === parseInt(sessionIdFromUrl);
     }
     
-    // If we have a zoomUrl, only show UPCOMING sessions
-    if (zoomUrlFromParams) {
-      return session.status === "UPCOMING";
-    }
-
-    // Regular filters - these will only apply when no URL params are present
+    // Regular filters - these will apply for all other cases, including when zoomUrl is present
     const matchesSearch = session.title
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
@@ -830,7 +829,10 @@ const handleCreateSession = async (e) => {
       (filterType === "PRIVATE" && session.sessionType === "PRIVATE");
     const matchesGroup =
       !groupIdFromUrl || session.groupId === parseInt(groupIdFromUrl);
-    return matchesSearch && matchesFilter && matchesGroup;
+    const matchesStatus = 
+      statusFilter === "All" || 
+      session.status === statusFilter;
+    return matchesSearch && matchesFilter && matchesGroup && matchesStatus;
   });
 
   const getSessionParticipant = (session) => {
@@ -894,27 +896,40 @@ const renderUpdateSessionModal = () => {
     );
   };
 
-  const showFilters = !sessionIdFromUrl && !zoomUrlFromParams;
+  // Only hide filters when there's a sessionId parameter
+  const showFilters = !sessionIdFromUrl;
 
   return (
     <div className="sessions-container">
       <div className="sessions-header">
-        <div className="search-filter">
-          <input
-            type="text"
-            placeholder="Search sessions..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <select
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-          >
-            <option value="All">All Sessions</option>
-            <option value="GROUP">Group Sessions</option>
-            <option value="PRIVATE">Private Sessions</option>
-          </select>
-        </div>
+        {showFilters && (
+          <div className="search-filter">
+            <input
+              type="text"
+              placeholder="Search sessions..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+            >
+              <option value="All">All Sessions</option>
+              <option value="GROUP">Group Sessions</option>
+              <option value="PRIVATE">Private Sessions</option>
+            </select>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              <option value="All">All Statuses</option>
+              <option value="UPCOMING">Upcoming</option>
+              <option value="RUNNING">Running</option>
+              <option value="ENDED">Ended</option>
+              <option value="CANCELED">Canceled</option>
+            </select>
+          </div>
+        )}
         <div className="create-buttons">
           <button onClick={() => setIsCreateModalOpen(true)}>
             Create Session
@@ -973,7 +988,7 @@ const renderUpdateSessionModal = () => {
               )}
 
               {session.status === 'ENDED' && (
-                <>
+                <> 
                   <button
                     className="action-button-session upload"
                     onClick={() => handleUploadClick(session)}
@@ -988,7 +1003,7 @@ const renderUpdateSessionModal = () => {
                       View Recordings
                     </button>
                   )}
-                </>
+                </>  
               )}
             </div>
           </div>

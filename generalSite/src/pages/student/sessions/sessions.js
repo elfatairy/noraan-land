@@ -169,7 +169,9 @@ const RecordingsModal = ({ recordings, isOpen, onClose }) => {
             <div key={recordingId} className="report-detail-item">
               <h4>Recording {index + 1}</h4>
               <iframe
-                src={`https://iframe.mediadelivery.net/embed/366620/${recordingId}`}
+               // src={`https://iframe.mediadelivery.net/embed/366620/${recordingId}`}
+                src={`https://nooranland.com/videos/${recordingId}`}
+                //src={`http://localhost:3000/videos/${recordingId}`}
                 loading="lazy"
                 style={{ border: 'none', width: '100%', aspectRatio: '16/9' }}
                 allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
