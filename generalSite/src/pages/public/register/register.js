@@ -1,4 +1,4 @@
-import React, { useState } from "react";  
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "react-toastify/dist/ReactToastify.css";
 import "./register.css";
@@ -8,7 +8,7 @@ import { useGoogleLogin } from "@react-oauth/google";
 import { FcGoogle } from 'react-icons/fc';
 import { toast } from 'react-toastify';
 import Select from 'react-select';
-
+import { setStorageData} from '../../../utils/data'
 const countryOptions = [
   { value: '+93', label: '🇦🇫 Afghanistan (+93)' },
   { value: '+355', label: '🇦🇱 Albania (+355)' },
@@ -241,11 +241,18 @@ const countryOptions = [
   { value: '+290', label: '🇸🇭 Saint Helena (+290)' },
   { value: '+1869', label: '🇰🇳 Saint Kitts and Nevis (+1869)' },
   { value: '+508', label: '🇵🇲 Saint Pierre and Miquelon (+508)' },
-  { value: '+1721', label: '🇸🇽 Sint Maarten (+1721)' },
+  { value: '+1721', label: '🇸🇽 Sint Maarten (+1721)' } ,
   { value: '+1649', label: '🇹🇨 Turks and Caicos Islands (+1649)' },
   { value: '+1340', label: '🇻🇮 U.S. Virgin Islands (+1340)' },
   { value: '+681', label: '🇼🇫 Wallis and Futuna (+681)' }
 ];
+
+
+const timeZoneOptions = Intl.supportedValuesOf('timeZone').map((tz) => ({
+  value: tz,
+  label: tz.replace('_', ' '),
+}));
+
 
 const Register = () => {
   const [username, setUsername] = useState("");
@@ -253,9 +260,10 @@ const Register = () => {
   const [password, setPassword] = useState("");
   const [countryCode, setCountryCode] = useState("+20"); // Default to Egypt
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [timezone, setTimezone] = useState(null);
   const [errors, setErrors] = useState({});
 
-  const { register,googleRegister, isLoadingRegister } = useAuth();
+  const { register, googleRegister, isLoadingRegister } = useAuth();
   const navigate = useNavigate();
 
   const validateUsername = (username) => {
@@ -279,8 +287,21 @@ const Register = () => {
   const googleSignUp = useGoogleLogin({
     onSuccess: async (codeResponse) => {
       try {
-        const result = await register('google', codeResponse.access_token);
+        // Check if we have phone number before proceeding with Google signup
+        if (!phoneNumber || !validatePhone(phoneNumber)) {
+          toast.error('Please enter a valid phone number before signing up with Google');
+          return;
+        }
+        // Include phone number with Google registration
+        const result = await register('google', {
+          access_token: codeResponse.access_token,
+          phone: `${countryCode}${phoneNumber}`
+        });
         if (result?.success) {
+          // Save timezone if available
+          if (timezone?.value) {
+            setStorageData('timezone', timezone.value);
+          }
           navigate("/");
         }
       } catch (error) {
@@ -290,18 +311,21 @@ const Register = () => {
     onError: () => toast.error('Google registration failed'),
     flow: 'implicit',
     popup: true,
-    cookiePolicy: 'single_host_origin'  });
-  
+    cookiePolicy: 'single_host_origin'
+  });
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) {
+      console.log(timezone?.value)
       const result = await register('credentials', {
         name: username,
         email,
         password,
-        phone: `${countryCode}${phoneNumber}` // Concatenated phone number
+        phone: `${countryCode}${phoneNumber}`, // Concatenated phone number
       });
-      
+
+      setStorageData('timezone' ,timezone?.value )
       if (result?.success) {
         navigate("/", { replace: true }); // Replace current route with home
       }
@@ -334,6 +358,10 @@ const Register = () => {
       newErrors.phone = "Phone number is required";
     } else if (!validatePhone(phoneNumber)) {
       newErrors.phone = "Please enter a valid phone number";
+    }
+
+    if (!timezone) {
+      newErrors.timezone = "Timezone is required";
     }
 
     setErrors(newErrors);
@@ -410,6 +438,30 @@ const Register = () => {
             )}
           </div>
           <div className="auth-form-group">
+  <label htmlFor="timezone">Time Zone</label>
+  <Select
+    id="timezone"
+    name="timezone"
+    options={timeZoneOptions}
+    value={timezone}
+    onChange={(option) => setTimezone(option)}
+    className={`timezone-select-container ${errors.timezone ? "error" : ""}`}
+    styles={{
+      container: (base) => ({
+        ...base,
+        width: '92%',
+      }),
+    }}
+    classNamePrefix="timezone-select"
+    isSearchable={true}
+    placeholder="Select your timezone"
+  />
+  {errors.timezone && (
+    <span className="error-message">{errors.timezone}</span>
+  )}
+</div>
+
+          <div className="auth-form-group">
             <label htmlFor="password">Password</label>
             <input
               type="password"
@@ -437,7 +489,7 @@ const Register = () => {
             {isLoadingRegister ? "Registering..." : "Register"}
           </button>
         </form>
-       
+
       </div>
     </div>
   );

@@ -94,10 +94,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const register = async ( payload) => {
+  const register = async (type, payload) => {
     try {
       let response;
- 
+
         const { name, email, password, phone } = payload;
         if (!validateRegistrationData(name, email, password, phone)) {
           return { success: false };
@@ -105,16 +105,17 @@ export const AuthProvider = ({ children }) => {
         response = await executeRegister(name, email, password, phone);
       
 
-      if (response?.success && response?.data?.student) {
-        // Store user data including phone
+      if (response?.data?.user || response?.data?.student) {
+        const userData = response?.data?.user || response?.data?.student;
+        // Store user data
         setStorageData('token', response.data.token);
-        setStorageData('id', response.data.student.id);
-        setStorageData('name', response.data.student.name);
-        setStorageData('email', response.data.student.email);
-        setStorageData('phone', response.data.student.phone); // Add this line
+        setStorageData('id', userData.id);
+        setStorageData('name', userData.name);
+        setStorageData('email', userData.email);
+        setStorageData('phone', userData.phone); // Store phone number
         
         // Update context
-        setUser(response.data.student);
+        setUser(userData);
         setIsLoggedIn(true);
         
         toast.success(response.message || 'Registration successful!');
@@ -129,8 +130,6 @@ export const AuthProvider = ({ children }) => {
 
   const validateRegistrationData = (name, email, password, phone) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
-
     if (!emailRegex.test(email)) {
       toast.error("Please enter a valid email address");
       return false;
@@ -143,7 +142,7 @@ export const AuthProvider = ({ children }) => {
       toast.error("Name must be at least 4 characters long");
       return false;
     }
-    if (!phoneRegex.test(phone)) {
+    if (!phone) {
       toast.error("Please enter a valid phone number");
       return false;
     }

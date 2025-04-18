@@ -14,7 +14,7 @@ const About = lazy(() => import('../pages/public/about/about'));
 const Courses = lazy(() => import('../pages/public/courses/courses'));
 const Login = lazy(() => import('../pages/public/login/login'));
 const Register = lazy(() => import('../pages/public/register/register'));
-
+const Privacy = lazy(() => import('../pages/public/privacy/privacy'));
 // Lazy load student pages
 const EnrolledCourses = lazy(() => import('../pages/student/enrolledCourses/enrolledCourses'));
 const StudentUpcomingSessions = lazy(() => import('../pages/student/upcomingSessions/upcomingSessions'));
@@ -28,6 +28,7 @@ export const routes = [
     children: [
       { path: PATHS.HOME, element: <Home /> },
       { path: PATHS.ABOUT, element: <About /> },
+      { path: PATHS.PRIVACY, element: <Privacy /> },
       { path: PATHS.COURSES, element: <Courses /> },
       { path: PATHS.PROFILE, element: <Profile /> },
       { path: PATHS.LOGIN, element: <Login /> },
