@@ -1,6 +1,7 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+ "short_name": "Nooran Land",
+  "name": "Nooran Land For Quran & Arabic Language",
+  "description": "Nooran Land is a platform for learning Quran and Arabic language, providing various resources and tools for students.",
   "icons": [
     {
       "src": "favicon.ico",
