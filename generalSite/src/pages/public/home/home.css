@@ -9,7 +9,7 @@
 /***** HERO ********/
 
 .hero {
-  width: 99.%;
+  width: 100vw;
   height: 112vh;
   display: flex;
   flex-direction: column;
@@ -332,6 +332,7 @@
 
 .testimonials .content .left video {
   border-radius: 10px;
+  height: 550px;
 }
 
 .testimonials .content .right {
@@ -361,7 +362,6 @@
   font-style: italic;
 }
 
-
 .testimonials .content .right::-webkit-scrollbar {
   width: 5px;
   height: 8px;
@@ -376,4 +376,35 @@
 
 .testimonials .content .right::-webkit-scrollbar-thumb:hover {
   background: #555;
+}
+
+@media screen and (max-width: 1200px) {
+  .testimonials .content {
+    padding-inline: 50px;
+  }
+}
+
+@media screen and (max-width: 940px) {
+  .testimonials .content {
+    flex-direction: column;
+    height: auto;
+    width: 450px;
+    padding-inline: 0;
+  }
+  .testimonials .content .right {
+    height: 550px;
+  }
+}
+
+@media screen and (max-width: 500px) {
+  .testimonials .content .left video {
+    height: 450px;
+  }
+
+  .testimonials .content {
+    width: 350px;
+  }
+  .testimonials .content .right {
+    height: 450px;
+  }
 }
