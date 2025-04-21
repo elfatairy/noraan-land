@@ -9,7 +9,7 @@
 /***** HERO ********/
 
 .hero {
-  width: 100%;
+  width: 99.%;
   height: 112vh;
   display: flex;
   flex-direction: column;
