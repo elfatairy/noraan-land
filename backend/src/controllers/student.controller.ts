@@ -25,6 +25,7 @@ import {
   assignHours,
   assignGroup,
   getStudentReportsService,
+  updatePreferedSessionType,
 } from "../services/student.service";
 import { compare } from "bcrypt";
 import {
@@ -47,7 +48,11 @@ import {
   getSession,
   getSessions,
 } from "../services/session.service";
-import { SubscriptionMethod, SubscriptionStatus } from "@prisma/client";
+import {
+  SessionType,
+  SubscriptionMethod,
+  SubscriptionStatus,
+} from "@prisma/client";
 import { getDate } from "../services/calendar.service";
 import { JOIN_LINK_SHOW } from "../utils/constants.util";
 import { serialize } from "../utils/helper.util";
@@ -279,6 +284,10 @@ export const assignGroupToStudent = async (
       studentCourse.StudentCourseSubscription.subscriptionStatus ==
         SubscriptionStatus.SUBSCRIBED;
 
+    if (studentCourse.groupId == null) {
+      await updatePreferedSessionType(studentCourse.id, SessionType.GROUP);
+    }
+
     const updatedStudentCourse = await assignGroup(studentCourse.id, groupId);
 
     if (shouldRevokeSubscription) {
@@ -345,6 +354,8 @@ export const convertStudentToPrivate = async (
     const shouldRevokeSubscription =
       studentCourse.StudentCourseSubscription.subscriptionStatus ==
       SubscriptionStatus.SUBSCRIBED;
+
+    await updatePreferedSessionType(studentCourse.id, SessionType.PRIVATE);
 
     const updatedStudentCourse = await assignGroup(studentCourse.id, null);
 
@@ -489,7 +500,7 @@ export const googleLogin = async (
   next: NextFunction
 ) => {
   try {
-    const { mode, phoneNumber , code , credential } = req.body;
+    const { mode, phoneNumber, code, credential } = req.body;
 
     if (!phoneNumber || !validatePhone(phoneNumber)) {
       res.status(400).json({
@@ -499,7 +510,11 @@ export const googleLogin = async (
       return;
     }
 
-    const verificationResponse = await verifyGoogleCredentialToken(mode, code , credential);
+    const verificationResponse = await verifyGoogleCredentialToken(
+      mode,
+      code,
+      credential
+    );
     if (verificationResponse.error || !verificationResponse.payload) {
       res.status(400).json({
         name: "ERROR_VERIFING_GOOGLE",
@@ -1255,7 +1270,10 @@ export const paymobResponse = async (
       console.log(req.body.obj);
     }
 
-    savePaymobTransactionId(obj.payment_key_claims.next_payment_intention, req.body.obj.id);
+    savePaymobTransactionId(
+      obj.payment_key_claims.next_payment_intention,
+      req.body.obj.id
+    );
   } catch (err: any) {
     console.log("ERROR: ", err);
   }
@@ -1268,12 +1286,11 @@ export const subscriptionWebhook = async (
 ) => {
   try {
     console.log(req.body);
-    const {subscription_data} = req.body;
+    const { subscription_data } = req.body;
 
-    if(subscription_data.state == "active") {
+    if (subscription_data.state == "active") {
       approvePaymobSubscription(req.body.transaction_id, subscription_data.id);
     }
-    
   } catch (err: any) {
     console.log("ERROR: ", err);
   }
@@ -1285,22 +1302,25 @@ export const getMyCourses = async (
   next: NextFunction
 ) => {
   try {
-    const { id: studentId , preferredSessionType:preferredSessionType } = res.locals.student;
+    const { id: studentId, preferredSessionType: preferredSessionType } =
+      res.locals.student;
 
     let enrolledCourses = await getStudentEnrolledCourses(studentId);
     let enrolledCoursesWithStatus: ((typeof enrolledCourses)[number] & {
       subscriptionStatus: SubscriptionStatus;
     })[] = [];
 
-    await Promise.allSettled(enrolledCourses.map(async (studentCourse) => {
-      enrolledCoursesWithStatus.push({
-        ...studentCourse,
-        subscriptionStatus: await getStudentCourseSubscriptionStatus(
-          studentCourse.studentCourseId
-        ),
-      });
-    }));
-    
+    await Promise.allSettled(
+      enrolledCourses.map(async (studentCourse) => {
+        enrolledCoursesWithStatus.push({
+          ...studentCourse,
+          subscriptionStatus: await getStudentCourseSubscriptionStatus(
+            studentCourse.studentCourseId
+          ),
+        });
+      })
+    );
+
     res.json({
       message: "Enrolled Courses Retreived Successfully",
       data: {

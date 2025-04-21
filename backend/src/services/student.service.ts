@@ -3,7 +3,7 @@ import bcrypt from "bcrypt";
 import { generateToken } from "../utils/token.util";
 import { OAuth2Client } from "google-auth-library";
 import { JOIN_LINK_SHOW, ROLES } from "../utils/constants.util";
-import { CalendarDateStatus, Prisma } from "@prisma/client";
+import { CalendarDateStatus, Prisma, SessionType } from "@prisma/client";
 import { StringValue } from "../../types";
 
 export const emailExists = async (email: string) => {
@@ -139,20 +139,22 @@ export const authenticateStudent = async (id: number, email: string) => {
 const client = new OAuth2Client({
   clientId: process.env.GOOGLE_CLIENT_ID,
   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  redirectUri: 'postmessage',
+  redirectUri: "postmessage",
 });
- 
-export const verifyGoogleCredentialToken = async (mode: string, code:string|null , credential:string|null) => {
+
+export const verifyGoogleCredentialToken = async (
+  mode: string,
+  code: string | null,
+  credential: string | null
+) => {
   let idToken = "";
   if (mode == "code" && code) {
-    const { tokens } = await client.getToken(code); 
+    const { tokens } = await client.getToken(code);
     console.log(tokens);
     if (!tokens.id_token) throw new Error("No ID token received from Google");
     idToken = tokens.id_token;
-
-  }else if (mode == "credential" && credential) {
+  } else if (mode == "credential" && credential) {
     idToken = credential;
-  
   }
 
   try {
@@ -160,16 +162,12 @@ export const verifyGoogleCredentialToken = async (mode: string, code:string|null
       idToken,
       audience: process.env.GOOGLE_CLIENT_ID,
     });
-console.log(ticket.getPayload());
+    console.log(ticket.getPayload());
     return { payload: ticket.getPayload() };
   } catch (error) {
     return { error: "Invalid student detected. Please try again" };
   }
-
 };
-
-
-
 
 export const createStudentSession = async (
   studentId: number,
@@ -200,7 +198,7 @@ export const getStudentCourseSubscriptionStatus = async (
       },
     })
   )?.subscriptionStatus;
-  
+
 export const getStudentEnrolledCourses = async (studentId: number) =>
   (
     await prisma.studentCourse.findMany({
@@ -213,9 +211,14 @@ export const getStudentEnrolledCourses = async (studentId: number) =>
           },
         },
       },
-    }) 
+    })
   ).map((item) => {
-    return { ...item.course, hours: item.hours, studentCourseId: item.id  , preferredSessionType: item.preferredSessionType };
+    return {
+      ...item.course,
+      hours: item.hours,
+      studentCourseId: item.id,
+      preferredSessionType: item.preferredSessionType,
+    };
   });
 
 export const getStudentNextWeekSessions = async (studentId: number) => {
@@ -352,6 +355,19 @@ export const assignHours = async (studentCourseId: number, hours: number) =>
     },
     data: {
       hours,
+    },
+  });
+
+export const updatePreferedSessionType = async (
+  studentCourseId: number,
+  preferredSessionType: SessionType
+) =>
+  await prisma.studentCourse.update({
+    where: {
+      id: studentCourseId,
+    },
+    data: {
+      preferredSessionType,
     },
   });
 
