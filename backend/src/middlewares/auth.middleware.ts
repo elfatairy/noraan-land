@@ -161,8 +161,7 @@ export const checkSubscribed = async (
   next: NextFunction
 ) => {
   try {
-    const { id, role } = res.locals;
-    const courseId = Number(req.params.courseId);
+    const { id, role, courseId } = res.locals;
 
     if (role == ROLES.ADMIN) {
       next();
