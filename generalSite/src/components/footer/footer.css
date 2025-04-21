@@ -21,6 +21,12 @@
   flex: 1;
 }
 
+@media screen and (max-width: 1200px) {
+  .footer-content div:last-child {
+    display: none;
+  }
+}
+
 /* .footer-content div:first-child {
   text-align: left;
 } */
@@ -50,6 +56,7 @@
   color: #F9C7C5;
   cursor: pointer;
   transition: opacity 0.3s ease;
+  text-wrap: nowrap;
 }
 
 .navf-links a:hover {
