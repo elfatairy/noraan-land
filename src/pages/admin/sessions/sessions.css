@@ -24,6 +24,11 @@
   min-width: 300px;
 }
 
+.search-filter .active-filter {
+  border-color: #95345C;
+  background-color: #f9eef2;
+}
+
 .create-buttons {
   display: flex;
   gap: 1rem;
@@ -60,6 +65,26 @@
   transition: transform 0.2s;
 }
 
+/* Add status-specific styling for session cards */
+.session-card.UPCOMING {
+  border-left-color: #F9AC9E;
+}
+
+.session-card.RUNNING {
+  border-left-color: #FA91C8;
+}
+
+.session-card.ENDED {
+  border-left-color: #95345C;
+  background-color: #f9f9f9;
+}
+
+.session-card.CANCELED {
+  border-left-color: #ff6b6b;
+  background-color: #f9f9f9;
+  opacity: 0.8;
+}
+
 .session-card:hover {
   transform: translateX(5px);
 }
@@ -85,21 +110,54 @@
   color: #95345C;
 }
 
-.status-badge.ONGOING {
+.status-badge.RUNNING {
   background: #FA91C8;
   color: white;
 }
 
-.status-badge.COMPLETED {
+.status-badge.ENDED {
   background: #95345C;
+  color: white;
+}
+
+.status-badge.CANCELED {
+  background: #ff6b6b;
   color: white;
 }
 
 .session-info {
   display: flex;
-  justify-content: space-between;
-  margin-top: 1rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin: 0.8rem 0;
   color: #666;
+  font-size: 0.9rem;
+}
+
+.session-info div {
+  flex: 1;
+  min-width: 150px;
+}
+
+.session-info strong {
+  font-weight: 600;
+  margin-right: 0.3rem;
+}
+
+.canceled-message {
+  font-style: italic;
+  color: #ff6b6b;
+}
+
+@media (max-width: 768px) {
+  .session-info {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .session-info div {
+    min-width: unset;
+  }
 }
 
 .modal-overlay {
@@ -552,4 +610,41 @@
   max-height: calc(80vh - 200px);
   overflow-y: auto;
   padding-right: 1rem;
+}
+
+.no-sessions-message {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.1rem;
+  color: #666;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px dashed #ddd;
+}
+
+.sessions-count {
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  font-size: 0.9rem;
+  color: #666;
+  text-align: right;
+}
+
+.canceled-message {
+  font-style: italic;
+  color: #ff6b6b;
+}
+
+.reset-filters-btn {
+  padding: 0.5rem 1rem;
+  background: #f8f9fa;
+  color: #95345C;
+  border: 1px solid #F9C7C5;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.reset-filters-btn:hover {
+  background: #F9C7C5;
 }

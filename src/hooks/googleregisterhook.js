@@ -5,7 +5,7 @@ import axios from 'axios';
 export const useGoogleRegister = () => {
   const { isLoading, error, data, setError, _execute } = useApiFetch();
 
-  const execute = useCallback(async (accessToken) => {
+  const execute = useCallback(async (accessToken, phone) => {
     try {
       const googleUserInfo = await axios.get(
         'https://www.googleapis.com/oauth2/v3/userinfo',
@@ -21,9 +21,10 @@ export const useGoogleRegister = () => {
         name: googleUserInfo.data.name,
         email: googleUserInfo.data.email,
         password: googleUserInfo.data.sub, // Using Google's unique ID as password
+        phone: phone // Add the phone parameter to the request
       };
 
-      return await _execute('users/auth/register', 'POST', requestData);
+      return await _execute('students/auth/register', 'POST', requestData);
     } catch (error) {
       setError(error);
       throw error;

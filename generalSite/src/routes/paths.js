@@ -3,6 +3,7 @@ export const PATHS = {
   HOME: '/',
   ABOUT: '/about',
   COURSES: '/courses',
+  PRIVACY: '/privacy',
   PROFILE: '/profile',
   LOGIN: '/login',
   REGISTER: '/register',

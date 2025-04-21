@@ -167,45 +167,48 @@
 
 /* Event status styles - Updated with better colors */
 .session-available {
-  background-color: #4CAF50 !important;
-  color: white !important;
+  background-color: #F9C7C5 !important;
+  color: #95345C !important;
+  border-color: #95345C !important;
 }
 
 .session-ended {
-  background-color: #607D8B !important;
-  color: white !important;
+  background-color: #F9C7C5 !important;
+  color: #95345C !important;
   opacity: 0.7;
-  cursor: not-allowed !important;
+  border-color: #95345C !important;
 }
 
 .session-canceled {
-  background-color: #F44336 !important;
-  color: white !important;
+  background-color: #F9C7C5 !important;
+  color: #95345C !important;
   opacity: 0.7;
-  cursor: not-allowed !important;
+  border-color: #95345C !important;
+  text-decoration: line-through;
 }
 
 .session-running {
-  background-color: #2196F3 !important;
-  color: white !important;
-  cursor: not-allowed !important;
+  background-color: #F9C7C5 !important;
+  color: #95345C !important;
+  border-color: #95345C !important;
 }
 
 .session-done {
-  background-color: #9C27B0 !important;
-  color: white !important;
+  background-color: #F9C7C5 !important;
+  color: #95345C !important;
+  border-color: #95345C !important;
 }
 
 /* Default session style for any status not explicitly defined */
 .fc-event-main {
-  background-color: #FF8691 !important;
-  color: #333 !important;
+  background-color: #F9C7C5 !important;
+  color: #95345C !important;
+  border-color: #95345C !important;
 }
 
 /* Make timegrid events full width */
 .fc-timegrid-event {
   margin: 0 !important;
-  padding: 2px !important;
   border: none !important;
   border-radius: 0 !important;
   top: 0 !important;
@@ -327,4 +330,170 @@
 .fc-daygrid-day-frame {
   position: relative;
   z-index: 3;
+}
+
+/* Add responsive styling for the calendar component */
+@media (max-width: 768px) {
+  .calendar-container {
+    padding: 1rem;
+  }
+  
+  .search-container {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: stretch;
+  }
+  
+  .calendar-wrapper {
+    padding: 0.5rem;
+  }
+  
+  .modal-content {
+    width: 95%;
+    padding: 1rem;
+  }
+  
+  .fc-toolbar {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .fc-toolbar-chunk {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+  
+  .fc-header-toolbar {
+    flex-wrap: wrap;
+  }
+}
+
+/* Session modal styling from sessions.css */
+.session-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.form-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #333;
+  font-weight: 500;
+}
+
+.form-group input[type="text"],
+.form-group input[type="number"],
+.form-group textarea,
+.form-group select,
+.react-datepicker__input-container input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #F9C7C5;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.radio-group {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 0.5rem;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.radio-label input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.submit-btn,
+.cancel-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.submit-btn {
+  background: #95345C;
+  color: white;
+}
+
+.cancel-btn {
+  background: #F9C7C5;
+  color: #95345C;
+}
+
+.submit-btn:hover,
+.cancel-btn:hover {
+  transform: translateY(-2px);
+}
+
+.form-select,
+.form-input,
+.form-textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #F9C7C5;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: white;
+}
+
+.form-textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.end-session-modal,
+.upload-modal {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* Fix datepicker width */
+.react-datepicker-wrapper,
+.react-datepicker__input-container {
+  width: 100%;
+}
+
+.react-datepicker__input-container input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #F9C7C5;
+  border-radius: 8px;
+  font-size: 1rem;
 }

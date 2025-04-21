@@ -36,10 +36,10 @@ const Student = () => {
 
   const handleCourseClick = (course) => {
     const params = new URLSearchParams({
-      sessionType: course.sessionType,
-      price: course.sessionType === 'PRIVATE' ? course.privatePrice : course.groupPrice,
+      preferredSessionType: course.preferredSessionType,
+      price: course.preferredSessionType === 'PRIVATE' ? course.privatePrice : course.groupPrice,
       hours: course.hours || 0,
-      ...(course.sessionType === 'GROUP' && course.group && { group: course.group.id }) // Access group.name instead of group object
+      ...(course.preferredSessionType === 'GROUP' && course.group && { group: course.group.id }) // Access group.name instead of group object
     });
 
     navigate(`/admin/students/${studentId}/courses/${course.id}?${params.toString()}`);
@@ -69,8 +69,8 @@ const Student = () => {
               <div className="course-header">
                 <h3>{course.name}</h3>
                 <div className="badge-container">
-                  <span className={`badge ${course.sessionType.toLowerCase()}`}>
-                    {course.sessionType}
+                  <span className={`badge ${course.preferredSessionType?.toLowerCase()}`}>
+                    {course.preferredSessionType}
                   </span>
                 </div>
               </div>

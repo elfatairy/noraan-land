@@ -5,6 +5,7 @@ import Loading from '../../../components/loading/loading';
 import { toast } from 'react-toastify';
 import { FaGraduationCap } from 'react-icons/fa';
 import './courses.css';
+import { getStorageData } from '../../../utils/data';
 
 const Courses = () => {
   const [courses, setCourses] = useState([]);
@@ -46,9 +47,16 @@ const Courses = () => {
     }
 
     try {
+      // Get timezone from localStorage and add to the beginning of studentNotes
+      const timezone = getStorageData('timezone') || '';
+      const notes = enrollmentData.studentNotes;
+      const formattedNotes = timezone ? `${timezone}, ${notes}` : notes;
+      
       await applyForCourse({
         courseId: selectedCourse.id,
-        ...enrollmentData
+        availableTime: enrollmentData.availableTime,
+        sessionType: enrollmentData.sessionType,
+        studentNotes: formattedNotes
       });
       toast.success('Enrollment request submitted successfully!');
       handleCloseModal();

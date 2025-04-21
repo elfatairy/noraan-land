@@ -97,6 +97,17 @@
   font-style: italic;
 }
 
+.developers a {
+  color: #F9C7C5;
+  text-decoration: none;
+  transition: opacity 0.3s ease;
+}
+
+.developers a:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .footer-content {

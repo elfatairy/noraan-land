@@ -9,13 +9,261 @@ import { useUpdateSessionDate } from '../../../hooks/newHooks/updateSessionDate'
 import { useGetGroups } from '../../../hooks/newHooks/getGroupshook';
 import { useGetCoursePrivateStudents } from '../../../hooks/newHooks/getCoursePrivateStudents';
 import { useGetCourses } from '../../../hooks/getcourseshook';
-import { CreateSessionModal, UpdateSessionModal } from '../sessions/sessions';
 import Loading from '../../../components/loading/loading';
 import { toast } from 'react-toastify';
 import { FaPlus, FaTimes } from 'react-icons/fa';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import './calender.css';
+
+// Create Session Modal Component
+const CreateSessionModal = memo(({
+  isOpen,
+  createSessionData,
+  courses,
+  groups, 
+  privateStudents,
+  onSubmit,
+  onClose,
+  onCreateDataChange,
+  onCourseChange
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="session-modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2>Create New Session</h2>
+          <FaTimes className="close-icon" onClick={onClose} />
+        </div>
+        <form onSubmit={onSubmit}>
+          <div className="form-group">
+            <label>Course</label>
+            <select
+              value={createSessionData.courseId || ''}
+              onChange={(e) => onCourseChange(e.target.value)}
+              required
+              className="form-select"
+            >
+              <option value="">Select a course</option>
+              {courses.map(course => (
+                <option key={course.id} value={course.id}>
+                  {course.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>Session Type</label>
+            <select
+              value={createSessionData.sessionType}
+              onChange={(e) => onCreateDataChange('sessionType', e.target.value)}
+              required
+              className="form-select"
+            >
+              <option value="PRIVATE">Private Session</option>
+              <option value="GROUP">Group Session</option>
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>Title</label>
+            <input
+              type="text"
+              value={createSessionData.title}
+              onChange={(e) => onCreateDataChange('title', e.target.value)}
+              placeholder="Enter session title"
+              required
+              className="form-input"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>Description</label>
+            <textarea
+              value={createSessionData.description}
+              onChange={(e) => onCreateDataChange('description', e.target.value)}
+              placeholder="Enter session description"
+              required
+              className="form-textarea"
+            />
+          </div>
+
+          <div className="form-row">
+            <div className="form-group flex-1">
+              <label>Session Date</label>
+              <DatePicker
+                selected={createSessionData.date}
+                onChange={(date) => onCreateDataChange('date', date)}
+                showTimeSelect
+                dateFormat="MMMM d, yyyy h:mm aa"
+                minDate={new Date()}
+                className="form-control"
+                required
+              />
+            </div>
+
+            <div className="form-group flex-1">
+              <label>Duration (minutes)</label>
+              <input
+                type="text"
+                value={createSessionData.duration}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, '');
+                  if (parseInt(value) <= 480 || value === '') {
+                    onCreateDataChange('duration', value);
+                  }
+                }}
+                placeholder="60"
+                required
+                className="form-input"
+              />
+            </div>
+          </div>
+
+          {createSessionData.courseId && (
+            <div className="form-group">
+              <label>
+                {createSessionData.sessionType === 'GROUP' ? 'Select Group' : 'Select Student'}
+              </label>
+              {createSessionData.sessionType === 'GROUP' ? (
+                <select
+                  value={createSessionData.groupId || ''}
+                  onChange={(e) => onCreateDataChange('groupId', e.target.value)}
+                  required
+                  className="form-select"
+                  disabled={!groups.length}
+                >
+                  <option value="">Choose a group</option>
+                  {groups.map(group => (
+                    <option key={group.id} value={group.id}>
+                      {group.name} ({group.studentsCount} students)
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <select
+                  value={createSessionData.privateStudentId || ''}
+                  onChange={(e) => onCreateDataChange('privateStudentId', e.target.value)}
+                  required
+                  className="form-select"
+                  disabled={!privateStudents.length}
+                >
+                  <option value="">Choose a student</option>
+                  {privateStudents
+                    .filter(student => student.hours !== null && !student.groupId)
+                    .map(student => (
+                      <option key={student.id} value={student.studentId}>
+                        {student.student.name}
+                      </option>
+                    ))}
+                </select>
+              )}
+              {createSessionData.sessionType === 'GROUP' && groups.length === 0 && (
+                <p className="helper-text">No groups available for this course</p>
+              )}
+              {createSessionData.sessionType === 'PRIVATE' && privateStudents.length === 0 && (
+                <p className="helper-text">No private students available for this course</p>
+              )}
+            </div>
+          )}
+
+          <div className="form-group">
+            <label>Payment Type</label>
+            <select
+              value={createSessionData.isFree ? 'free' : 'paid'}
+              onChange={(e) => onCreateDataChange('isFree', e.target.value === 'free')}
+              required
+              className="form-select"
+            >
+              <option value="paid">Paid Session</option>
+              <option value="free">Free Session</option>
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={createSessionData.isRecurring}
+                onChange={(e) => onCreateDataChange('isRecurring', e.target.checked)}
+              />
+              <span>Recurring Session</span>
+            </label>
+          </div>
+          
+          <div className="modal-buttons">
+            <button type="submit" className="submit-btn">Create Session</button>
+            <button type="button" className="cancel-btn" onClick={onClose}>Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+});
+
+// Update Session Modal Component
+const UpdateSessionModal = memo(({ 
+  isOpen,
+  updateSessionData,
+  onSubmit,
+  onClose,
+  onUpdateDataChange
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content">
+        <div className="modal-header">
+          <h2>Update Session</h2>
+          <FaTimes className="close-icon" onClick={onClose} />
+        </div>
+        <form onSubmit={onSubmit}>
+          <div className="form-group">
+            <label>Session Date</label>
+            <DatePicker
+              selected={updateSessionData.newDate}
+              onChange={(date) => onUpdateDataChange('newDate', date)}
+              showTimeSelect
+              dateFormat="MMMM d, yyyy h:mm aa"
+              minDate={new Date()}
+              className="form-control"
+            />
+          </div>
+          <div className="form-group">
+            <label>Duration (minutes)</label>
+            <input
+              type="number"
+              value={updateSessionData.newDuration}
+              onChange={(e) => onUpdateDataChange('newDuration', parseInt(e.target.value))}
+              min="15"
+              max="480"
+              required
+              className="form-input"
+            />
+          </div>
+          <div className="form-group">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={updateSessionData.isRecurring}
+                onChange={(e) => onUpdateDataChange('isRecurring', e.target.checked)}
+              />
+              <span>Update recurring sessions</span>
+            </label>
+          </div>
+          <div className="modal-buttons">
+            <button type="submit" className="submit-btn">Update</button>
+            <button type="button" className="cancel-btn" onClick={onClose}>Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+});
 
 const Calendar = () => { 
   // State
@@ -172,26 +420,33 @@ const Calendar = () => {
   const handleCreateSession = async (e) => {
     e.preventDefault();
     try {
-      if (createSessionData.courseId) {
-        await Promise.all([
-          fetchGroups(createSessionData.courseId),
-          fetchPrivateStudents(createSessionData.courseId)
-        ]);
-      }
-
       const payload = {
         ...createSessionData,
         date: createSessionData.date.toISOString(),
         duration: parseInt(createSessionData.duration),
+        courseId: parseInt(createSessionData.courseId),
         groupId: createSessionData.sessionType === 'GROUP' ? 
           parseInt(createSessionData.groupId) : null,
         privateStudentId: createSessionData.sessionType === 'PRIVATE' ? 
           parseInt(createSessionData.privateStudentId) : null
       };
 
-      await createSession(payload);
+      await createSession( createSessionData.courseId,payload);
       toast.success('Session created successfully');
       setIsCreateModalOpen(false);
+      // Reset create session data
+      setCreateSessionData({
+        title: "",
+        description: "",
+        date: new Date(),
+        duration: "60",
+        sessionType: "PRIVATE",
+        courseId: '',
+        groupId: '',
+        privateStudentId: '',
+        isRecurring: false,
+        isFree: false
+      });
       fetchEvents();
     } catch (error) {
       toast.error(error?.response?.data?.message || 'Failed to create session');
@@ -254,6 +509,29 @@ const Calendar = () => {
       }
     }
     setDraggedEvent(null);
+  };
+
+  // Handler for course change in create session modal
+  const handleCourseChange = (courseId) => {
+    if (courseId) {
+      fetchGroups(courseId);
+      fetchPrivateStudents(courseId);
+      setCreateSessionData(prev => ({
+        ...prev,
+        courseId,
+        groupId: '',
+        privateStudentId: ''
+      }));
+    } else {
+      setCreateSessionData(prev => ({
+        ...prev,
+        courseId: '',
+        groupId: '',
+        privateStudentId: ''
+      }));
+      setGroups([]);
+      setPrivateStudents([]);
+    }
   };
 
   // Render custom day cell content
@@ -365,17 +643,10 @@ const Calendar = () => {
         onCreateDataChange={(field, value) => {
           setCreateSessionData(prev => {
             const newState = { ...prev, [field]: value };
-            // Clear groups and students when course changes
-            if (field === 'courseId') {
-              newState.groupId = '';
-              newState.privateStudentId = '';
-              // Fetch new groups and students
-              fetchGroups(value);
-              fetchPrivateStudents(value);
-            }
             return newState;
           });
         }}
+        onCourseChange={handleCourseChange}
       />
 
       <UpdateSessionModal
