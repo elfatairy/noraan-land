@@ -14,6 +14,7 @@ const Footer = () => {
             <a href="/home">Home</a>
             <a href="/about">About</a>
             <a href="/courses">Courses</a>
+            <a href="/privacy">Privacy Policy</a>
           </div>
 
           <div></div>
@@ -86,7 +87,12 @@ const Footer = () => {
             Nouran Land © 2024
           </p>
           <p className="developers">
-            Developed by Youssuf, Omar
+            Developed by <a href="https://youssufhosam.com" target="_blank" rel="noopener noreferrer">Youssuf</a>, <a href="https://omarhassan.net/" target="_blank" rel="noopener noreferrer">Omar</a>
+          </p>
+          <p className="developers">
+            Designed by <a 
+            // href="https://mahmoud-portfolio.com" 
+            target="_blank" rel="noopener noreferrer">Mahmoud Ibrahim</a>
           </p>
           <p>
             All Creative Rights Protected by Nouran Land
