@@ -55,7 +55,7 @@ const Hero = () => {
             </a>
           </div>
           <div className="img">
-            <img src="./images/quran.webp" alt=""/>
+            <img src="./images/drkpinkTeacher.png" style={{width:'650px'}} alt=""/>
           </div>
         </div>
         <img src="./images/masjed_bg_overlay.png" className="overlay-image" alt="" />
