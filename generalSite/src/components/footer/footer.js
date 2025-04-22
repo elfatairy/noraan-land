@@ -90,7 +90,7 @@ const Footer = () => {
             Developed by <a href="https://youssufhosam.com" target="_blank" rel="noopener noreferrer">Youssuf</a>, <a href="https://omarhassan.net/" target="_blank" rel="noopener noreferrer">Omar</a>
           </p>
           <p className="developers">
-            Desigend by <a 
+            Designed by <a 
             // href="https://mahmoud-portfolio.com" 
             target="_blank" rel="noopener noreferrer">Mahmoud Ibrahim</a>
           </p>

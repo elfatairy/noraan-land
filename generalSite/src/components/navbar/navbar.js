@@ -64,7 +64,8 @@ const Navbar = () => {
         <ul className="nav-links mobile-links">
           <li><Link to="/admin/upcoming-sessions">Upcoming Sessions</Link></li>
           <li><Link to="/admin/calendar">Calendar</Link></li>
-          <li><Link to="/admin/courses-management">Courses</Link></li>
+          <li><Link to="/admin/courses">Courses</Link></li>
+          <li><Link to="/admin/students">Students</Link></li>
           <li><Link to="/">Back to Home</Link></li>
         </ul>
       );
