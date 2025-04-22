@@ -60,6 +60,7 @@ export const addFolder = async (req: Request, res: Response, next: NextFunction)
       return;
     }
 
+    console.log(name, res.locals.path);
     await createFolder(name, res.locals.path);
 
     res.json({
