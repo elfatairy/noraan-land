@@ -36,7 +36,7 @@
   
   .courses-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(400px, 2.5fr));
+    grid-template-columns: repeat(auto-fill, minmax(340px, 2.5fr));
     gap: 2rem;
   }
   
@@ -195,6 +195,7 @@
   margin-top: auto;
   padding-top: 1rem;
   width: 100%;
+  flex-wrap: wrap;
 }
 
 .action-button {
@@ -484,4 +485,15 @@
 .transaction-status h3 {
   color: #333;
   margin-bottom: 1.5rem;
+}
+
+@media (max-width: 767px) {
+  .courses-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .search-input {
+    width: 100%;
+  }
 }

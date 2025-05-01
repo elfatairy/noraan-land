@@ -12,6 +12,7 @@
     display: flex;
     gap: 1rem;
     align-items: center;
+    flex-wrap: wrap;
   }
   
   .search-filter input,
@@ -366,5 +367,34 @@
   to {
     transform: translateY(0);
     opacity: 1;
+  }
+}
+
+@media (max-width: 767px) {
+  .search-filter {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .search-filter input,
+  .search-filter select {
+    width: 100%;
+  }
+  
+  .sessions-header {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .session-card {
+    padding: 0.75rem;
+  }
+  
+  .session-actions {
+    flex-direction: column;
+  }
+  
+  .action-button-sessionStudent {
+    width: 100%;
   }
 }

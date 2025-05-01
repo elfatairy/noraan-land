@@ -194,10 +194,11 @@ const StudentCourse = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const sessionType = searchParams.get('sessionType');
+  const preferredSessionType = searchParams.get('preferredSessionType') || sessionType;
   const price = searchParams.get('price');
   const hours = searchParams.get('hours');
   const group = searchParams.get('group');
-  const groupId = searchParams.get('group'); // instead of 'groupId'
+  const groupId = searchParams.get('group');
   const groupName = searchParams.get('groupName');
   const groupPrice = parseFloat(searchParams.get('groupPrice')) || 0;
   const privatePrice = parseFloat(searchParams.get('privatePrice')) || 0;
@@ -217,14 +218,14 @@ const StudentCourse = () => {
     date: '',
     duration: 60,
     sessionType,
-    groupId: searchParams.get('group') || null, // Use 'group' instead of 'groupId'
+    groupId: searchParams.get('group') || null,
     isRecurring: false,
     privateStudentId: sessionType === 'PRIVATE' ? parseInt(studentId) : null,
     isFree: false,
-    paymentType: 'paid' // Add payment type
+    paymentType: 'paid'
   });
   const [expandedReports, setExpandedReports] = useState({});
-  const [selectedSessionType, setSelectedSessionType] = useState(sessionType || 'PRIVATE');
+  const [selectedSessionType, setSelectedSessionType] = useState(preferredSessionType || 'PRIVATE');
   const [isChangingData, setIsChangingData] = useState(false);
 
   // Hooks
@@ -292,54 +293,71 @@ const handleCreateSession = async () => {
   }
 };
 
-  // Update the handleChangeData function URL parameter handling
-const handleChangeData = async () => {
-  setIsChangingData(true);
-  let hoursSuccess = false;
-  let typeChangeSuccess = false;
+  // Update the handleChangeData function with toasts
+  const handleChangeData = async () => {
+    setIsChangingData(true);
+    let hoursSuccess = false;
+    let typeChangeSuccess = false;
+    const oldHours = hours;
 
-  try {
-    // After hours update
-    await assignHours(studentId, courseId, Number(newHours));
-    hoursSuccess = true;
-    
-    // Update URL with new hours
-    const newParams = new URLSearchParams(searchParams);
-    newParams.set('hours', newHours);
-    
-    if (selectedSessionType === 'PRIVATE') {
-      await convertToPrivate(studentId, courseId);
-      typeChangeSuccess = true;
+    try {
+      // After hours update
+      if (newHours !== oldHours) {
+        await assignHours(studentId, courseId, Number(newHours));
+        hoursSuccess = true;
+        toast.success(`Hours updated from ${oldHours} to ${newHours}`);
+      }
       
-      // Update URL params for PRIVATE
-      newParams.set('sessionType', 'PRIVATE');
-      newParams.delete('group'); // Use 'group' instead of 'groupId'
-      setSearchParams(newParams);
+      // Update URL with new hours
+      const newParams = new URLSearchParams(searchParams);
+      newParams.set('hours', newHours);
       
-    } else if (selectedSessionType === 'GROUP' && selectedGroup) {
-      await assignToGroup(studentId, courseId, selectedGroup);
-      typeChangeSuccess = true;
-      
-      // Update URL params for GROUP
-      newParams.set('sessionType', 'GROUP');
-      newParams.set('group', selectedGroup); // Use 'group' instead of 'groupId'
-      setSearchParams(newParams);
+      if (selectedSessionType === 'PRIVATE' && selectedSessionType !== preferredSessionType) {
+        await convertToPrivate(studentId, courseId);
+        typeChangeSuccess = true;
+        toast.success('Successfully converted to private session');
+        
+        // Update URL params for PRIVATE
+        newParams.set('sessionType', 'PRIVATE');
+        newParams.delete('group');
+        setSearchParams(newParams);
+        
+      } else if (selectedSessionType === 'GROUP' && selectedGroup && selectedSessionType !== preferredSessionType) {
+        await assignToGroup(studentId, courseId, selectedGroup);
+        typeChangeSuccess = true;
+        toast.success('Successfully assigned to group');
+        
+        // Update URL params for GROUP
+        newParams.set('sessionType', 'GROUP');
+        newParams.set('group', selectedGroup);
+        setSearchParams(newParams);
+      }
+
+      if (!hoursSuccess && !typeChangeSuccess) {
+        toast.info('No changes were made');
+      }
+    } catch (error) {
+      const message = error.response?.data?.message || 'An error occurred';
+      if (error.response?.status === 403) {
+        toast.error(`Permission denied: ${message}`);
+      } else {
+        toast.error(`Failed to update: ${message}`);
+      }
+    } finally {
+      setIsChangingData(false);
+      if (hoursSuccess || typeChangeSuccess) {
+        setShowChangeDataModal(false);
+      }
     }
-    // ...rest of the error handling
-  } catch (error) {
-    const message = error.response?.data?.message || 'An error occurred';
-    if (error.response?.status === 403) {
-      toast.error(`Permission denied: ${message}`);
-    } else {
-      toast.error(`Failed to update hours: ${message}`);
+  };
+
+  // Add useEffect to update selectedSessionType when URL changes
+  useEffect(() => {
+    const newPreferredType = searchParams.get('preferredSessionType') || searchParams.get('sessionType');
+    if (newPreferredType) {
+      setSelectedSessionType(newPreferredType);
     }
-  } finally {
-    setIsChangingData(false);
-    if (hoursSuccess || typeChangeSuccess) {
-      setShowChangeDataModal(false);
-    }
-  }
-};
+  }, [searchParams]);
 
   const handleCreateSessionClick = () => {
     setShowCreateSessionModal(true);

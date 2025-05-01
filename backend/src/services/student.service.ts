@@ -218,6 +218,8 @@ export const getStudentEnrolledCourses = async (studentId: number) =>
       hours: item.hours,
       studentCourseId: item.id,
       preferredSessionType: item.preferredSessionType,
+      groupId: item.groupId,
+      privateStudentId: item.studentId,
     };
   });
 

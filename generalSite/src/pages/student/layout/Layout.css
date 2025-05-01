@@ -109,5 +109,9 @@
     }
     .student-layout .main-content {
         margin-left: 0;
+        width: 100%;
     }
-}
+    .student-layout .content-wrapper {
+        padding-top: 60px;
+    }
+}   

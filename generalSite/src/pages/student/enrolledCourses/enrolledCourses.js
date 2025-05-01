@@ -10,7 +10,6 @@ import { usePaymobIntention } from '../../../hooks/paymentHooks/paymobIntention'
 
 const CourseDetailsModal = ({ course, isOpen, onClose }) => {
   const { execute: getPaymobIntention, isLoading: isPaymobLoading } = usePaymobIntention();
-  
   if (!isOpen) return null;
 
   const totalPrice = course.hours * (course.preferredSessionType === 'GROUP' ? course.groupPrice : course.privatePrice);
@@ -188,8 +187,8 @@ const EnrolledCourses = () => {
               <div className="card-actions">
                 <button 
                   onClick={() => navigate(`/student/courses/${course.id}/sessions${
-                    course.sessionType === 'GROUP' 
-                      ? `?sessionType=GROUP&groupId=${course.group.id}`
+                    course.preferredSessionType === 'GROUP' 
+                      ? `?sessionType=GROUP&groupId=${course.groupId}`
                       : `?sessionType=PRIVATE&studentId=${course.privateStudentId}`
                   }`)}
                   className="action-button sessions"

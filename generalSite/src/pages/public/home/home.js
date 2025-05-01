@@ -11,7 +11,7 @@ const Hero = () => {
       <div className="hero-top">
         <div className="container">
           <div className="text">
-            <h1>Nooran Land</h1>
+            <h1>Nooran </h1>
             <p>Here is your start in the arabic and islamic studies</p>
             <a href="/courses" className="button">
               <div className="icon">
