@@ -24,6 +24,8 @@ import {
   createPaypalProduct,
 } from "../services/paypal.service";
 import { cancelPaymobSubscription } from "../services/paymob.service";
+import { createFolder } from "../services/material.service";
+import { join } from "path";
 
 export const create = async (
   req: Request,
@@ -74,6 +76,8 @@ export const create = async (
       zoomLink,
       paypalProductId
     );
+
+    await createFolder(createdCourse.id.toString(), join(__dirname, '../../uploads'));
     /*
     // PAYPAL
     
