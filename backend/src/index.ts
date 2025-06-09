@@ -1,5 +1,4 @@
 import express, {
-  ErrorRequestHandler,
   NextFunction,
   Request,
   Response,
@@ -7,8 +6,6 @@ import express, {
 import bodyParser from "body-parser";
 import cors from "cors";
 import path from "path";
-const app = express();
-const port = parseInt(process.env.PORT || "3000");
 import apiRouter from "./routes/index.route";
 import router from "./routes/nonApi.route";
 import { HTTPErrorLogger, HTTPLogger } from "./utils/logging.util";
@@ -19,6 +16,8 @@ import { swaggerDocs } from "./utils/documentation.util";
 import fileUpload from "express-fileupload";
 import fs from "fs/promises";
 
+const app = express();
+const port = parseInt(process.env.PORT || "3000");
 app.set("trust proxy", 1);
 
 // CORS configuration

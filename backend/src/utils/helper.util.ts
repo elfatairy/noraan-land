@@ -8,6 +8,7 @@ let latestValue = 0;
 export const convertUSDtoEGP = async (amount: number) => {
   const now = new Date();
   if (now.getTime() - latestUpdate.getTime() > 86400000) {
+    console.log("updating rate");
     const res = await axios.get("https://api.currencyapi.com/v3/latest", {
       headers: {
         apikey: process.env.CURRENCYAPI_API_KEY,
