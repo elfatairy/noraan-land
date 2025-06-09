@@ -3,7 +3,7 @@ import { getStorageData } from "./data";
 import axios from "axios";
 
  const BASE_URL = 'https://nooranland.com/api';
-//const BASE_URL = 'http://localhost:3000/api';
+//const BASE_URL = 'https://nooranland.com/api';
 
 export const useApiFetch = () => {
   const [isLoading, setIsLoading] = useState(false);

@@ -76,7 +76,7 @@ const UpcomingSessions = () => {
   const handleStartMeeting = async (session) => {
     try {
       const response = await startMeeting(session.id);
-      window.open(response.data.startUrl, '_blank');
+      window.open(response.data.zoomLink, '_blank');
     } catch (error) {
       toast.error('Failed to start meeting');
     }

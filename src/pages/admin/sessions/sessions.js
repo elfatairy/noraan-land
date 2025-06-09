@@ -471,7 +471,7 @@ const RecordingsModal = memo(({ recordings, isOpen, onClose }) => {
               <h4>Recording {index + 1}</h4>
               <iframe
                // src={`https://iframe.mediadelivery.net/embed/366620/${recordingId}`}
-                //src={`http://localhost:3000/videos/${recordingId}`}
+                //src={`https://nooranland.com/videos/${recordingId}`}
                 src={`https://nooranland.com/videos/${recordingId}`}
 
                 loading="lazy"

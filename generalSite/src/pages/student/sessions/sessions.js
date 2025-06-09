@@ -171,7 +171,7 @@ const RecordingsModal = ({ recordings, isOpen, onClose }) => {
               <iframe
                // src={`https://iframe.mediadelivery.net/embed/366620/${recordingId}`}
                 src={`https://nooranland.com/videos/${recordingId}`}
-                //src={`http://localhost:3000/videos/${recordingId}`}
+                //src={`https://nooranland.com/videos/${recordingId}`}
                 loading="lazy"
                 style={{ border: 'none', width: '100%', aspectRatio: '16/9' }}
                 allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"

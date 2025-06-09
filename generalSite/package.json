@@ -24,11 +24,12 @@
     "react-lottie": "^1.2.10",
     "react-router-dom": "^7.1.1",
     "react-scripts": "5.0.1",
+    "react-select": "^5.7.4",
     "react-toastify": "^11.0.2",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "set PORT=3001 && react-scripts start",
+    "start": "set PORT=3003 && react-scripts start", 
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
@@ -50,5 +51,9 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "customize-cra": "^1.0.0",
+    "react-app-rewired": "^2.2.1"
   }
 }
