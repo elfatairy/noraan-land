@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useGetEnrolledCourses } from '../../../hooks/userenrolledcourses';
+import { useGetConversionRate } from '../../../hooks/getConversionRate';
 import Loading from '../../../components/loading/loading';
 import moment from 'moment';
 import { toast } from 'react-toastify';
@@ -8,11 +9,52 @@ import { FaCalendar, FaBook, FaQuestionCircle, FaInfo, FaTimes, FaCheckCircle, F
 import './enrolledCourses.css';
 import { usePaymobIntention } from '../../../hooks/paymentHooks/paymobIntention';
 
-const CourseDetailsModal = ({ course, isOpen, onClose }) => {
+const calculateEGPPrice = (usdPrice, rate) => {
+  const egpPrice = usdPrice * rate;
+  return Math.ceil(egpPrice);
+};
+
+const CourseDetailsModal = ({ course, isOpen, onClose, conversionRate }) => {
   const { execute: getPaymobIntention, isLoading: isPaymobLoading } = usePaymobIntention();
+  const [showPopupHelp, setShowPopupHelp] = useState(false);
+  const popupRef = useRef(null);
+  const helpLinkRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showPopupHelp && 
+          popupRef.current && 
+          !popupRef.current.contains(event.target) &&
+          helpLinkRef.current &&
+          !helpLinkRef.current.contains(event.target)) {
+        setShowPopupHelp(false);
+      }
+    };
+
+    const handleAutoHide = () => {
+      if (showPopupHelp) {
+        const timer = setTimeout(() => {
+          setShowPopupHelp(false);
+        }, 5000);
+        return () => clearTimeout(timer);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    const cleanup = handleAutoHide();
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      if (cleanup) cleanup();
+    };
+  }, [showPopupHelp]);
+
   if (!isOpen) return null;
 
   const totalPrice = course.hours * (course.preferredSessionType === 'GROUP' ? course.groupPrice : course.privatePrice);
+  const totalPriceEGP = calculateEGPPrice(totalPrice, conversionRate);
+  const pricePerHour = course.preferredSessionType === 'GROUP' ? course.groupPrice : course.privatePrice;
+  const pricePerHourEGP = calculateEGPPrice(pricePerHour, conversionRate);
 
   const handlePaymobPayment = async () => {
     try {
@@ -62,24 +104,43 @@ const CourseDetailsModal = ({ course, isOpen, onClose }) => {
           </div>
           <div className="report-detail-item">
             <strong>Price per Hour:</strong>
-            <p>${course.preferredSessionType === 'GROUP' ? course.groupPrice : course.privatePrice}</p>
+            <p>${pricePerHour} ({pricePerHourEGP} EGP)</p>
           </div>
           <div className="report-detail-item">
             <strong>Total Price:</strong>
-            <p>${totalPrice}</p>
+            <p>${totalPrice} ({totalPriceEGP} EGP)</p>
           </div>
 
           {course.subscriptionStatus === 'UNSUBSCRIBED' && (
             <div className="payment-section">
               <h4>Payment Methods</h4>
               <div className="payment-buttons">
-                <button 
-                  className="payment-button paymob"
-                  onClick={handlePaymobPayment}
-                  disabled={isPaymobLoading}
-                >
-                  {isPaymobLoading ? 'Processing...' : 'Pay with Paymob'}
-                </button>
+                <div className="payment-button-container">
+                  <button 
+                    className="payment-button paymob"
+                    onClick={handlePaymobPayment}
+                    disabled={isPaymobLoading}
+                  >
+                    {isPaymobLoading ? 'Processing...' : `Pay $${totalPrice} (${totalPriceEGP} EGP)`}
+                  </button>
+                  <div className="payment-info">
+                    <span className="access-info">
+                      Upon completing the payment, access to the course will be granted immediately. 
+                      <button 
+                        ref={helpLinkRef}
+                        className="help-link"
+                        onClick={() => setShowPopupHelp(!showPopupHelp)}
+                      >
+                        Not working?
+                      </button>
+                      {showPopupHelp && (
+                        <div ref={popupRef} className="help-popup">
+                          Make sure to enable popup windows
+                        </div>
+                      )}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -121,6 +182,8 @@ const EnrolledCourses = () => {
   const [courses, setCourses] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const { execute: getEnrolledCourses, isLoading } = useGetEnrolledCourses();
+  const { execute: getConversionRate, data: conversionData } = useGetConversionRate();
+  const [conversionRate, setConversionRate] = useState(49.50930864); // Set default rate
   const navigate = useNavigate();
   const location = useLocation();
   const [selectedCourse, setSelectedCourse] = useState(null);
@@ -128,6 +191,7 @@ const EnrolledCourses = () => {
 
   useEffect(() => {
     fetchCourses();
+    fetchConversionRate();
   }, []);
 
   useEffect(() => {
@@ -146,6 +210,17 @@ const EnrolledCourses = () => {
       }
     } catch (error) {
       toast.error('Failed to fetch enrolled courses');
+    }
+  };
+
+  const fetchConversionRate = async () => {
+    try {
+      const response = await getConversionRate();
+      if (response?.data?.rate) {
+        setConversionRate(response.data.rate);
+      }
+    } catch (error) {
+      toast.error('Failed to fetch conversion rate');
     }
   };
 
@@ -175,47 +250,53 @@ const EnrolledCourses = () => {
 
       <div className="courses-grid">
         {filteredCourses.length > 0 ? (
-          filteredCourses.map(course => (
-            <div key={course.id} className="course-card">
-              <div className="card-header">
-                <h3>{course.name}</h3>
-                <span className={`status-badge ${course.subscriptionStatus.toLowerCase()}`}>
-                  {course.subscriptionStatus}
-                </span>
+          filteredCourses.map(course => {
+            const totalPrice = course.hours * (course.preferredSessionType === 'GROUP' ? course.groupPrice : course.privatePrice);
+            const totalPriceEGP = calculateEGPPrice(totalPrice, conversionRate);
+            
+            return (
+              <div key={course.id} className="course-card">
+                <div className="card-header">
+                  <h3>{course.name}</h3>
+                  <span className={`status-badge ${course.subscriptionStatus.toLowerCase()}`}>
+                    {course.subscriptionStatus}
+                  </span>
+                </div>
+                <p className="course-description">{course.description}</p>
+            
+                <div className="card-actions">
+                  <button 
+                    onClick={() => navigate(`/student/courses/${course.id}/sessions${
+                      course.preferredSessionType === 'GROUP' 
+                        ? `?sessionType=GROUP&groupId=${course.groupId}`
+                        : `?sessionType=PRIVATE&studentId=${course.privateStudentId}`
+                    }`)}
+                    className="action-button sessions"
+                  >
+                    <FaCalendar /> Sessions
+                  </button>
+                  <button 
+                    onClick={() => navigate(`/student/courses/${course.id}/materials/files`)}
+                    className="action-button materials"
+                  >
+                    <FaBook /> Files
+                  </button>
+                  <button 
+                    onClick={() => navigate(`/student/courses/${course.id}/materials/quizez`)}
+                    className="action-button quizez"
+                  >
+                    <FaQuestionCircle /> Quizez
+                  </button>
+                  <button 
+                    onClick={() => setSelectedCourse(course)}
+                    className="action-button details"
+                  >
+                    <FaInfo /> Details
+                  </button>
+                </div>
               </div>
-              <p className="course-description">{course.description}</p>
-              <div className="card-actions">
-                <button 
-                  onClick={() => navigate(`/student/courses/${course.id}/sessions${
-                    course.preferredSessionType === 'GROUP' 
-                      ? `?sessionType=GROUP&groupId=${course.groupId}`
-                      : `?sessionType=PRIVATE&studentId=${course.privateStudentId}`
-                  }`)}
-                  className="action-button sessions"
-                >
-                  <FaCalendar /> Sessions
-                </button>
-                <button 
-                  onClick={() => navigate(`/student/courses/${course.id}/materials/files`)}
-                  className="action-button materials"
-                >
-                  <FaBook /> Files
-                </button>
-                <button 
-                  onClick={() => navigate(`/student/courses/${course.id}/materials/quizez`)}
-                  className="action-button quizez"
-                >
-                  <FaQuestionCircle /> Quizez
-                </button>
-                <button 
-                  onClick={() => setSelectedCourse(course)}
-                  className="action-button details"
-                >
-                  <FaInfo /> Details
-                </button>
-              </div>
-            </div>
-          ))
+            );
+          })
         ) : (
           <div className="no-courses">
             <p>No enrolled courses found</p>
@@ -228,6 +309,7 @@ const EnrolledCourses = () => {
           course={selectedCourse}
           isOpen={!!selectedCourse}
           onClose={() => setSelectedCourse(null)}
+          conversionRate={conversionRate}
         />
       )}
 

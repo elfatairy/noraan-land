@@ -12,7 +12,7 @@ const Hero = () => {
         <div className="container">
           <div className="text">
             <h1>Nooran Land</h1>
-            <p>Here is your start in the arabic and islamic studies</p>
+            <p>Here is your start in Arabic and islamic studies</p>
             <a href="/courses" className="button">
               <div className="icon">
                 <svg

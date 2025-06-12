@@ -9,6 +9,7 @@ import { FcGoogle } from 'react-icons/fc';
 import { toast } from 'react-toastify';
 import Select from 'react-select';
 import { setStorageData} from '../../../utils/data'
+
 const countryOptions = [
   { value: '+93', label: '🇦🇫 Afghanistan (+93)' },
   { value: '+355', label: '🇦🇱 Albania (+355)' },
@@ -247,7 +248,6 @@ const countryOptions = [
   { value: '+681', label: '🇼🇫 Wallis and Futuna (+681)' }
 ];
 
-
 const timeZoneOptions = Intl.supportedValuesOf('timeZone').map((tz) => ({
   value: tz,
   label: tz.replace('_', ' '),
@@ -255,7 +255,8 @@ const timeZoneOptions = Intl.supportedValuesOf('timeZone').map((tz) => ({
 
 
 const Register = () => {
-  const [username, setUsername] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [countryCode, setCountryCode] = useState("+20"); // Default to Egypt
@@ -266,8 +267,8 @@ const Register = () => {
   const { register, googleRegister, isLoadingRegister } = useAuth();
   const navigate = useNavigate();
 
-  const validateUsername = (username) => {
-    return username.length >= 4 && username.length < 255;
+  const validateName = (name) => {
+    return name.length >= 2 && name.length < 50;
   };
 
   const validateEmail = (email) => {
@@ -317,17 +318,17 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (validateForm()) {
-      console.log(timezone?.value)
+      const fullName = `${firstName} ${lastName}`.trim();
       const result = await register('credentials', {
-        name: username,
+        name: fullName,
         email,
         password,
-        phone: `${countryCode}${phoneNumber}`, // Concatenated phone number
+        phone: `${countryCode}${phoneNumber}`,
       });
 
-      setStorageData('timezone' ,timezone?.value )
+      setStorageData('timezone', timezone?.value);
       if (result?.success) {
-        navigate("/", { replace: true }); // Replace current route with home
+        navigate("/", { replace: true });
       }
     }
   };
@@ -335,11 +336,16 @@ const Register = () => {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!username) {
-      newErrors.username = "Username is required";
-    } else if (!validateUsername(username)) {
-      newErrors.username =
-        "User name should be atleast 4 charachters, and at max 255 charachters  ";
+    if (!firstName) {
+      newErrors.firstName = "First name is required";
+    } else if (!validateName(firstName)) {
+      newErrors.firstName = "First name should be between 2 and 50 characters";
+    }
+
+    if (!lastName) {
+      newErrors.lastName = "Last name is required";
+    } else if (!validateName(lastName)) {
+      newErrors.lastName = "Last name should be between 2 and 50 characters";
     }
 
     if (!email) {
@@ -380,8 +386,8 @@ const Register = () => {
             <input
               type="email"
               id="email"
-              name="username" // Changed to username for login form autofill
-              autoComplete="username email" // Added both username and email
+              name="username"
+              autoComplete="username email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
@@ -393,20 +399,37 @@ const Register = () => {
             )}
           </div>
           <div className="auth-form-group">
-            <label htmlFor="displayName">Username</label>
+            <label htmlFor="firstName">First Name</label>
             <input
               type="text"
-              id="displayName"
-              name="displayName"
-              autoComplete="off" // Prevent autofill for this field
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter your username"
-              className={errors.username ? "error" : ""}
+              id="firstName"
+              name="firstName"
+              autoComplete="given-name"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              placeholder="Enter your first name"
+              className={errors.firstName ? "error" : ""}
               required
             />
-            {errors.username && (
-              <span className="error-message">{errors.username}</span>
+            {errors.firstName && (
+              <span className="error-message">{errors.firstName}</span>
+            )}
+          </div>
+          <div className="auth-form-group">
+            <label htmlFor="lastName">Last Name</label>
+            <input
+              type="text"
+              id="lastName"
+              name="lastName"
+              autoComplete="family-name"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              placeholder="Enter your last name"
+              className={errors.lastName ? "error" : ""}
+              required
+            />
+            {errors.lastName && (
+              <span className="error-message">{errors.lastName}</span>
             )}
           </div>
           <div className="auth-form-group phone-group">
@@ -438,35 +461,34 @@ const Register = () => {
             )}
           </div>
           <div className="auth-form-group">
-  <label htmlFor="timezone">Time Zone</label>
-  <Select
-    id="timezone"
-    name="timezone"
-    options={timeZoneOptions}
-    value={timezone}
-    onChange={(option) => setTimezone(option)}
-    className={`timezone-select-container ${errors.timezone ? "error" : ""}`}
-    styles={{
-      container: (base) => ({
-        ...base,
-        width: '92%',
-      }),
-    }}
-    classNamePrefix="timezone-select"
-    isSearchable={true}
-    placeholder="Select your timezone"
-  />
-  {errors.timezone && (
-    <span className="error-message">{errors.timezone}</span>
-  )}
-</div>
-
+            <label htmlFor="timezone">Time Zone</label>
+            <Select
+              id="timezone"
+              name="timezone"
+              options={timeZoneOptions}
+              value={timezone}
+              onChange={(option) => setTimezone(option)}
+              className={`timezone-select-container ${errors.timezone ? "error" : ""}`}
+              styles={{
+                container: (base) => ({
+                  ...base,
+                  width: '92%',
+                }),
+              }}
+              classNamePrefix="timezone-select"
+              isSearchable={true}
+              placeholder="Select your timezone"
+            />
+            {errors.timezone && (
+              <span className="error-message">{errors.timezone}</span>
+            )}
+          </div>
           <div className="auth-form-group">
             <label htmlFor="password">Password</label>
             <input
               type="password"
               id="password"
-              name="current-password" // Changed from new-password to current-password
+              name="current-password"
               autoComplete="current-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}

@@ -66,6 +66,11 @@
     justify-content: space-between;
     margin: 1rem 0;
     color: #B3666D;
+    font-size: 1.1rem;
+    font-weight: 500;
+    padding: 0.5rem;
+    background-color: rgba(249, 199, 197, 0.1);
+    border-radius: 8px;
   }
   
   .date-info {
@@ -495,5 +500,87 @@
   
   .search-input {
     width: 100%;
+  }
+}
+
+.payment-button-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.payment-help {
+  position: relative;
+  margin-top: 0.5rem;
+  margin-left: 0.5rem;
+}
+
+.payment-info {
+  margin-top: 0.5rem;
+  margin-left: 0.5rem;
+  position: relative;
+}
+
+.access-info {
+  color: #666;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  display: inline-block;
+}
+
+.help-link {
+  background: none;
+  border: none;
+  color: #95345C;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0.25rem;
+  transition: color 0.3s ease;
+  white-space: nowrap;
+  display: inline;
+  margin-left: 0.25rem;
+  position: relative;
+}
+
+.help-link:hover {
+  color: #B3666D;
+}
+
+.help-popup {
+  position: absolute;
+  bottom: calc(100% + 5px);
+  left: 0;
+  background: white;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  font-size: 0.9rem;
+  color: #95345C;
+  white-space: nowrap;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease;
+}
+
+.help-popup::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 1rem;
+  transform: translateX(-50%);
+  border-width: 6px;
+  border-style: solid;
+  border-color: white transparent transparent transparent;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

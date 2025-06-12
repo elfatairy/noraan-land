@@ -112,8 +112,8 @@ const ChangeDataModal = memo(({
   if (!isOpen) return null;
 
   const totalPrice = selectedSessionType === 'GROUP' 
-    ? groupPrice * (newHours || 0)
-    : privatePrice * (newHours || 0);
+    ? groupPrice * (parseInt(newHours) || 0)
+    : privatePrice * (parseInt(newHours) || 0);
 
   return (
     <div className={styles.modal}>
@@ -128,10 +128,16 @@ const ChangeDataModal = memo(({
             <input
               type="text"
               value={newHours}
-              onChange={(e) => setNewHours(e.target.value.replace(/\D/g, ''))}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === '' || /^\d*$/.test(value)) {
+                  setNewHours(value);
+                }
+              }}
               className={styles.formInput}
+              placeholder="Enter hours"
             />
-            <small className={styles.note}>0 hours for free students</small>
+            <small className={styles.note}>Leave empty or set to 0 for free students</small>
           </div>
 
           <div className={styles.formGroup}>
@@ -211,7 +217,7 @@ const StudentCourse = () => {
   const [reports, setReports] = useState([]);
   const [groups, setGroups] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState(groupId || '');
-  const [newHours, setNewHours] = useState(hours || 0);
+  const [newHours, setNewHours] = useState(hours === 'null' ? '' : hours || '');
   const [sessionData, setSessionData] = useState({
     title: '',
     description: '',

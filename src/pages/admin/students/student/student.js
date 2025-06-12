@@ -38,9 +38,17 @@ const Student = () => {
     const params = new URLSearchParams({
       preferredSessionType: course.preferredSessionType,
       price: course.preferredSessionType === 'PRIVATE' ? course.privatePrice : course.groupPrice,
-      hours: course.hours || 0,
-      ...(course.preferredSessionType === 'GROUP' && course.group && { group: course.group.id }) // Access group.name instead of group object
+      hours: course.hours === null ? 'null' : course.hours,
+      ...(course.preferredSessionType === 'GROUP' && course.group && { 
+        group: course.group.id,
+        groupName: course.group.name,
+        groupPrice: course.groupPrice
+      })
     });
+
+    if (course.preferredSessionType === 'PRIVATE') {
+      params.set('privatePrice', course.privatePrice);
+    }
 
     navigate(`/admin/students/${studentId}/courses/${course.id}?${params.toString()}`);
   };

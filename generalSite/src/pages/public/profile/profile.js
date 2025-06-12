@@ -77,11 +77,11 @@ const Profile = () => {
 
             try {
                 const res = await updateProfile(payload);
-                if (res?.data?.user) {
+                if (res?.data?.student) {
                     if (name != initialProfile.name)
                         setStorageData('name', name);
 
-                    setInitialProfile(res.data.user);
+                    setInitialProfile(res.data.student);
                     toast.success("Profile updated successfully");
 
                     setTimeout(() => {
