@@ -1,7 +1,24 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import './privacy.css';
 
 const PrivacyPolicy = () => {
+  useEffect(() => {
+    // Check if there's a hash in the URL
+    if (window.location.hash) {
+      // Remove the # from the hash
+      const elementId = window.location.hash.substring(1);
+      const element = document.getElementById(elementId);
+      
+      if (element) {
+        // Scroll to the very end of the page to show footer
+        window.scrollTo({
+          top: document.body.scrollHeight,
+          behavior: 'smooth'
+        });
+      }
+    }
+  }, []);
+
   return (
     <div className="privacy-policy">
       <div className="top">
@@ -221,17 +238,18 @@ const PrivacyPolicy = () => {
               You are advised to review this Privacy Policy periodically for any changes. Changes to this Privacy Policy are effective when they are posted on this page.
             </p>
             
-            <h4>Contact Us</h4>
+            <h4 >Contact Us</h4>
             <p>
               If you have any questions about this Privacy Policy, You can contact us:
             </p>
             <ul>
               <li>By email: contact@nooranland.com</li>
+              <li id="contact" >By phone: +201275267600</li>
             </ul>
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 };
 
