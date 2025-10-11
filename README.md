@@ -8,6 +8,8 @@
 
 <br />
 <div align="center">
+  <img width="1919" height="874" alt="image" src="https://github.com/user-attachments/assets/cd6873d5-42c4-44a0-b732-3b0d03b4cebf" />
+
 <h3 align="center">Noran Land</h3>
 
   <p align="center">

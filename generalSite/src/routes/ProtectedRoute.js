@@ -1,6 +1,9 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/auth';
 import { PATHS } from './paths';
+import { createRequire } from 'module';
+
+const require = createRequire(import.meta.url);
 
 export const ProtectedRoute = ({ children, role }) => {
   const { user, isAuthenticated } = useAuth();
